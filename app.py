@@ -1,12 +1,18 @@
+#라이브러리 임포트
 import pygame as pg
+import pytweening as pt
 import sys, math, random, Scripts.shake
+from Scripts.utils import load_image, load_images, Animation, get_surface_center_to
 
-SCREEN_SCALE = (1920 / 2 - 100, 1080 / 2 + 400 - 100)
+#상수 설정
+SCREEN_SCALE = (1000, 1000)
 GAME_NAME = "DR.Mind"
 TARGET_FPS = 60
 
+#게임 클래스
 class Game:
     def __init__(self):
+        #init함수
         pg.init()
         pg.display.set_caption(GAME_NAME)
         self.camera = pg.display.set_mode(SCREEN_SCALE)
@@ -18,7 +24,9 @@ class Game:
         self.screen_shake = Scripts.shake.Shake(self.clock)
 
         self.assets = {
-            
+            "main_title" : load_image("UI/MainTitle.png"),
+            "character" : load_image("Characters/Stickman.png"),
+            "evil" : load_image("Characters/untitled.png")
         }
 
         self.sfxs = {
@@ -26,35 +34,60 @@ class Game:
         }
 
         self.fonts = {
-
+            "main_title_font" : pg.font.Font('Assets/Fonts/Galmuri11-Bold.ttf', 12),
         }
 
         self.entities = {
 
         }
 
-        self.start()
-
-    def start(self):
+        self.state_title_screen()
+    
+    def state_title_screen(self):
+        #start:
+        start_key = pg.K_SPACE
         while(True):
-            self.update()
+            #update:
+            if (self.game_paused): return
 
-    def update(self):
-        if (self.game_paused): return
+            press_to_start = pg.transform.scale2x(self.fonts["main_title_font"].render("스페이스바로 시작", False, "white"))
+            self.screen.blit(press_to_start, get_surface_center_to(press_to_start, (600, SCREEN_SCALE[1] - 100)))
+            self.screen.blit(pg.transform.scale2x(self.assets["main_title"]), get_surface_center_to(self.assets["main_title"], (SCREEN_SCALE[0] / 2, 200)))
+            
+            
+            self.camera.blit(self.screen, (0, 0))
 
-        
-        pg.draw.rect(self.screen, "blue", (100, 100, 100, 100))
-        #shake_random = (random.random() * self.screen_shake_gain - self.screen_shake_gain / 2, random.random() * self.screen_shake_gain - self.screen_shake_gain / 2)
-        #self.screen_shake_gain = max(0, self.screen_shake_gain - .1)
-        pg.Surface.blit(self.camera, self.screen, (0, 0))
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    sys.exit()
+                if event.type == pg.KEYDOWN:
+                    if event.key == start_key:
+                        self.state_story_1()
+                        return
 
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                pg.quit()
-                sys.exit()
 
-        pg.display.update()
-        self.clock.tick(TARGET_FPS)
+            pg.display.flip()
+            self.clock.tick(TARGET_FPS)
+
+    def state_story_1(self):
+        #start:
+
+        while(True):
+            #update:
+            self.screen.fill("black")
+            if (self.game_paused): return
+            
+            
+            self.camera.blit(self.screen, (0, 0))
+
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    sys.exit()
+
+            pg.display.flip()
+            self.clock.tick(TARGET_FPS)
                 
             
 if __name__ == '__main__':
