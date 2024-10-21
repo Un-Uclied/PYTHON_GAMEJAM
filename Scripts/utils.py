@@ -6,7 +6,7 @@ import math
 BASE_IMAGE_PATH = "Assets/Sprites/"
 
 def load_image(path):
-    img = pg.image.load(BASE_IMAGE_PATH + path)
+    img = pg.image.load(BASE_IMAGE_PATH + path).convert_alpha()
     return img
 
 def load_images(path):

@@ -63,9 +63,10 @@ class Game:
         start_key = pg.K_SPACE
         while(True):
             #update:
+            print(self.clock.get_fps())
             if (self.game_paused): return
             self.screen.fill("black")
-
+            
             self.delta_time = self.clock.tick(TARGET_FPS) / 1000.0
 
             press_to_start = pg.transform.scale2x(self.fonts["main_title_font"].render("스페이스바로 시작", False, "white"))
@@ -96,6 +97,8 @@ class Game:
 
             self.delta_time = self.clock.tick(TARGET_FPS) / 1000.0
             
+            print(self.clock.get_fps())
+
             self.screen.blit(self.assets["spider_img"].img(2), (0, 0))
             self.camera.blit(self.screen, (0, 0))
             for event in pg.event.get():
@@ -128,7 +131,9 @@ class Game:
         self.ui_obejcts.append(bottom_fade)
         self.ui_obejcts.append(black_heart)
 
-        new_timer = random.randrange(rand_heart_spawn_speed[0], rand_heart_spawn_speed[1]) / 10
+        vignette = pg.transform.scale(self.assets["viggnete"], (1000, 1000))
+
+        new_timer = random.randrange(rand_heart_spawn_speed[0], rand_heart_spawn_speed[1]) / 10  
         while(True):
             #update:
             
@@ -136,6 +141,8 @@ class Game:
             self.screen.fill("black")
 
             self.delta_time = self.clock.tick(TARGET_FPS) / 1000.0
+
+            print(f"{self.clock.get_fps()}      AAAAAAAAAAAAAAAAA")
 
             enemy.update()
             player.update()
@@ -169,12 +176,9 @@ class Game:
                     new_half_heart.tween_to((420, 800), heart_move_speed, "linear")
 
                     self.ui_obejcts.append(new_half_heart)
-
-
-
-                    
+   
             #ui
-            self.screen.blit(self.assets["viggnete"], (0, 0))
+            self.screen.blit(vignette, (0, 0))
 
             self.camera.blit(self.screen, (0, 0))
 
@@ -183,7 +187,7 @@ class Game:
                     pg.quit()
                     sys.exit()
 
-            pg.display.flip()
+            pg.display.update()
 
                 
             
