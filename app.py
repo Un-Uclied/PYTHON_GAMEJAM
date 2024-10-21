@@ -25,7 +25,8 @@ class Game:
 
         self.assets = {
             "main_title" : load_image("UI/MainTitle.png"),
-            "spider_img" : ImageSets(load_images(""))
+            "spider_img" : ImageSets(load_images("Characters/Traumas/Spider")),
+            "spider_bg" : load_image("Backgrounds/SpiderBackground.png"),
         }
 
         self.sfxs = {
@@ -77,7 +78,30 @@ class Game:
             self.screen.fill("black")
             if (self.game_paused): return
             
+            self.screen.blit(self.assets["spider_img"].img(2), (0, 0))
+            self.camera.blit(self.screen, (0, 0))
+
+            for event in pg.event.get():
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_ESCAPE:
+                        self.state_main_game(0)
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    sys.exit()
+
+            pg.display.flip()
+            self.clock.tick(TARGET_FPS)
+
+    def state_main_game(self, chapter : int):
+        #start:
+
+        while(True):
+            #update:
+            self.screen.fill("black")
+            if (self.game_paused): return
             
+            self.screen.blit(pg.transform.scale(self.assets["spider_bg"], (1000, 1000)), (0, 0))
+            self.screen.blit(pg.transform.scale(self.assets["spider_img"].img(2)), (0, 0))
             self.camera.blit(self.screen, (0, 0))
 
             for event in pg.event.get():
@@ -87,6 +111,7 @@ class Game:
 
             pg.display.flip()
             self.clock.tick(TARGET_FPS)
+
                 
             
 if __name__ == '__main__':

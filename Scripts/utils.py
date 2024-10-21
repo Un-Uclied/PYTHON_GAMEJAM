@@ -38,7 +38,7 @@ class Animation:
     
 
 class ImageSets:
-    def __init__(self, images):
+    def __init__(self, images : list):
         self.images = images
 
     def img(self, index):
