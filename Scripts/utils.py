@@ -4,8 +4,7 @@ import os, json
 BASE_IMAGE_PATH = "Assets/Sprites/"
 
 def load_image(path):
-    img = pg.image.load(BASE_IMAGE_PATH + path).convert()
-    img.set_colorkey((0,0,0))
+    img = pg.image.load(BASE_IMAGE_PATH + path)
     return img
 
 def load_images(path):

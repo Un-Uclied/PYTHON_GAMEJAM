@@ -2,6 +2,7 @@
 import pygame as pg
 import pytweening as pt
 import sys, math, random, Scripts.shake
+from Scripts.Entities import Enemy
 from Scripts.utils import load_image, load_images, Animation, get_surface_center_to, ImageSets, load_images
 
 #상수 설정
@@ -84,7 +85,7 @@ class Game:
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_ESCAPE:
-                        self.state_main_game(0)
+                        self.state_main_game(0, "spider")
                 if event.type == pg.QUIT:
                     pg.quit()
                     sys.exit()
@@ -92,7 +93,7 @@ class Game:
             pg.display.flip()
             self.clock.tick(TARGET_FPS)
 
-    def state_main_game(self, chapter : int):
+    def state_main_game(self, chapter : int, enemy_name : str):
         #start:
 
         while(True):
@@ -100,8 +101,10 @@ class Game:
             self.screen.fill("black")
             if (self.game_paused): return
             
+            enemy = Enemy(self.assets[f"{enemy_name}_img"], (300, 250), (400, 400))
+
             self.screen.blit(pg.transform.scale(self.assets["spider_bg"], (1000, 1000)), (0, 0))
-            self.screen.blit(pg.transform.scale(self.assets["spider_img"].img(2)), (0, 0))
+            enemy.render(self.screen)
             self.camera.blit(self.screen, (0, 0))
 
             for event in pg.event.get():
