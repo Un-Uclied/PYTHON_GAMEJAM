@@ -37,6 +37,14 @@ class Animation:
         return self.images[int(self.frame / self.img_duration)].convert_alpha()
     
 
+class ImageSets:
+    def __init__(self, images):
+        self.images = images
+
+    def img(self, index):
+        return self.images[index].convert_alpha()
+    
+
 
 def get_surface_center_to(surface : pg.Surface, dest : tuple):
     return (dest[0]-surface.get_size()[0], dest[1]-surface.get_size()[1])

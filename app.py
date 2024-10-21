@@ -2,7 +2,7 @@
 import pygame as pg
 import pytweening as pt
 import sys, math, random, Scripts.shake
-from Scripts.utils import load_image, load_images, Animation, get_surface_center_to
+from Scripts.utils import load_image, load_images, Animation, get_surface_center_to, ImageSets, load_images
 
 #상수 설정
 SCREEN_SCALE = (1000, 1000)
@@ -25,8 +25,7 @@ class Game:
 
         self.assets = {
             "main_title" : load_image("UI/MainTitle.png"),
-            "character" : load_image("Characters/Stickman.png"),
-            "evil" : load_image("Characters/untitled.png")
+            "spider_img" : ImageSets(load_images(""))
         }
 
         self.sfxs = {
