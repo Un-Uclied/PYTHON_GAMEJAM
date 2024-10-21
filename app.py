@@ -1,7 +1,7 @@
 import pygame as pg
 import sys, math, random, Scripts.shake
 
-SCREEN_SCALE = (1920 / 2, 1080 / 2 + 400)
+SCREEN_SCALE = (1920 / 2 - 100, 1080 / 2 + 400 - 100)
 GAME_NAME = "DR.Mind"
 TARGET_FPS = 60
 
