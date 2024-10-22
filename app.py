@@ -57,7 +57,7 @@ class Game:
         }
 
         self.state_title_screen()
-    
+
     def state_title_screen(self):
         #start:
         start_key = pg.K_SPACE
@@ -97,8 +97,6 @@ class Game:
             self.screen.fill("black")
 
             self.delta_time = self.clock.tick(TARGET_FPS) / 1000.0
-            
-            print(self.clock.get_fps())
 
             self.screen.blit(self.assets["spider_img"].img(2), (0, 0))
             self.camera.blit(self.screen, (0, 0))
@@ -110,7 +108,7 @@ class Game:
                     pg.quit()
                     sys.exit()
 
-            pg.display.flip()
+            pg.display.update()
 
     def state_main_game(self, chapter : int, enemy_name : str):
         #start:
@@ -119,7 +117,9 @@ class Game:
         heart_move_speed = 2
 
         #enemy
-        enemy = Enemy(self.assets[f"{enemy_name}_img"], [300, 250], (400, 400))
+        #enemy = Enemy(self.assets[f"{enemy_name}_img"], [300, 250], (400, 400))
+        enemy = UI(pg.transform.scale(self.assets[f"{enemy_name}_img"], (400, 400)), (300, 250))
+        self.ui_obejcts.append(enemy)
         player = Player(self.assets["doctor"], [750, 750], (200, 200))
         bg = pg.transform.scale(self.assets["spider_bg"], (1000, 1000))
 
@@ -132,9 +132,9 @@ class Game:
         self.ui_obejcts.append(bottom_fade)
         self.ui_obejcts.append(black_heart)
 
-        vignette = pg.transform.scale(self.assets["viggnete"], (1000, 1000))
+        img_vignette = pg.transform.scale(self.assets["viggnete"], (1000, 1000))
 
-        new_timer = random.randrange(rand_heart_spawn_speed[0], rand_heart_spawn_speed[1]) / 10  
+        heart_spawn_timer = random.randrange(rand_heart_spawn_speed[0], rand_heart_spawn_speed[1]) / 10  
         while(True):
             #update:
             
@@ -142,8 +142,6 @@ class Game:
             self.screen.fill("black")
 
             self.delta_time = self.clock.tick(TARGET_FPS) / 1000.0
-
-            print(f"{self.clock.get_fps()}      AAAAAAAAAAAAAAAAA")
 
             enemy.update()
             player.update()
