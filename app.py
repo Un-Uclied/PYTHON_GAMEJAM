@@ -3,6 +3,7 @@ import pygame as pg
 import pytweening as pt
 import sys, math, random, Scripts.shake
 from Scripts.Entities import Enemy, Player
+from Scripts.Tilemap import Tilemap
 from Scripts.utils import load_image, load_images, Animation, get_surface_center_to, ImageSets, load_images, Tweener, UI
 
 #상수 설정
@@ -42,6 +43,9 @@ class Game:
             "yellow_heart" : load_image("UI/YellowHeart.png"),
             "blue_heart" : load_image("UI/BlueHeart.png"),
             "red_heart" : load_image("UI/RedHeart.png"),
+
+            "floor" : load_images('Tiles/Floor'),
+            "wall" : load_images('Tiles/Wall'),
         }
 
         self.sfxs = {
@@ -63,17 +67,9 @@ class Game:
         start_key = pg.K_SPACE
         while(True):
             #update:
-            print(self.clock.get_fps())
-            if (self.game_paused): return
             self.screen.fill("black")
             
             self.delta_time = self.clock.tick(TARGET_FPS) / 1000.0
-
-            press_to_start = pg.transform.scale2x(self.fonts["main_title_font"].render("스페이스바로 시작", False, "white"))
-            self.screen.blit(press_to_start, get_surface_center_to(press_to_start, (600, SCREEN_SCALE[1] - 100)))
-            self.screen.blit(pg.transform.scale2x(self.assets["main_title"]), get_surface_center_to(self.assets["main_title"], (SCREEN_SCALE[0] / 2, 200)))
-            
-            self.camera.blit(self.screen, (0, 0))
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -81,106 +77,25 @@ class Game:
                     sys.exit()
                 if event.type == pg.KEYDOWN:
                     if event.key == start_key:
-                        self.state_story_1()
+                        self.state_main_game()
                         return
 
+            pg.display.update()
 
-            pg.display.flip()
-
-    def state_story_1(self):
-        #start:
-
+    def state_main_game(self):
+       #start:
+        tilemap = Tilemap(self, 32)
+        tilemap.load("new_map.json")
+        pos = 0
         while(True):
             #update:
-            if (self.game_paused): return
             self.screen.fill("black")
-
+            
             self.delta_time = self.clock.tick(TARGET_FPS) / 1000.0
-            
-            print(self.clock.get_fps())
-
-            self.screen.blit(self.assets["spider_img"].img(2), (0, 0))
-            self.camera.blit(self.screen, (0, 0))
-            for event in pg.event.get():
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_ESCAPE:
-                        self.state_main_game(0, "spider")
-                if event.type == pg.QUIT:
-                    pg.quit()
-                    sys.exit()
-
-            pg.display.flip()
-
-    def state_main_game(self, chapter : int, enemy_name : str):
-        #start:
-
-        rand_heart_spawn_speed = (5, 12)
-        heart_move_speed = 2
-
-        #enemy
-        enemy = Enemy(self.assets[f"{enemy_name}_img"], [300, 250], (400, 400))
-        player = Player(self.assets["doctor"], [750, 750], (200, 200))
-        bg = pg.transform.scale(self.assets["spider_bg"], (1000, 1000))
-
-        enemy.is_turn = True
-        is_heart_gaming = False
-
-        bottom_fade = UI(self.assets["bottom_fade"], (0, 1000))
-        black_heart = UI(pg.transform.scale(self.assets["black_heart"], (180, 180)), (420, 1000))
-
-        self.ui_obejcts.append(bottom_fade)
-        self.ui_obejcts.append(black_heart)
-
-        vignette = pg.transform.scale(self.assets["viggnete"], (1000, 1000))
-
-        new_timer = random.randrange(rand_heart_spawn_speed[0], rand_heart_spawn_speed[1]) / 10  
-        while(True):
-            #update:
-            
-            if (self.game_paused): return
-            self.screen.fill("black")
-
-            self.delta_time = self.clock.tick(TARGET_FPS) / 1000.0
-
-            print(f"{self.clock.get_fps()}      AAAAAAAAAAAAAAAAA")
-
-            enemy.update()
-            player.update()
-            for obj in self.ui_obejcts:
-                obj.update(self.delta_time)
-            
-            #bg
-            self.screen.blit(bg, (0, 0))
-
-            enemy.render(self.screen)
-            player.render(self.screen)
-
-            for obj in self.ui_obejcts:
-                obj.render(self.screen)
-
-            if enemy.is_turn:
-                if not is_heart_gaming:
-                    is_heart_gaming = True
-                    bottom_fade.tween_to((0, 500), 3)
-                    black_heart.tween_to((420, 800), 5)
-                new_timer -= self.delta_time
-                if (new_timer <= 0):
-                    new_timer = random.randrange(rand_heart_spawn_speed[0], rand_heart_spawn_speed[1]) / 10
-                    left_or_right = random.randint(0, 1)
-                    new_half_heart = None
-                    if left_or_right == 0:
-                        new_half_heart = UI(pg.transform.scale(self.assets["blue_heart"], (180, 180)), (-200, 800))
-                    elif left_or_right == 1:
-                        new_half_heart = UI(pg.transform.scale(self.assets["red_heart"], (180, 180)), (1200, 800))
-
-                    new_half_heart.tween_to((420, 800), heart_move_speed, "linear")
-
-                    self.ui_obejcts.append(new_half_heart)
-   
-            #ui
-            self.screen.blit(vignette, (0, 0))
-
-            self.camera.blit(self.screen, (0, 0))
+            tilemap.render(self.screen, (0, 0))
+            pos += 1
+            self.screen.blit(self.assets["doctor"], (pos, 0))
+            self.camera.blit(self.screen, (0,0))
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
