@@ -8,8 +8,9 @@ from Scripts.Animations import Animation
 
 #상수 설정
 SCREEN_SCALE = (1000, 1000)
-GAME_NAME = "어쩌구"
+GAME_NAME = "Game"
 TARGET_FPS = 60
+#TARGET_TILE = 48
 
 #입력 설정
 MOVE_UP = pg.K_w
@@ -28,7 +29,7 @@ class Game:
         pg.display.set_caption(GAME_NAME)
 
         self.camera = pg.display.set_mode(SCREEN_SCALE)
-        self.screen = pg.surface.Surface((500, 500), pg.SRCALPHA)
+        self.screen = pg.surface.Surface(SCREEN_SCALE, pg.SRCALPHA)
 
         self.clock = pg.time.Clock()
 
@@ -100,7 +101,7 @@ class Game:
         tilemap.load("new_map.json")
         
         #플레이어 : game, name, pos, hit_box_size, anim_size
-        self.player = MoveableEntity(self, "player", (0, 0), (32, 32), (32, 32))
+        self.player = MoveableEntity(self, "player", (0, 0), (64, 64), (64, 64))
         # [[좌, 우], [하, 상]]
         self.player_movement = [[False, False], [False, False]]
         player_movespeed = 3.5
