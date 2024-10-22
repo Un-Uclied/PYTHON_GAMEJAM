@@ -1,5 +1,5 @@
 #임포트
-import pygame
+import pygame as pg
 import json
 
 NEIGHBOR_OFFSETS = [(-1, 0), (-1, -1), (0, -1), (1, -1), (1, 0), (0, 0), (-1, 1), (0, 1), (1, 1)]
@@ -80,7 +80,7 @@ class Tilemap:
         rects = []
         for tile in self.tiles_around([int(pos[0]), int(pos[1])]):
             if tile['type'] in PHYSICS_TILES:
-                rects.append(pygame.Rect(tile['pos'][0] * self.tile_size,
+                rects.append(pg.Rect(tile['pos'][0] * self.tile_size,
                                           tile['pos'][1] * self.tile_size,
                                             self.tile_size,
                                               self.tile_size))
@@ -89,9 +89,9 @@ class Tilemap:
     def render(self, surf, offset=(0, 0)):
         #그리드에 그려지지 않은 타일:
         for tile in self.offgrid_tiles:
-            if str(tile['type']) in self.game.assets:
+            if str(tile['type']) in self.game.assets["tiles"]:
                 #그리려는 타일이 self.game.assets에 있는지 확인
-                    surf.blit(self.game.assets[tile['type']][tile['variant']],
+                    surf.blit(self.game.assets["tiles"][tile['type']][tile['variant']],
                                 (tile['pos'][0] - offset[0],
                                 tile['pos'][1] - offset[1]))
 
@@ -104,9 +104,9 @@ class Tilemap:
                 if loc in self.tilemap:
                     tile = self.tilemap[loc]
                     
-                    if str(tile['type']) in self.game.assets:
+                    if str(tile['type']) in self.game.assets["tiles"]:
                         #그리려는 타일이 self.game.assets에 있는지 확인
-                        surf.blit(self.game.assets[tile['type']][tile['variant']], 
+                        surf.blit(self.game.assets["tiles"][tile['type']][tile['variant']], 
                                     (tile['pos'][0] * self.tile_size - offset[0],
                                     tile['pos'][1] * self.tile_size - offset[1]))
                     else:
