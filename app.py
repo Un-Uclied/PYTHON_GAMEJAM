@@ -74,6 +74,7 @@ class Game:
             self.screen.blit(pg.transform.scale2x(self.assets["main_title"]), get_surface_center_to(self.assets["main_title"], (SCREEN_SCALE[0] / 2, 200)))
             
             self.camera.blit(self.screen, (0, 0))
+            
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
