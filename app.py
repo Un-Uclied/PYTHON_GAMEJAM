@@ -28,7 +28,7 @@ class Game:
         pg.display.set_caption(GAME_NAME)
 
         self.camera = pg.display.set_mode(SCREEN_SCALE)
-        self.screen = pg.surface.Surface(SCREEN_SCALE)
+        self.screen = pg.surface.Surface(SCREEN_SCALE, pg.SRCALPHA)
 
         self.clock = pg.time.Clock()
 
@@ -105,22 +105,32 @@ class Game:
         self.player_movement = [[False, False], [False, False]]
         player_movespeed = 3.5
 
+        #카메라 플레이어 추적
+        scroll = [0, 0]
+        scroll_speed = 2
+
         while(True):
             #update:
 
             #화면 초기화
             self.screen.fill("black")
-            
+
+            scroll[0] += (self.screen.get_width() / 2 - self.player.get_rect().centerx) * scroll_speed
+            scroll[1] += (self.screen.get_width() / 2 - self.player.get_rect().centery) * scroll_speed
+            render_scroll = (int(scroll[0]), int(scroll[1]))
             #타일 맵 렌더
-            tilemap.render(self.screen, (0, 0))
+            tilemap.render(self.screen,render_scroll)
 
             #플레이어 업데이트 & 렌더
             self.player.update(tilemap, self.player_movement, player_movespeed)
             self.player.animation.update()
-            self.player.render(self.screen, (0, 0))
+            self.player.render(self.screen, render_scroll)
+
+            
+            #render_scroll = (self.scroll[0] / -16,self.scroll[1] / -16)
 
             #화면 렌더
-            self.camera.blit(self.screen, (0,0))
+            self.camera.blit(self.screen, (0, 0))
 
             #이벤트 리슨
             for event in pg.event.get():
