@@ -24,7 +24,7 @@ class Editor:
 
         self.movement = [False, False, False, False]
         
-        self.tilemap = Tilemap(self, tile_size=32)
+        self.tilemap = Tilemap(self, tile_size=40)
 
         try:
             #self.tilemap.load("new_map.json")

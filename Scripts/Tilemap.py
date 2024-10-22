@@ -3,11 +3,11 @@ import pygame as pg
 import json
 
 NEIGHBOR_OFFSETS = [(-1, 0), (-1, -1), (0, -1), (1, -1), (1, 0), (0, 0), (-1, 1), (0, 1), (1, 1)]
-PHYSICS_TILES = {"floor", "wall"}
+PHYSICS_TILES = {"wall"}
 
 #타일 맵
 class Tilemap:
-    def __init__(self, game, tile_size = 32):
+    def __init__(self, game, tile_size = 40):
         #셋팅
         self.game = game
         self.tile_size = tile_size

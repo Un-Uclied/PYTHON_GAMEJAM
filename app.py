@@ -7,10 +7,10 @@ from Scripts.Entities import Entity, MoveableEntity
 from Scripts.Animations import Animation
 
 #상수 설정
-SCREEN_SCALE = (1000, 1000)
+SCREEN_SCALE = (1200, 1000)
 GAME_NAME = "Game"
 TARGET_FPS = 60
-#TARGET_TILE = 48
+#TARGET_TILE = 40
 
 #입력 설정
 MOVE_UP = pg.K_w
@@ -97,14 +97,14 @@ class Game:
         #start:
 
         #타일맵 로드
-        tilemap = Tilemap(self, 32)
+        tilemap = Tilemap(self, 40) #타일 하나 크기 = 40
         tilemap.load("new_map.json")
         
         #플레이어 : game, name, pos, hit_box_size, anim_size
-        self.player = MoveableEntity(self, "player", (0, 0), (64, 64), (64, 64))
+        self.player = MoveableEntity(self, "player", (0, 0), (40, 40), (40, 40)) #타일 하나 크기에 맞추기
         # [[좌, 우], [하, 상]]
         self.player_movement = [[False, False], [False, False]]
-        player_movespeed = 3.5
+        player_movespeed = 5
 
         #카메라 플레이어 추적
         scroll = [0, 0]
@@ -128,8 +128,6 @@ class Game:
             self.player.update(tilemap, self.player_movement, player_movespeed)
             self.player.animation.update()
             self.player.render(self.screen, render_scroll)
-            
-            #render_scroll = (self.scroll[0] / -16,self.scroll[1] / -16)
 
             #화면 렌더
             self.camera.blit(self.screen, (0, 0))
