@@ -107,7 +107,7 @@ class Game:
 
         #카메라 플레이어 추적
         scroll = [0, 0]
-        scroll_speed = 2
+        scroll_speed = 25
 
         while(True):
             #update:
@@ -115,17 +115,18 @@ class Game:
             #화면 초기화
             self.screen.fill("black")
 
-            scroll[0] += (self.screen.get_width() / 2 - self.player.get_rect().centerx) * scroll_speed
-            scroll[1] += (self.screen.get_width() / 2 - self.player.get_rect().centery) * scroll_speed
+            scroll[0] += (self.player.get_rect().centerx - self.screen.get_width() / 2 - scroll[0]) / scroll_speed
+            scroll[1] += (self.player.get_rect().centery - self.screen.get_width() / 2 - scroll[1]) / scroll_speed
             render_scroll = (int(scroll[0]), int(scroll[1]))
+
+            print(render_scroll)
             #타일 맵 렌더
-            tilemap.render(self.screen,render_scroll)
+            tilemap.render(self.screen, render_scroll)
 
             #플레이어 업데이트 & 렌더
             self.player.update(tilemap, self.player_movement, player_movespeed)
             self.player.animation.update()
             self.player.render(self.screen, render_scroll)
-
             
             #render_scroll = (self.scroll[0] / -16,self.scroll[1] / -16)
 
