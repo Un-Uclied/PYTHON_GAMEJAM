@@ -17,8 +17,9 @@ class Editor:
         self.clock = pygame.time.Clock()
 
         self.assets = {
-            "floor" : load_images('Tiles/Floor'),
-            "wall" : load_images('Tiles/Wall'),
+            "tiles" : {
+                "floor" : load_images('Tiles/Floor'),
+            "wall" : load_images('Tiles/Wall'),}
         }
 
         self.movement = [False, False, False, False]
@@ -33,7 +34,7 @@ class Editor:
 
         self.scroll = [0, 0]
 
-        self.tile_list = list(self.assets)
+        self.tile_list = list(self.assets["tiles"])
         self.tile_group = 0
         self.tile_variant = 0
 
@@ -54,7 +55,7 @@ class Editor:
             
             self.tilemap.render(self.canvas, offset=render_scroll)
             
-            current_tile_img = self.assets[self.tile_list[self.tile_group]][self.tile_variant].copy()
+            current_tile_img = self.assets["tiles"][self.tile_list[self.tile_group]][self.tile_variant].copy()
             current_tile_img.set_alpha(100)
             
             mpos = pygame.mouse.get_pos()
@@ -73,7 +74,7 @@ class Editor:
                 if tile_loc in self.tilemap.tilemap:
                     del self.tilemap.tilemap[tile_loc]
                 for tile in self.tilemap.offgrid_tiles.copy():
-                    tile_img = self.assets[tile['type']][tile['variant']]
+                    tile_img = self.assets["tiles"][tile['type']][tile['variant']]
                     tile_r = pygame.Rect(tile['pos'][0] - self.scroll[0], tile['pos'][1] - self.scroll[1], tile_img.get_width(), tile_img.get_height())
                     if tile_r.collidepoint(mpos):
                         self.tilemap.offgrid_tiles.remove(tile)
@@ -95,9 +96,9 @@ class Editor:
                     if self.shift:
                         
                         if event.button == 4:
-                            self.tile_variant = (self.tile_variant - 1) % len(self.assets[self.tile_list[self.tile_group]])
+                            self.tile_variant = (self.tile_variant - 1) % len(self.assets["tiles"][self.tile_list[self.tile_group]])
                         if event.button == 5:
-                            self.tile_variant = (self.tile_variant + 1) % len(self.assets[self.tile_list[self.tile_group]])
+                            self.tile_variant = (self.tile_variant + 1) % len(self.assets["tiles"][self.tile_list[self.tile_group]])
                     else:
                         if event.button == 4:
                             self.tile_group = (self.tile_group - 1) % len(self.tile_list)

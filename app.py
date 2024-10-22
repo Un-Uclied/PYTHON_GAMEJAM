@@ -8,7 +8,7 @@ from Scripts.Animations import Animation
 
 #상수 설정
 SCREEN_SCALE = (1000, 1000)
-GAME_NAME = "DR.Mind"
+GAME_NAME = "어쩌구"
 TARGET_FPS = 60
 
 #입력 설정
@@ -28,7 +28,7 @@ class Game:
         pg.display.set_caption(GAME_NAME)
 
         self.camera = pg.display.set_mode(SCREEN_SCALE)
-        self.screen = pg.surface.Surface(SCREEN_SCALE, pg.SRCALPHA)
+        self.screen = pg.surface.Surface((500, 500), pg.SRCALPHA)
 
         self.clock = pg.time.Clock()
 
@@ -100,7 +100,7 @@ class Game:
         tilemap.load("new_map.json")
         
         #플레이어 : game, name, pos, hit_box_size, anim_size
-        self.player = MoveableEntity(self, "player", (0, 0), (64, 64), (64, 64))
+        self.player = MoveableEntity(self, "player", (0, 0), (32, 32), (32, 32))
         # [[좌, 우], [하, 상]]
         self.player_movement = [[False, False], [False, False]]
         player_movespeed = 3.5
@@ -115,11 +115,11 @@ class Game:
             #화면 초기화
             self.screen.fill("black")
 
+            #모든 오브젝트를 움직여서 카메라가 움직이는 효과처럼 착시
             scroll[0] += (self.player.get_rect().centerx - self.screen.get_width() / 2 - scroll[0]) / scroll_speed
             scroll[1] += (self.player.get_rect().centery - self.screen.get_width() / 2 - scroll[1]) / scroll_speed
             render_scroll = (int(scroll[0]), int(scroll[1]))
 
-            print(render_scroll)
             #타일 맵 렌더
             tilemap.render(self.screen, render_scroll)
 

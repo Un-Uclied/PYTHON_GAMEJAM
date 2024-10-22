@@ -15,6 +15,11 @@ class Entity:
         self.flipx = False
         self.set_action('idle')
 
+        #디버깅용 히트박스
+        self.hit_box = pg.surface.Surface((self.size[0], self.size[1]))
+        self.hit_box.fill('red')
+
+
     def set_action(self, action):
         if action != self.action:
             self.action = action
@@ -28,6 +33,8 @@ class Entity:
         self.mask_img = self.mask.to_surface(setcolor=self.mask_color, unsetcolor=(0,0,0,0))
         surface.blit(pg.transform.flip(self.mask_img, self.flipx, 0), (self.pos[0] - offset[0] + self.anim_offset[0], self.pos[1] - offset[1] + self.anim_offset[1]))
 
+        #surface.blit(self.hit_box, (self.pos[0] - offset[0], self.pos[1] - offset[1]))
+
 
 class MoveableEntity(Entity):
     #생성자
@@ -37,10 +44,6 @@ class MoveableEntity(Entity):
         #충돌 가능
         self.collisions = {'up' : False, 'down' : False, 
                             'right' : False, 'left' : False}
-
-        #디버깅용 히트박스
-        #self.hit_box = pg.surface.Surface((self.size[0], self.size[1]))
-        #self.hit_box.fill('red')
 
     #히트박스
     def get_rect(self):
@@ -61,31 +64,32 @@ class MoveableEntity(Entity):
         # 콜리션 초기화
         self.collisions = {'up': False, 'down': False, 'right': False, 'left': False}
 
-        # 엔티티 이동
-        self.pos[0] += movement_vector.x
+        
         self.pos[1] += movement_vector.y
         entity_rect = self.get_rect()
-
         # 상하 충돌 체크
         for collided_rect in tilemap.physics_rects_around(self.pos):
             if entity_rect.colliderect(collided_rect):
-                #ex) 아래로 가고 있음 & 충돌함 => 자신의 아래 = 벽의 위
-                if movement_vector.y < 0:
+                # #ex) 아래로 가고 있음 & 충돌함 => 자신의 아래 = 벽의 위
+                if movement_vector.y > 0:
                     entity_rect.bottom = collided_rect.top
                     self.collisions['down'] = True
-                elif movement_vector.y > 0:
+                if movement_vector.y < 0:
                     entity_rect.top = collided_rect.bottom
                     self.collisions['up'] = True
                 self.pos[1] = entity_rect.y
+                pass
 
+        self.pos[0] += movement_vector.x
+        entity_rect = self.get_rect()
         # 좌우 충돌 체크
-        for collided_rect in tilemap.physics_rects_around(self.pos):
-            if entity_rect.colliderect(collided_rect):
+        for rect in tilemap.physics_rects_around(self.pos):
+            if entity_rect.colliderect(rect):
                 if movement_vector.x > 0:
-                    entity_rect.right = collided_rect.left
+                    entity_rect.right = rect.left
                     self.collisions['right'] = True
-                elif movement_vector.x < 0:
-                    entity_rect.left = collided_rect.right
+                if movement_vector.x < 0:
+                    entity_rect.left = rect.right
                     self.collisions['left'] = True
                 self.pos[0] = entity_rect.x
 
