@@ -3,12 +3,21 @@ import pygame as pg
 import sys
 from Scripts.Tilemap import Tilemap
 from Scripts.utils import load_image, load_images
-from Scripts.Entities import Entity
+from Scripts.Entities import Entity, MoveableEntity
+from Scripts.Animations import Animation
 
 #상수 설정
 SCREEN_SCALE = (1000, 1000)
 GAME_NAME = "DR.Mind"
 TARGET_FPS = 60
+
+#입력 설정
+MOVE_UP = pg.K_w
+MOVE_DOWN = pg.K_s
+MOVE_LEFT = pg.K_a
+MOVE_RIGHT = pg.K_d
+
+WEAPON_ATTACK = 1
 
 #게임 클래스
 class Game:
@@ -33,10 +42,13 @@ class Game:
             
             #타일맵 이미지 에셋
             "tiles" : {
-                "floor" : load_images('Tiles/Floor'),
-                "wall" : load_images('Tiles/Wall'),
-            }
+                "floor" : load_images("Tiles/Floor"),
+                "wall" : load_images("Tiles/Wall"),
+            },
             
+            "entities" : {
+                "player/idle" : Animation(load_images("Characters/Player"), 5, True)
+            }
         }
 
         #게임 효과음
@@ -61,8 +73,8 @@ class Game:
         while(True):
             #update:
 
-            #카메라 초기화
-            self.camera.fill("black")
+            #화면 초기화
+            self.screen.fill("black")
 
             #이벤트 리슨
             for event in pg.event.get():
@@ -86,17 +98,26 @@ class Game:
         #타일맵 로드
         tilemap = Tilemap(self, 32)
         tilemap.load("new_map.json")
-
-        self.player = 
+        
+        #플레이어 : game, name, pos, hit_box_size, anim_size
+        self.player = MoveableEntity(self, "player", (0, 0), (64, 64), (64, 64))
+        # [[좌, 우], [하, 상]]
+        self.player_movement = [[False, False], [False, False]]
+        player_movespeed = 3.5
 
         while(True):
             #update:
 
-            #카메라 초기화
-            self.camera.fill("black")
+            #화면 초기화
+            self.screen.fill("black")
             
             #타일 맵 렌더
             tilemap.render(self.screen, (0, 0))
+
+            #플레이어 업데이트 & 렌더
+            self.player.update(tilemap, self.player_movement, player_movespeed)
+            self.player.animation.update()
+            self.player.render(self.screen, (0, 0))
 
             #화면 렌더
             self.camera.blit(self.screen, (0,0))
@@ -106,6 +127,25 @@ class Game:
                 if event.type == pg.QUIT:
                     pg.quit()
                     sys.exit()
+
+                if event.type == pg.KEYDOWN:
+                    if event.key == MOVE_UP:
+                        self.player_movement[1][1] = True
+                    if event.key == MOVE_DOWN:
+                        self.player_movement[1][0] = True
+                    if event.key == MOVE_LEFT:
+                        self.player_movement[0][1] = True
+                    if event.key == MOVE_RIGHT:
+                        self.player_movement[0][0] = True
+                if event.type == pg.KEYUP:
+                    if event.key == MOVE_UP:
+                        self.player_movement[1][1] = False
+                    if event.key == MOVE_DOWN:
+                        self.player_movement[1][0] = False
+                    if event.key == MOVE_LEFT:
+                        self.player_movement[0][1] = False
+                    if event.key == MOVE_RIGHT:
+                        self.player_movement[0][0] = False
 
             self.clock.tick(TARGET_FPS)
             #카메라 업데이트
