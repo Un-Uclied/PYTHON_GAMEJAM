@@ -1,5 +1,6 @@
 import pygame as pg
 import math
+import Particles
 
 class Entity:
     def __init__(self, game, name : str, pos : tuple, size : tuple, anim_size : tuple):
@@ -40,7 +41,7 @@ class MoveableEntity(Entity):
     #생성자
     def __init__(self, game, name, pos, size, anim_size):
         super().__init__(game, name, pos, size, anim_size)
-
+        self.movement_vector = pg.math.Vector2((0, 0))
         #충돌 가능
         self.collisions = {'up' : False, 'down' : False, 
                             'right' : False, 'left' : False}
@@ -54,27 +55,27 @@ class MoveableEntity(Entity):
         # movement [[좌, 우], [하, 상]]
         
         # movement를 벡터로 변환
-        movement_vector = pg.math.Vector2((movement[0][0] - movement[0][1]), (movement[1][0] - movement[1][1]))
+        self.movement_vector = pg.math.Vector2((movement[0][0] - movement[0][1]), (movement[1][0] - movement[1][1]))
         
         # 벡터가 0이 아니면 노멀라이즈
-        if movement_vector.length() > 0:
-            movement_vector = movement_vector.normalize()
+        if self.movement_vector.length() > 0:
+            self.movement_vector = self.movement_vector.normalize()
         
-        movement_vector *= move_speed
+        self.movement_vector *= move_speed
         # 콜리션 초기화
         self.collisions = {'up': False, 'down': False, 'right': False, 'left': False}
 
         
-        self.pos[1] += movement_vector.y
+        self.pos[1] += self.movement_vector.y
         entity_rect = self.get_rect()
         # 상하 충돌 체크
         for collided_rect in tilemap.physics_rects_around(self.pos):
             if entity_rect.colliderect(collided_rect):
                 # #ex) 아래로 가고 있음 & 충돌함 => 자신의 아래 = 벽의 위
-                if movement_vector.y > 0:
+                if self.movement_vector.y > 0:
                     entity_rect.bottom = collided_rect.top
                     self.collisions['down'] = True
-                if movement_vector.y < 0:
+                if self.movement_vector.y < 0:
                     entity_rect.top = collided_rect.bottom
                     self.collisions['up'] = True
                 self.pos[1] = entity_rect.y
@@ -85,16 +86,27 @@ class MoveableEntity(Entity):
         # 좌우 충돌 체크
         for rect in tilemap.physics_rects_around(self.pos):
             if entity_rect.colliderect(rect):
-                if movement_vector.x > 0:
+                if self.movement_vector.x > 0:
                     entity_rect.right = rect.left
                     self.collisions['right'] = True
-                if movement_vector.x < 0:
+                if self.movement_vector.x < 0:
                     entity_rect.left = rect.right
                     self.collisions['left'] = True
                 self.pos[0] = entity_rect.x
 
         # 캐릭터가 오른쪽을 보고 있는지 확인
-        if movement_vector.x > 0:
+        if self.movement_vector.x > 0:
             self.flipx = False
-        elif movement_vector.x < 0:
+        elif self.movement_vector.x < 0:
             self.flipx = True
+
+class Player(MoveableEntity):
+    def __init__(self, game, name, pos, size, anim_size, health):
+        super().__init__(game, name, pos, size, anim_size)
+        self.health = health
+
+    def jump(self, jump_power):
+        self.movement_vector.y -= jump_power
+
+    def add_damage(self, damage_amt):
+        self.health -= damage_amt

@@ -3,21 +3,19 @@ import pygame as pg
 import sys
 from Scripts.Tilemap import Tilemap
 from Scripts.utils import load_image, load_images
-from Scripts.Entities import Entity, MoveableEntity
+from Scripts.Entities import Entity, MoveableEntity, Player
 from Scripts.Animations import Animation
 
 #상수 설정
 SCREEN_SCALE = (1200, 1000)
 GAME_NAME = "Game"
-TARGET_FPS = 60
-#TARGET_TILE = 40
+TARGET_FPS = 2
+TARGET_TILE = 40
 
 #입력 설정
-MOVE_UP = pg.K_w
-MOVE_DOWN = pg.K_s
-MOVE_LEFT = pg.K_a
-MOVE_RIGHT = pg.K_d
+JUMP = pg.K_SPACE
 
+#마우스 입력 설정
 WEAPON_ATTACK = 1
 
 #게임 클래스
@@ -56,7 +54,7 @@ class Game:
         self.sfxs = {
 
         }
-
+        
         #게임 폰트
         self.fonts = {
             "main_title_font" : pg.font.Font('Assets/Fonts/Galmuri11-Bold.ttf', 12),
@@ -101,7 +99,7 @@ class Game:
         tilemap.load("new_map.json")
         
         #플레이어 : game, name, pos, hit_box_size, anim_size
-        self.player = MoveableEntity(self, "player", (0, 0), (40, 40), (40, 40)) #타일 하나 크기에 맞추기
+        self.player = Player(self, "player", (0, 0), (40, 40), (40, 40)) #타일 하나 크기에 맞추기
         # [[좌, 우], [하, 상]]
         self.player_movement = [[False, False], [False, False]]
         player_movespeed = 5
@@ -141,23 +139,8 @@ class Game:
                     sys.exit()
 
                 if event.type == pg.KEYDOWN:
-                    if event.key == MOVE_UP:
-                        self.player_movement[1][1] = True
-                    if event.key == MOVE_DOWN:
-                        self.player_movement[1][0] = True
-                    if event.key == MOVE_LEFT:
-                        self.player_movement[0][1] = True
-                    if event.key == MOVE_RIGHT:
-                        self.player_movement[0][0] = True
-                if event.type == pg.KEYUP:
-                    if event.key == MOVE_UP:
-                        self.player_movement[1][1] = False
-                    if event.key == MOVE_DOWN:
-                        self.player_movement[1][0] = False
-                    if event.key == MOVE_LEFT:
-                        self.player_movement[0][1] = False
-                    if event.key == MOVE_RIGHT:
-                        self.player_movement[0][0] = False
+                    if event.key == JUMP:
+                        player.jump(8)
 
             self.clock.tick(TARGET_FPS)
             #카메라 업데이트
