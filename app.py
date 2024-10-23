@@ -1,23 +1,19 @@
 #라이브러리 임포트
 import pygame as pg
 import sys
-from Scripts.Tilemap import Tilemap
 from Scripts.utils import load_image, load_images
-from Scripts.Entities import Entity, MoveableEntity
+from Scripts.Entities import Entity, MoveableEntity, Player
 from Scripts.Animations import Animation
 
 #상수 설정
-SCREEN_SCALE = (1200, 1000)
+SCREEN_SCALE = (1800, 800)
 GAME_NAME = "Game"
 TARGET_FPS = 60
 #TARGET_TILE = 40
 
 #입력 설정
-MOVE_UP = pg.K_w
-MOVE_DOWN = pg.K_s
-MOVE_LEFT = pg.K_a
-MOVE_RIGHT = pg.K_d
-
+KEY_JUMP = pg.K_SPACE
+#마우스 입력 설정
 WEAPON_ATTACK = 1
 
 #게임 클래스
@@ -30,6 +26,7 @@ class Game:
 
         self.camera = pg.display.set_mode(SCREEN_SCALE)
         self.screen = pg.surface.Surface(SCREEN_SCALE, pg.SRCALPHA)
+        self.ui = pg.surface.Surface(SCREEN_SCALE, pg.SRCALPHA)
 
         self.clock = pg.time.Clock()
 
@@ -49,6 +46,10 @@ class Game:
             
             "entities" : {
                 "player/idle" : Animation(load_images("Characters/Player"), 5, True)
+            },
+
+            "bg" : {
+                "office" : load_image("Backgrounds/office.png")
             }
         }
 
@@ -96,41 +97,57 @@ class Game:
     def state_main_game(self):
         #start:
 
-        #타일맵 로드
-        tilemap = Tilemap(self, 40) #타일 하나 크기 = 40
-        tilemap.load("new_map.json")
-        
         #플레이어 : game, name, pos, hit_box_size, anim_size
-        self.player = MoveableEntity(self, "player", (0, 0), (40, 40), (40, 40)) #타일 하나 크기에 맞추기
+        self.player = Player(self, "player", (500, 640), (80, 160), (80, 160), 100) #타일 하나 크기에 맞추기
         # [[좌, 우], [하, 상]]
         self.player_movement = [[False, False], [False, False]]
-        player_movespeed = 5
 
-        #카메라 플레이어 추적
-        scroll = [0, 0]
-        scroll_speed = 25
+        #백그라운드 스크롤
+        background1 = self.assets["bg"]["office"]
+        background2 = self.assets["bg"]["office"]
+        bg_width = background1.get_width()
+        bg_scroll_speed = 20
+
+        bg_x1 = 0
+        bg_x2 = bg_width
+
+        #천장 & 바닥
+        floor = pg.rect.Rect(200, 700, SCREEN_SCALE[0], 100)
+        ceil = pg.rect.Rect(200, 0, SCREEN_SCALE[0], 100)
+        physic_rects = [floor, ceil]
+
+        ui_background = pg.rect.Rect(0, 0, 300, SCREEN_SCALE[1])
 
         while(True):
             #update:
 
             #화면 초기화
             self.screen.fill("black")
+            
+            #배경 렌더
+            bg_x1 -= bg_scroll_speed
+            bg_x2 -= bg_scroll_speed
 
-            #모든 오브젝트를 움직여서 카메라가 움직이는 효과처럼 착시
-            scroll[0] += (self.player.get_rect().centerx - self.screen.get_width() / 2 - scroll[0]) / scroll_speed
-            scroll[1] += (self.player.get_rect().centery - self.screen.get_width() / 2 - scroll[1]) / scroll_speed
-            render_scroll = (int(scroll[0]), int(scroll[1]))
+            if bg_x1 <= -bg_width:
+                bg_x1 = bg_width
+            if bg_x2 <= -bg_width:
+                bg_x2 = bg_width
 
-            #타일 맵 렌더
-            tilemap.render(self.screen, render_scroll)
+            self.screen.blit(background1, (bg_x1, 0))
+            self.screen.blit(background2, (bg_x2, 0))
+            #배경 렌더 끝
+
 
             #플레이어 업데이트 & 렌더
-            self.player.update(tilemap, self.player_movement, player_movespeed)
+            self.player.update(physic_rects, self.player_movement)
             self.player.animation.update()
-            self.player.render(self.screen, render_scroll)
+            self.player.render(self.screen)
+            #플레이어 업데이트 & 렌더 끝
+            pg.draw.rect(self.ui, "black", ui_background)
 
             #화면 렌더
             self.camera.blit(self.screen, (0, 0))
+            self.camera.blit(self.ui, (0, 0))
 
             #이벤트 리슨
             for event in pg.event.get():
@@ -139,23 +156,8 @@ class Game:
                     sys.exit()
 
                 if event.type == pg.KEYDOWN:
-                    if event.key == MOVE_UP:
-                        self.player_movement[1][1] = True
-                    if event.key == MOVE_DOWN:
-                        self.player_movement[1][0] = True
-                    if event.key == MOVE_LEFT:
-                        self.player_movement[0][1] = True
-                    if event.key == MOVE_RIGHT:
-                        self.player_movement[0][0] = True
-                if event.type == pg.KEYUP:
-                    if event.key == MOVE_UP:
-                        self.player_movement[1][1] = False
-                    if event.key == MOVE_DOWN:
-                        self.player_movement[1][0] = False
-                    if event.key == MOVE_LEFT:
-                        self.player_movement[0][1] = False
-                    if event.key == MOVE_RIGHT:
-                        self.player_movement[0][0] = False
+                    if event.key == KEY_JUMP:
+                        self.player.jump(20)
 
             self.clock.tick(TARGET_FPS)
             #카메라 업데이트
