@@ -2,6 +2,7 @@
 import pygame as pg
 import sys
 from Scripts.utils import load_image, load_images
+from Scripts.Shadows import Shadow
 from Scripts.Entities import Entity, MoveableEntity, Player
 from Scripts.Animations import Animation
 
