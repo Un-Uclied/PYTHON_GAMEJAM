@@ -45,7 +45,7 @@ class Game:
             },
             
             "entities" : {
-                "player/idle" : Animation(load_images("Characters/Player"), 5, True)
+                "player/idle" : Animation(load_images("Characters/Player"), 3, True)
             },
 
             "bg" : {
@@ -98,7 +98,8 @@ class Game:
         #start:
 
         #플레이어 : game, name, pos, hit_box_size, anim_size
-        self.player = Player(self, "player", (500, 640), (80, 160), (80, 160), 100) #타일 하나 크기에 맞추기
+        self.player = Player(self, "player", (500, 640), (80, 160), (160, 160), 100) #타일 하나 크기에 맞추기
+        self.player.anim_offset = [0, 20]
         # [[좌, 우], [하, 상]]
         self.player_movement = [[False, False], [False, False]]
 
@@ -111,12 +112,15 @@ class Game:
         bg_x1 = 0
         bg_x2 = bg_width
 
-        #천장 & 바닥
+        #천장 & 바닥 & 배경
         floor = pg.rect.Rect(200, 700, SCREEN_SCALE[0], 100)
         ceil = pg.rect.Rect(200, 0, SCREEN_SCALE[0], 100)
         physic_rects = [floor, ceil]
-
         ui_background = pg.rect.Rect(0, 0, 300, SCREEN_SCALE[1])
+
+        #엔티티
+        floor_spawn_pos = (SCREEN_SCALE, 640)
+        ceil_spawn_pos = (SCREEN_SCALE, 100)
 
         while(True):
             #update:
@@ -135,6 +139,9 @@ class Game:
 
             self.screen.blit(background1, (bg_x1, 0))
             self.screen.blit(background2, (bg_x2, 0))
+
+            self.screen.blit(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 100)), (0, 700))
+            self.screen.blit(pg.transform.flip(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 100)), False, True), (0, 0))
             #배경 렌더 끝
 
 
@@ -157,7 +164,7 @@ class Game:
 
                 if event.type == pg.KEYDOWN:
                     if event.key == KEY_JUMP:
-                        self.player.jump(20)
+                        self.player.jump(25)
 
             self.clock.tick(TARGET_FPS)
             #카메라 업데이트
