@@ -1,6 +1,5 @@
 import pygame as pg
 import math
-from Shadows import Shadow
 
 class Entity:
     def __init__(self, game, name : str, pos : tuple, size : tuple, anim_size : tuple):
@@ -114,7 +113,6 @@ class Player(MoveableEntity):
         self.gravity_strength = 10
         self.max_jump_count = 1
         self.current_jump_count = 0
-        self.shadow = Shadow(pos, (size[0], size[1] / 2))
 
     def update(self, tilemap, movement=[[0, 0], [0, 0]], move_speed=0):
         super().update(tilemap, movement, move_speed)
@@ -125,7 +123,6 @@ class Player(MoveableEntity):
 
     def render(self, surface, offset=(0, 0)):
         super().render(surface, offset)
-        self.shadow.render(surface)
 
     def jump(self, jump_power):
         if self.current_jump_count == self.max_jump_count: return
