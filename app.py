@@ -110,6 +110,8 @@ class Game:
         scroll = [0, 0]
         scroll_speed = 25
 
+        #스폰 위치
+
         while(True):
             #update:
 
