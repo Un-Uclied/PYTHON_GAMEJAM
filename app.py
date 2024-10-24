@@ -281,7 +281,7 @@ class Game:
 
             #스포닝 에너미
             if random.randint(1, 120) == 1:
-                self.entities.append(MoveableEnemy(self, "ratbit", floor_spawn_pos, (150, 150), (150, 150), 10))
+                self.entities.append(MoveableEnemy(self, "ratbit", ceil_spawn_pos if random.random() > .5 else floor_spawn_pos, (150, 150), (150, 150), 10))
             #스포닝 에너미 끝
 
             #매니징
