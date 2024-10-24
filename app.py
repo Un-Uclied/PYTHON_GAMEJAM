@@ -8,6 +8,7 @@ from Scripts.Entities import Entity, MoveableEntity, Player
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
 from Scripts.Ui import TextUi
+from Scripts.Bullets import Bullet, PlayerBullet
 
 #상수 설정
 SCREEN_SCALE = (1600, 800)
@@ -47,6 +48,10 @@ class Game:
                 "floor" : load_images("Tiles/Floor"),
                 "wall" : load_images("Tiles/Wall"),
             },
+
+            "projectiles" : {
+                "bullet" : load_image("Projectiles/Bullet.png")
+            },
             
             "entities" : {
                 "player/run" : Animation(load_images("Characters/Player/Run"), 3, True),
@@ -80,6 +85,8 @@ class Game:
             "galmuri" : 'Assets/Fonts/Galmuri11-Bold.ttf',
         }
 
+        self.physic_rects = []
+
         #스폰된 엔티티들
         self.entities = []
 
@@ -91,6 +98,9 @@ class Game:
 
         #스폰된 UI들
         self.uis = []
+
+        #스폰된 탄들
+        self.projectiles = []
     
     #타이틀 스크린
     def state_title_screen(self):
@@ -150,6 +160,23 @@ class Game:
             if hasattr(ui, "render"):
                 ui.render(self.screen)
 
+    def manage_projectiles(self):
+        for p in self.projectiles:
+            p.timer -= 1
+            if hasattr(p, "update"):
+                p.update()
+            if hasattr(p, "render"):
+                p.render(self.screen)
+
+            for rects in self.physic_rects: #벽 같은거
+                if rects.collidepoint(p.pos):
+                    p.destroy() # 벽에 맞음
+                    self.projectiles.remove(p)
+            if not p.tag == "player's bullet" and self.player.get_rect().collidepoint(p.pos[0], p.pos[1]):
+                p.destroy() #플레이어에 맞음
+                self.projectiles.remove(p)
+            if p.timer <= 0:
+                self.projectiles.remove(p) #시간이 지나고, 화면 밖으로 나간것으로 추정
     #메인 게임
     def state_main_game(self):
         #start:
@@ -183,7 +210,7 @@ class Game:
         #천장 & 바닥 & 배경
         floor = pg.rect.Rect(200, 700, SCREEN_SCALE[0], 100)
         ceil = pg.rect.Rect(200, 0, SCREEN_SCALE[0], 100)
-        physic_rects = [floor, ceil]
+        self.physic_rects = [floor, ceil]
 
         #엔티티
         floor_spawn_pos = (SCREEN_SCALE, 640)
@@ -220,7 +247,7 @@ class Game:
             worm.render(self.screen)
 
             #플레이어 업데이트 & 렌더
-            self.player.update(physic_rects, self.player_movement)
+            self.player.update(self.physic_rects, self.player_movement)
             self.player.animation.update()
             self.player.render(self.screen)
             #플레이어 업데이트 & 렌더 끝
@@ -228,6 +255,7 @@ class Game:
             self.manage_spark()
             self.manage_particle()
             self.manage_ui()
+            self.manage_projectiles()
 
             #화면 렌더
             self.camera.blit(self.outline, (0, 0))
@@ -243,11 +271,20 @@ class Game:
                     if event.key == KEY_JUMP:
                         self.player.jump(22)
 
+            mouse_click = pg.mouse.get_pressed(3) #(마우스 좌클릭, 마우스 휠클릭, 마우스 우클릭)
+            mouse_pos = pg.mouse.get_pos()
+            if mouse_click[0] == WEAPON_ATTACK:
+                player_pos =  self.player.get_rect().center
+                self.projectiles.append(
+                    PlayerBullet(self, player_pos, pg.math.Vector2(mouse_pos[0] - player_pos[0], mouse_pos[1] - player_pos[1]), 25, self.assets["projectiles"]["bullet"], 500, "player's bullet")
+                )
+
             self.clock.tick(TARGET_FPS)
             #카메라 업데이트
             pg.display.update()
 
     def end_scene(self):
+        self.physic_rects.clear()
         self.particles.clear()
         self.sparks.clear()
         self.uis.clear()
