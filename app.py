@@ -7,7 +7,7 @@ from Scripts.Entities import Entity, MoveableEntity, Player
 from Scripts.Animations import Animation
 
 #상수 설정
-SCREEN_SCALE = (1800, 800)
+SCREEN_SCALE = (1600, 800)
 GAME_NAME = "Game"
 TARGET_FPS = 60
 #TARGET_TILE = 40
@@ -27,7 +27,7 @@ class Game:
 
         self.camera = pg.display.set_mode(SCREEN_SCALE)
         self.screen = pg.surface.Surface(SCREEN_SCALE, pg.SRCALPHA)
-        self.ui = pg.surface.Surface(SCREEN_SCALE, pg.SRCALPHA)
+        self.outline = pg.surface.Surface(SCREEN_SCALE, pg.SRCALPHA)
 
         self.clock = pg.time.Clock()
 
@@ -46,7 +46,15 @@ class Game:
             },
             
             "entities" : {
-                "player/idle" : Animation(load_images("Characters/Player"), 3, True)
+                "player/run" : Animation(load_images("Characters/Player/Run"), 3, True),
+                "player/jump" : Animation(load_images("Characters/Player/Jump"), 3, False),
+                "player/fall" : Animation(load_images("Characters/Player/Fall"), 6, True),
+                
+                "worm/idle" : Animation(load_images("Characters/Worm"), 3, True)
+            },
+
+            "props" : {
+                "player/gun" : load_image("Characters/Player/Gun.png")
             },
 
             "bg" : {
@@ -98,11 +106,17 @@ class Game:
     def state_main_game(self):
         #start:
 
-        #플레이어 : game, name, pos, hit_box_size, anim_size
-        self.player = Player(self, "player", (500, 640), (80, 160), (160, 160), 100) #타일 하나 크기에 맞추기
+        #플레이어 : game, name, pos, hit_box_size, anim_size, max health
+        self.player = Player(self, "player", (350, 640), (70, 170), (170, 170), 100) #타일 하나 크기에 맞추기
+        #총 주기
+        self.player.give_gun(self.assets["props"]["player/gun"], 100, (75, 75))
         self.player.anim_offset = [0, 20]
         # [[좌, 우], [하, 상]]
         self.player_movement = [[False, False], [False, False]]
+
+        #구렁이
+        worm = Entity(self, "worm", (-100, 95), (610, 610), (610, 610))
+        worm.set_action("idle")
 
         #백그라운드 스크롤
         background1 = self.assets["bg"]["office"]
@@ -117,7 +131,6 @@ class Game:
         floor = pg.rect.Rect(200, 700, SCREEN_SCALE[0], 100)
         ceil = pg.rect.Rect(200, 0, SCREEN_SCALE[0], 100)
         physic_rects = [floor, ceil]
-        ui_background = pg.rect.Rect(0, 0, 300, SCREEN_SCALE[1])
 
         #엔티티
         floor_spawn_pos = (SCREEN_SCALE, 640)
@@ -125,9 +138,11 @@ class Game:
 
         while(True):
             #update:
+            print(self.clock.get_fps())
 
             #화면 초기화
             self.screen.fill("black")
+            self.outline.fill("black")
             
             #배경 렌더
             bg_x1 -= bg_scroll_speed
@@ -145,17 +160,19 @@ class Game:
             self.screen.blit(pg.transform.flip(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 100)), False, True), (0, 0))
             #배경 렌더 끝
 
+            worm.update()
+            worm.render(self.screen)
+            
 
             #플레이어 업데이트 & 렌더
             self.player.update(physic_rects, self.player_movement)
             self.player.animation.update()
             self.player.render(self.screen)
             #플레이어 업데이트 & 렌더 끝
-            pg.draw.rect(self.ui, "black", ui_background)
 
             #화면 렌더
+            self.camera.blit(self.outline, (0, 0))
             self.camera.blit(self.screen, (0, 0))
-            self.camera.blit(self.ui, (0, 0))
 
             #이벤트 리슨
             for event in pg.event.get():
@@ -165,7 +182,7 @@ class Game:
 
                 if event.type == pg.KEYDOWN:
                     if event.key == KEY_JUMP:
-                        self.player.jump(25)
+                        self.player.jump(22)
 
             self.clock.tick(TARGET_FPS)
             #카메라 업데이트

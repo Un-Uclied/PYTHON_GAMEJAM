@@ -13,12 +13,14 @@ class Entity:
 
         self.action = ''
         self.flipx = False
-        self.set_action('idle')
+        #self.set_action('idle')
 
         #디버깅용 히트박스
         self.hit_box = pg.surface.Surface((self.size[0], self.size[1]))
         self.hit_box.fill('red')
 
+    def update(self):
+        self.animation.update()
 
     def set_action(self, action):
         if action != self.action:
@@ -109,28 +111,70 @@ class MoveableEntity(Entity):
 class Player(MoveableEntity):
     def __init__(self, game, name, pos, size, anim_size, max_health):
         super().__init__(game, name, pos, size, anim_size)
+        #Status / number
         self.health = max_health
-        self.gravity_strength = 10
+
         self.max_jump_count = 1
         self.current_jump_count = 0
 
+        #Status / Bool
+        self.on_ground = False
+        
+        #총
+        self.gun = pg.surface.Surface(size)
+        self.gun_offset = (0, 0)
+        self.gun_rotation = 0
+        self.gun_max_roatation = 0
+
+        self.set_action("run")
+
+    def give_gun(self, gun_img : pg.Surface, max_rotation : float, offset = (0, 0)):
+        self.gun = gun_img
+        self.gun_offset = offset
+        self.gun_max_roatation = max_rotation
+
     def update(self, tilemap, movement=[[0, 0], [0, 0]], move_speed=0):
         super().update(tilemap, movement, move_speed)
-        self.gravity()
 
+        #중력 추가
+        self.gravity(15, 10)
+
+        #떨어지는 애니메이션
+        if -self.velocity[1] < 0 and self.on_ground and not self.collisions["down"]:
+            self.set_action("fall")
+
+        #바닥 충돌
         if self.collisions["down"]:
+            self.on_ground = True
             self.current_jump_count = 0
+            self.set_action("run")
 
-    def render(self, surface, offset=(0, 0)):
+        #총 각도 계산
+        mouse = pg.mouse.get_pos()
+        x_dist = mouse[0] - self.pos[0]
+        y_dist = -(mouse[1] - self.pos[1])
+        angle = math.degrees(math.atan2(y_dist, x_dist))
+        self.gun_rotation = max(min(angle, self.gun_max_roatation), -self.gun_max_roatation)
+
+    def render(self, surface : pg.surface.Surface, offset=(0, 0)):
         super().render(surface, offset)
 
-    def jump(self, jump_power):
+        #총 렌더
+        render_gun = pg.transform.rotate(self.gun, self.gun_rotation)
+        rect_gun = render_gun.get_rect(center = (self.pos[0] + self.gun_offset[0] + offset[0], self.pos[1] + self.gun_offset[1] + offset[1]))
+
+        surface.blit(render_gun, rect_gun)
+
+    def jump(self, jump_power : float):
         if self.current_jump_count == self.max_jump_count: return
+        self.set_action("jump")
         self.current_jump_count += 1
         self.velocity[1] = -jump_power
 
-    def take_damage(self, damage):
+    def take_damage(self, damage : int):
+        #대미지 입히기
         self.health -= damage
 
-    def gravity(self):
-        self.velocity[1] = min(15, self.velocity[1] + 0.1 * self.gravity_strength)
+    def gravity(self, max_gravity : float, gravity_strength : float):
+        #중력 가속
+        self.velocity[1] = min(max_gravity, self.velocity[1] + 0.1 * gravity_strength)
