@@ -4,7 +4,7 @@ import sys, random, math
 
 from Scripts.utils import load_image, load_images
 from Scripts.Shadows import Shadow
-from Scripts.Entities import Entity, MoveableEntity, Player
+from Scripts.Entities import Entity, MoveableEntity, Player, MoveableEnemy
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
 from Scripts.Ui import TextUi
@@ -14,7 +14,6 @@ from Scripts.Bullets import Bullet, PlayerBullet
 SCREEN_SCALE = (1600, 800)
 GAME_NAME = "Break Away"
 TARGET_FPS = 60
-#TARGET_TILE = 40
 
 #입력 설정
 KEY_JUMP = pg.K_SPACE
@@ -31,9 +30,12 @@ class Game:
 
         self.camera = pg.display.set_mode(SCREEN_SCALE)
         self.screen = pg.surface.Surface(SCREEN_SCALE, pg.SRCALPHA)
-        self.outline = pg.surface.Surface(SCREEN_SCALE, pg.SRCALPHA)
 
         self.clock = pg.time.Clock()
+        self.current_time = pg.time.get_ticks()
+
+        self.camera_shake_gain = 0
+        self.camera_shrink_speed = .5
 
         #게임 에셋
         self.assets = {
@@ -58,7 +60,12 @@ class Game:
                 "player/jump" : Animation(load_images("Characters/Player/Jump"), 3, False),
                 "player/fall" : Animation(load_images("Characters/Player/Fall"), 6, True),
                 
-                "worm/idle" : Animation(load_images("Characters/Worm"), 3, True)
+                "worm/idle" : Animation(load_images("Characters/Worm"), 3, True),
+
+                "ratbit/idle" : Animation(load_images("Characters/Ratbit/Idle"), 3, True),
+                "ratit/attack" : Animation(load_images("Characters/Ratbit/Attack"), 4, False),
+            
+                "stone/idle" :Animation(load_images("Characters/Stone"), 4, True),
             },
 
             "props" : {
@@ -112,13 +119,17 @@ class Game:
         
         while(True):
             #update:
+            self.current_time = pg.time.get_ticks()
 
             #화면 초기화
             self.screen.fill("black")
 
-            self.manage_particle()
+            self.manage_spark()
             self.manage_particle()
             self.manage_ui()
+            self.manage_projectiles()
+            self.manage_camera_shake()
+            self.manage_entity() 
 
             #화면 렌더
             self.camera.blit(self.screen, (0, 0))
@@ -177,6 +188,17 @@ class Game:
                 self.projectiles.remove(p)
             if p.timer <= 0:
                 self.projectiles.remove(p) #시간이 지나고, 화면 밖으로 나간것으로 추정
+    
+    def manage_camera_shake(self):
+        self.camera_shake_gain = max(self.camera_shake_gain - self.camera_shrink_speed, 0)
+
+    def manage_entity(self):
+        for en in self.entities:
+            if isinstance(en, MoveableEnemy):
+                en.target_pos = self.player.pos
+            en.update()
+            en.render(self.screen)
+
     #메인 게임
     def state_main_game(self):
         #start:
@@ -186,6 +208,9 @@ class Game:
         #총 주기
         self.player.give_gun(self.assets["props"]["player/gun"], 100, (75, 75))
         self.player.anim_offset = [0, 20]
+        gun_cooltime = 500 #.5초
+        gun_fire_shake = 6.5
+        last_fire_time = pg.time.get_ticks()
         # [[좌, 우], [하, 상]]
         self.player_movement = [[False, False], [False, False]]
 
@@ -213,18 +238,18 @@ class Game:
         self.physic_rects = [floor, ceil]
 
         #엔티티
-        floor_spawn_pos = (SCREEN_SCALE, 640)
-        ceil_spawn_pos = (SCREEN_SCALE, 100)
+        floor_spawn_pos = (SCREEN_SCALE[0], 590)
+        ceil_spawn_pos = (SCREEN_SCALE[0], 100)
 
         #ui
         self.uis.append(TextUi("못밤 플레이어 | 못밤 체력 : 100 | 못밤 스코어 : 없음 ㅋ", (50, 30), self.fonts["galmuri"], 30, "white"))
 
         while(True):
             #update:
+            self.current_time = pg.time.get_ticks()
 
             #화면 초기화
             self.screen.fill("black")
-            self.outline.fill("black")
             
             #배경 렌더
             bg_x1 -= bg_scroll_speed
@@ -243,8 +268,10 @@ class Game:
             self.screen.blit(pg.transform.flip(pg.transform.rotate(self.assets["ui"]["bottom_fade"], 90), True, False), (0, 0))
             #배경 렌더 끝
 
+            #구렁이 업데이트 ㅋㅋ
             worm.update()
             worm.render(self.screen)
+            #구렁이 ㅋㅋ 끝
 
             #플레이어 업데이트 & 렌더
             self.player.update(self.physic_rects, self.player_movement)
@@ -252,14 +279,24 @@ class Game:
             self.player.render(self.screen)
             #플레이어 업데이트 & 렌더 끝
 
+            #스포닝 에너미
+            if random.randint(1, 120) == 1:
+                self.entities.append(MoveableEnemy(self, "ratbit", floor_spawn_pos, (150, 150), (150, 150), 10))
+            #스포닝 에너미 끝
+
+            #매니징
             self.manage_spark()
             self.manage_particle()
             self.manage_ui()
             self.manage_projectiles()
+            self.manage_camera_shake()
+            self.manage_entity()
+            #매니징 끝
 
             #화면 렌더
-            self.camera.blit(self.outline, (0, 0))
-            self.camera.blit(self.screen, (0, 0))
+            shake = (self.camera_shake_gain * random.random(), self.camera_shake_gain * random.random())
+            self.camera.blit(self.screen, shake)
+            #화면 렌더 끝
 
             #이벤트 리슨
             for event in pg.event.get():
@@ -270,14 +307,19 @@ class Game:
                 if event.type == pg.KEYDOWN:
                     if event.key == KEY_JUMP:
                         self.player.jump(22)
+            #이벤트 리슨 끝
 
+            #플레이어 공격
             mouse_click = pg.mouse.get_pressed(3) #(마우스 좌클릭, 마우스 휠클릭, 마우스 우클릭)
             mouse_pos = pg.mouse.get_pos()
-            if mouse_click[0] == WEAPON_ATTACK:
+            if mouse_click[0] == WEAPON_ATTACK and self.current_time - last_fire_time >= gun_cooltime:
                 player_pos =  self.player.get_rect().center
                 self.projectiles.append(
-                    PlayerBullet(self, player_pos, pg.math.Vector2(mouse_pos[0] - player_pos[0], mouse_pos[1] - player_pos[1]), 25, self.assets["projectiles"]["bullet"], 500, "player's bullet")
+                    PlayerBullet(self, self.player.get_rect().center, pg.math.Vector2(mouse_pos[0] - player_pos[0], mouse_pos[1] - player_pos[1]), 35, self.assets["projectiles"]["bullet"], 500, "player's bullet")
                 )
+                self.camera_shake_gain += gun_fire_shake
+                last_fire_time = self.current_time
+            #플레이어 공격 끝
 
             self.clock.tick(TARGET_FPS)
             #카메라 업데이트
@@ -288,6 +330,7 @@ class Game:
         self.particles.clear()
         self.sparks.clear()
         self.uis.clear()
+        self.projectiles.clear()
 
                 
 #게임 실행

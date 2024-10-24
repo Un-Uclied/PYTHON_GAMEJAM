@@ -7,7 +7,7 @@ class Entity:
         self.anim_offset = [0,0]
         self.game = game
         self.name = name
-        self.pos = list(pos)
+        self.pos = pg.math.Vector2(pos[0], pos[1])
         self.size = size
         self.anim_size = anim_size
         self.mask_color = (0, 0, 0, 0)
@@ -30,14 +30,14 @@ class Entity:
 
     def render(self, surface, offset = (0, 0)):
         current_frame_img = pg.transform.scale(self.animation.img(), self.anim_size)
-        surface.blit(pg.transform.flip(current_frame_img, self.flipx, 0), (self.pos[0] - offset[0] + self.anim_offset[0], self.pos[1] - offset[1] + self.anim_offset[1]))
+        surface.blit(pg.transform.flip(current_frame_img, self.flipx, 0), (self.pos.x - offset[0] + self.anim_offset[0], self.pos.y - offset[1] + self.anim_offset[1]))
         
         self.mask = pg.mask.from_surface(current_frame_img)
         self.mask_img = self.mask.to_surface(setcolor=self.mask_color, unsetcolor=(0,0,0,0))
-        surface.blit(pg.transform.flip(self.mask_img, self.flipx, 0), (self.pos[0] - offset[0] + self.anim_offset[0], self.pos[1] - offset[1] + self.anim_offset[1]))
+        surface.blit(pg.transform.flip(self.mask_img, self.flipx, 0), (self.pos.x - offset[0] + self.anim_offset[0], self.pos.y - offset[1] + self.anim_offset[1]))
 
         #디버깅용
-        #surface.blit(self.hit_box, (self.pos[0] - offset[0], self.pos[1] - offset[1]))
+        #surface.blit(self.hit_box, (self.pos.x - offset[0], self.pos.y - offset[1]))
 
 
 class MoveableEntity(Entity):
@@ -53,7 +53,7 @@ class MoveableEntity(Entity):
 
     #히트박스
     def get_rect(self):
-        return pg.rect.Rect(self.pos[0], self.pos[1], self.size[0], self.size[1])
+        return pg.rect.Rect(self.pos.x, self.pos.y, self.size[0], self.size[1])
 
     #update:
     def update(self, physic_rects : list, movement = [[0, 0], [0, 0]], move_speed = 1):
@@ -75,7 +75,7 @@ class MoveableEntity(Entity):
         self.collisions = {'up': False, 'down': False, 'right': False, 'left': False}
 
         
-        self.pos[1] += frame_movement[1]
+        self.pos.y += frame_movement[1]
         entity_rect = self.get_rect()
         # 상하 충돌 체크
         for collided_rect in physic_rects:
@@ -87,10 +87,10 @@ class MoveableEntity(Entity):
                 if frame_movement[1] < 0:
                     entity_rect.top = collided_rect.bottom
                     self.collisions['up'] = True
-                self.pos[1] = entity_rect.y
+                self.pos.y = entity_rect.y
                 pass
 
-        self.pos[0] += frame_movement[0]
+        self.pos.x += frame_movement[0]
         entity_rect = self.get_rect()
         # 좌우 충돌 체크
         for rect in physic_rects:
@@ -101,7 +101,7 @@ class MoveableEntity(Entity):
                 if frame_movement[0] < 0:
                     entity_rect.left = rect.right
                     self.collisions['left'] = True
-                self.pos[0] = entity_rect.x
+                self.pos.x = entity_rect.x
 
         # 캐릭터가 오른쪽을 보고 있는지 확인
         if frame_movement[0] > 0:
@@ -155,8 +155,8 @@ class Player(MoveableEntity):
 
         #총 각도 계산
         mouse = pg.mouse.get_pos()
-        x_dist = mouse[0] - self.pos[0]
-        y_dist = -(mouse[1] - self.pos[1])
+        x_dist = mouse[0] - self.pos.x
+        y_dist = -(mouse[1] - self.pos.y)
         angle = math.degrees(math.atan2(y_dist, x_dist))
         self.gun_rotation = max(min(angle, self.gun_max_roatation), -self.gun_max_roatation)
 
@@ -165,7 +165,7 @@ class Player(MoveableEntity):
 
         #총 렌더
         render_gun = pg.transform.rotate(self.gun, self.gun_rotation)
-        rect_gun = render_gun.get_rect(center = (self.pos[0] + self.gun_offset[0] + offset[0], self.pos[1] + self.gun_offset[1] + offset[1]))
+        rect_gun = render_gun.get_rect(center = (self.pos.x + self.gun_offset[0] + offset[0], self.pos.y + self.gun_offset[1] + offset[1]))
 
         surface.blit(render_gun, rect_gun)
 
@@ -181,7 +181,7 @@ class Player(MoveableEntity):
                 )
     
     def get_foot_pos(self):
-        return (self.pos[0] + self.size[0] / 2, self.pos[1] + self.size[1])
+        return (self.pos.x + self.size[0] / 2, self.pos.y + self.size[1])
 
     def take_damage(self, damage : int):
         #대미지 입히기
@@ -190,3 +190,23 @@ class Player(MoveableEntity):
     def gravity(self, max_gravity : float, gravity_strength : float):
         #중력 가속
         self.velocity[1] = min(max_gravity, self.velocity[1] + 0.1 * gravity_strength)
+
+class MoveableEnemy(Entity):
+    def __init__(self, game, name, pos, size, anim_size, move_speed):
+        super().__init__(game, name, pos, size, anim_size)
+
+        self.set_action('idle')
+
+        self.target_pos = pos
+        self.move_speed = move_speed
+
+    def update(self):
+        super().update()
+
+        target_vec = pg.math.Vector2(self.target_pos[0], self.target_pos[1])
+        my_vec = pg.math.Vector2(self.pos.x, self.pos.y)
+
+        self.move_direction = pg.math.Vector2(target_vec.x - my_vec.x, target_vec.y - my_vec.y).normalize()
+        self.pos.x += self.move_direction.x * self.move_speed
+        self.pos.y += self.move_direction.y * self.move_speed
+
