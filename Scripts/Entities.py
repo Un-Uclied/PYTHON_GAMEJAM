@@ -20,6 +20,10 @@ class Entity:
         self.hit_box = pg.surface.Surface((self.size[0], self.size[1]))
         self.hit_box.fill('red')
 
+    #히트박스
+    def get_rect(self):
+        return pg.rect.Rect(self.pos.x, self.pos.y, self.size[0], self.size[1])
+
     def update(self):
         self.animation.update()
 
@@ -50,10 +54,6 @@ class MoveableEntity(Entity):
         #충돌 가능
         self.collisions = {'up' : False, 'down' : False, 
                             'right' : False, 'left' : False}
-
-    #히트박스
-    def get_rect(self):
-        return pg.rect.Rect(self.pos.x, self.pos.y, self.size[0], self.size[1])
 
     #update:
     def update(self, physic_rects : list, movement = [[0, 0], [0, 0]], move_speed = 1):
@@ -110,8 +110,9 @@ class MoveableEntity(Entity):
             self.flipx = True
 
 class Player(MoveableEntity):
-    def __init__(self, game, name, pos, size, anim_size, max_health):
+    def __init__(self, game, name, pos, size, anim_size ,max_health):
         super().__init__(game, name, pos, size, anim_size)
+
         #Status / number
         self.health = max_health
 
@@ -161,7 +162,7 @@ class Player(MoveableEntity):
         self.gun_rotation = max(min(angle, self.gun_max_roatation), -self.gun_max_roatation)
 
     def render(self, surface : pg.surface.Surface, offset=(0, 0)):
-        super().render(surface, offset)
+        super().render(surface)
 
         #총 렌더
         render_gun = pg.transform.rotate(self.gun, self.gun_rotation)
@@ -200,6 +201,12 @@ class MoveableEnemy(Entity):
         self.target_pos = pos
         self.move_speed = move_speed
 
+    def destroy(self):
+        for i in range(5):
+            self.game.particles.append(Particle(self.game, "blood",(self.pos.x - self.size[0] / 2, self.pos.y + self.size[1] / 2), (180, 180), [(10 * random.random()), 10 + (20 * random.random())], random.randint(0, 20)))
+        for i in range(10):
+            self.game.sparks.append(Spark((self.pos.x - self.size[0] / 2, self.pos.y + self.size[1] / 2), math.radians(360) * random.random(), 7, "black"))
+
     def update(self):
         super().update()
 
@@ -209,4 +216,14 @@ class MoveableEnemy(Entity):
         self.move_direction = pg.math.Vector2(target_vec.x - my_vec.x, target_vec.y - my_vec.y).normalize()
         self.pos.x += self.move_direction.x * self.move_speed
         self.pos.y += self.move_direction.y * self.move_speed
+
+class Obstacle(Entity):
+    def __init__(self, game, name, pos, size, anim_size, speed):
+        super().__init__(game, name, pos, size, anim_size)
+        self.speed = speed
+        self.set_action("idle")
+
+    def update(self):
+        super().update()
+        self.pos.x -= self.speed
 

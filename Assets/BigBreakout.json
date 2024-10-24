@@ -1,0 +1,5 @@
+{
+    "entities" : {"ratbit" : 1, "stone" : 1},
+
+    "spawn_rates" : {"ratbit_spawn_rate" : 250, "stone_spawn_rate" : 300}
+}

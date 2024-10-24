@@ -1,11 +1,11 @@
 import pygame as pg
-import os
+import os, json
 
 BASE_IMAGE_PATH = "Assets/Sprites/"
 
 def load_image(path):
     img = pg.image.load(BASE_IMAGE_PATH + path)
-    
+
     if img.get_bitsize() == 32: #뒤에 투명한 배경이 있는 이미지
         img = img.convert_alpha()
     else: #뒤에 검은 배경이 있는 이미지
@@ -17,3 +17,8 @@ def load_images(path):
     for img_name in sorted(os.listdir(BASE_IMAGE_PATH + path)):
         images.append(load_image(path + '/' + img_name))
     return images
+
+def load_data(save_file : str):
+    with open(os.path.join(save_file), 'r+') as file:
+        dicts = json.load(file)
+    return dicts
