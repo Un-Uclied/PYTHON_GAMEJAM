@@ -1,5 +1,6 @@
 import pygame as pg
-import math
+import math, random
+from Scripts.Particles import Spark, Particle
 
 class Entity:
     def __init__(self, game, name : str, pos : tuple, size : tuple, anim_size : tuple):
@@ -140,7 +141,7 @@ class Player(MoveableEntity):
         self.gravity(15, 10)
 
         #떨어지는 애니메이션
-        if -self.velocity[1] < 0 and self.on_ground and not self.collisions["down"]:
+        if -self.velocity[1] < 0 and not self.on_ground and not self.collisions["down"]:
             self.set_action("fall")
 
         #바닥 충돌
@@ -148,6 +149,9 @@ class Player(MoveableEntity):
             self.on_ground = True
             self.current_jump_count = 0
             self.set_action("run")
+            self.game.particles.append(Particle(self.game, "dusts", (self.get_foot_pos()[0] + 25 + (random.random() * 5), self.get_foot_pos()[1] + 25 + (random.random() * 5)), (50, 50),  (-5, -.1), frame=random.randint(0, 20)))
+        else:
+            self.on_ground = False
 
         #총 각도 계산
         mouse = pg.mouse.get_pos()
@@ -170,6 +174,14 @@ class Player(MoveableEntity):
         self.set_action("jump")
         self.current_jump_count += 1
         self.velocity[1] = -jump_power
+
+        for i in range(15):
+            self.game.sparks.append(
+                    Spark(self.get_foot_pos(), math.radians(90 * random.random() + 45), 5, "grey")
+                )
+    
+    def get_foot_pos(self):
+        return (self.pos[0] + self.size[0] / 2, self.pos[1] + self.size[1])
 
     def take_damage(self, damage : int):
         #대미지 입히기
