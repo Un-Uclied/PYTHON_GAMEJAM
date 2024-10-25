@@ -163,6 +163,8 @@ class Player(MoveableEntity):
         self.current_mouse_angle = math.degrees(math.atan2(y_dist, x_dist))
         self.arm_rotation = max(min(self.current_mouse_angle, self.arm_max_roatation), -self.arm_max_roatation)
 
+        self.animation.update()
+
     def render(self, surface : pg.surface.Surface, offset=(0, 0)):
         super().render(surface)
 

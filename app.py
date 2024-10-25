@@ -316,7 +316,6 @@ class Game:
 
             #플레이어 업데이트 & 렌더
             self.player.update(self.physic_rects, self.player_movement)
-            self.player.animation.update()
             self.player.render(self.screen)
             #플레이어 업데이트 & 렌더 끝
 
