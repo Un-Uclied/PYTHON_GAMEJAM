@@ -161,6 +161,8 @@ class Player(MoveableEntity):
         angle = math.degrees(math.atan2(y_dist, x_dist))
         self.gun_rotation = max(min(angle, self.gun_max_roatation), -self.gun_max_roatation)
 
+        self.animation.update()
+
     def render(self, surface : pg.surface.Surface, offset=(0, 0)):
         super().render(surface)
 
