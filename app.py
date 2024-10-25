@@ -4,7 +4,7 @@ import sys, random, math
 
 from Scripts.utils import load_image, load_images, load_data
 from Scripts.Shadows import Shadow
-from Scripts.Entities import Entity, MoveableEntity, Player, MoveableEnemy, Obstacle
+from Scripts.Entities import Player, Entity, Strucker, Ratbit, Helli
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
 from Scripts.Ui import TextUi
@@ -19,6 +19,11 @@ TARGET_FPS = 60
 KEY_JUMP = pg.K_SPACE
 #마우스 입력 설정
 WEAPON_ATTACK = 1
+
+#엔티티 스폰 위치
+CEIL_SPAWN_POS = (SCREEN_SCALE[0], 100)
+FLOOR_SPAWN_POS = (SCREEN_SCALE[0], 540)
+MID_SPAWN_POS = (SCREEN_SCALE[0], 300)
 
 #게임 클래스
 class Game:
@@ -52,7 +57,8 @@ class Game:
             },
 
             "projectiles" : {
-                "bullet" : load_image("Projectiles/Bullet.png")
+                "bullet" : load_image("Projectiles/Bullet.png"),
+                "helli_fire_bullet" : load_image("Projectiles/FireBullet.png")
             },
             
             "entities" : {
@@ -63,13 +69,16 @@ class Game:
                 "worm/idle" : Animation(load_images("Characters/Worm"), 3, True),
 
                 "ratbit/idle" : Animation(load_images("Characters/Ratbit/Idle"), 3, True),
-                "ratit/attack" : Animation(load_images("Characters/Ratbit/Attack"), 4, False),
+                "ratbit/attack" : Animation(load_images("Characters/Ratbit/Attack"), 8, True),
             
-                "stone/idle" :Animation(load_images("Characters/Stone"), 4, True),
+                "strucker/idle" :Animation(load_images("Characters/Strucker"), 4, True),
+
+                "helli/idle" : Animation(load_images("Characters/Helli/Idle"), 5, True)
+
             },
 
             "props" : {
-                "player/gun" : load_image("Characters/Player/Gun.png")
+                "player/arm" : load_image("Characters/Player/Arm.png")
             },
 
             "bg" : {
@@ -188,18 +197,16 @@ class Game:
 
             #적 감지
             for enemy in self.entities:
-                if projectile.tag == "player's bullet" and enemy.get_rect().collidepoint(projectile.pos) and projectile in self.projectiles:
-                    if hasattr(enemy, "destroy"):
-                        self.on_player_kill(enemy)
-                        enemy.destroy()
-                        self.entities.remove(enemy)
-
-                        self.projectiles.remove(projectile)
+                if projectile.tag == "player's bullet" and enemy.get_rect().collidepoint(projectile.pos) and projectile in self.projectiles and not isinstance(enemy, Strucker):
+                    enemy.take_damage(projectile.damage)
+                    self.projectiles.remove(projectile)
+                        
                     
             #플레이어 감지
             if not projectile.tag == "player's bullet" and self.player.get_rect().collidepoint(projectile.pos[0], projectile.pos[1]) and projectile in self.projectiles:
                 projectile.destroy() #플레이어에 맞음
                 self.projectiles.remove(projectile)
+                self.on_player_damaged(projectile.damage)
             if projectile.timer <= 0:
                 self.projectiles.remove(projectile) #시간이 지나고, 화면 밖으로 나간것으로 추정
 
@@ -213,24 +220,40 @@ class Game:
 
     def manage_entity(self):
         for entity in self.entities:
-            if entity.name == "ratbit":
-                entity.target_pos = self.player.pos
-            if isinstance(entity, Obstacle):
-                if entity.pos.x + entity.size[0] < 0:
-                    self.entities.remove(entity)
-                
+            entity.can_attack()
             entity.update()
             entity.render(self.screen)
+
+    def spawn_entity(self):
+        #스포닝 에너미
+        if random.randint(1, 200) == 1:
+            self.entities.append(Ratbit(self, "ratbit",
+                                        pos=CEIL_SPAWN_POS if random.random() > .5 else FLOOR_SPAWN_POS,
+                                        size=(150, 150), anim_size=(150, 150), 
+                                        following_speed=25, 
+                                        health=1, damage=20, attack_range=100))
+        if random.randint(1, 250) == 1:
+            self.entities.append(Strucker(self, "strucker", 
+                                        pos=(FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1] + 40),
+                                        size=(100, 150), anim_size=(150, 150), 
+                                        speed=20, damage=20))
+        if random.randint(1, 250) == 1:
+            self.entities.append(Helli(self, "helli", 
+                                        pos=(FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1]),
+                                        size=(200, 200), anim_size=(150, 150), speed=5, health=40, damage=20, 
+                                        up=(CEIL_SPAWN_POS[0] - 200, CEIL_SPAWN_POS[1] - 100), 
+                                        down=(FLOOR_SPAWN_POS[0] - 200, FLOOR_SPAWN_POS[1] + 100),
+                                        attack_chance=150, bullet_speed=15))
+        #스포닝 에너미 끝
 
     #메인 게임
     def state_main_game(self):
         #start:
 
         #플레이어 : game, name, pos, hit_box_size, anim_size, max health
-        self.player = Player(self, "player", (375, 640), (70, 170), (170, 170), 100) #타일 하나 크기에 맞추기
-        #총 주기
-        self.player.give_gun(self.assets["props"]["player/gun"], 100, (55, 75))
+        self.player = Player(self, "player", (375, 640), (70, 170), (170, 170), 100, self.assets["props"]["player/arm"], 100, (55, 75))
         self.player.anim_offset = [-25, 20]
+        #총 세팅
         gun_cooltime = 300 #.3초
         gun_fire_shake = 4.5
         last_fire_time = pg.time.get_ticks()
@@ -260,12 +283,9 @@ class Game:
         ceil = pg.rect.Rect(200, 0, SCREEN_SCALE[0], 100)
         self.physic_rects = [floor, ceil]
 
-        #엔티티
-        floor_spawn_pos = (SCREEN_SCALE[0], 590)
-        ceil_spawn_pos = (SCREEN_SCALE[0], 100)
-
         #ui
-        self.uis.append(TextUi("못밤 플레이어 | 못밤 체력 : 100 | 못밤 스코어 : 없음 ㅋ", (50, 30), self.fonts["galmuri"], 30, "white"))
+        stat_ui = TextUi("못밤 플레이어 | 못밤 체력 : 100 | 못밤 스코어 : 없음 ㅋ", (50, 30), self.fonts["galmuri"], 30, "white")
+        self.uis.append(stat_ui)
 
         while(True):
             #update:
@@ -282,7 +302,7 @@ class Game:
                 bg_x1 = bg_width
             if bg_x2 <= -bg_width:
                 bg_x2 = bg_width
-
+ 
             self.screen.blit(background1, (bg_x1, 0))
             self.screen.blit(background2, (bg_x2, 0))
 
@@ -291,18 +311,16 @@ class Game:
             self.screen.blit(pg.transform.flip(pg.transform.rotate(self.assets["ui"]["bottom_fade"], 90), True, False), (0, 0))
             #배경 렌더 끝
 
+            stat_ui.text = f"못밤 플레이어 | 못밤 체력 : {self.player.health} | 못밤 스코어 : 없음 ㅋ"
+            
+
             #플레이어 업데이트 & 렌더
             self.player.update(self.physic_rects, self.player_movement)
             self.player.animation.update()
             self.player.render(self.screen)
             #플레이어 업데이트 & 렌더 끝
 
-            #스포닝 에너미
-            if random.randint(1, 150) == 1:
-                self.entities.append(MoveableEnemy(self, "ratbit", ceil_spawn_pos if random.random() > .5 else floor_spawn_pos, (150, 150), (150, 150), 30))
-            if random.randint(1, 200) == 1:
-                self.entities.append(Obstacle(self, "stone", floor_spawn_pos, (100, 150), (150, 180), 20))
-            #스포닝 에너미 끝
+            self.spawn_entity()
 
             #매니징
             self.manage_projectiles()
@@ -319,7 +337,7 @@ class Game:
             self.manage_particle()
             self.manage_spark()
             self.manage_ui()
-            #매니징 끝
+            #매니징 끝 
 
             #화면 렌더
             shake = (self.camera_shake_gain * random.random(), self.camera_shake_gain * random.random())
@@ -341,13 +359,10 @@ class Game:
             mouse_click = pg.mouse.get_pressed(3) #(마우스 좌클릭, 마우스 휠클릭, 마우스 우클릭)
             mouse_pos = pg.mouse.get_pos()
             if mouse_click[0] == WEAPON_ATTACK and self.current_time - last_fire_time >= gun_cooltime:
-                player_pos =  self.player.get_rect().center
-                self.projectiles.append(
-                    PlayerBullet(self, self.player.get_rect().center, pg.math.Vector2(mouse_pos[0] - player_pos[0], mouse_pos[1] - player_pos[1]), 35, self.assets["projectiles"]["bullet"], 500, "player's bullet")
-                )
-                self.sfxs["gun_fire"].play()
-                self.camera_shake_gain += gun_fire_shake
-                last_fire_time = self.current_time
+                if self.player.gun_fire(mouse_pos):
+                    self.sfxs["gun_fire"].play()
+                    self.camera_shake_gain += gun_fire_shake
+                    last_fire_time = self.current_time
             #플레이어 공격 끝
 
             self.clock.tick(TARGET_FPS)
@@ -365,8 +380,9 @@ class Game:
         self.camera_shake_gain += 5
         print(f"적 처치! : {killed_entity}")
 
-    def on_player_damaged(self):
-        print("플레이어 피해!")
+    def on_player_damaged(self, damage_amount):
+        self.player.take_damage(damage_amount)
+        self.camera_shake_gain += 10
         
 
                 

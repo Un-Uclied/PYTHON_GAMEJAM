@@ -3,21 +3,25 @@ from Scripts.Particles import Spark
 
 
 class Bullet:
-    def __init__(self, game, spawn_pos : tuple, direction : pg.math.Vector2, speed : float, sprite : pg.Surface, timer : float, tag : str):
-        self.pos = list(spawn_pos)
+    def __init__(self, game, spawn_pos : tuple, direction : pg.math.Vector2, speed : float, sprite : pg.Surface, timer : float, tag : str, damage : int):
+        self.pos = pg.math.Vector2(spawn_pos[0], spawn_pos[1])
         self.direction = direction.normalize() * speed
         self.sprite = sprite
         self.timer = timer
         self.tag = tag
-        self.rect = pg.Rect(spawn_pos[0] - sprite.get_size()[0], spawn_pos[1] - sprite.get_size()[1], sprite.get_size()[0], sprite.get_size()[1])
+        self.rect = pg.Rect(self.pos.x - sprite.get_size()[0], spawn_pos.y - sprite.get_size()[1], sprite.get_size()[0], sprite.get_size()[1])
+
+        self.damage = damage
 
         self.game = game
 
     def destroy(self):
-        pass
+        for i in range(10):
+            self.game.sparks.append(Spark(self.pos, math.radians(360) * random.random(), 3.5, "black"))
 
     def update(self):
-        pass
+        self.pos.x += self.direction.x
+        self.pos.y += self.direction.y
 
     def render(self, surface : pg.Surface):
         surface.blit(self.sprite, self.pos)
@@ -27,8 +31,4 @@ class PlayerBullet(Bullet):
     def destroy(self):
         for i in range(10):
             self.game.sparks.append(Spark(self.pos, math.radians(360) * random.random(), 3.5, "yellow"))
-
-    def update(self):
-        self.pos[0] += self.direction.x
-        self.pos[1] += self.direction.y
         
