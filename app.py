@@ -48,7 +48,9 @@ class Game:
             #UI에셋
             "ui" : { 
                 "viggnete" : load_image("UI/Vignette.png"),
-                "bottom_fade" : load_image("UI/BottomFade.png")
+                "bottom_fade" : load_image("UI/BottomFade.png"),
+
+                "title" : load_image("UI/Title.png")
             },
             
             #타일맵 이미지 에셋
@@ -136,8 +138,8 @@ class Game:
         
         #스페이스바로 시작
         start_key = pg.K_SPACE
-        self.uis.append(TextUi(f"{GAME_NAME} 메인 메뉴!", (50, 50), self.fonts["galmuri"], 30, "white"))
-        
+        self.uis.append(TextUi(f"{GAME_NAME} 메인 메뉴!", (500, 50), self.fonts["galmuri"], 30, "white"))
+
         while(True):
             #update:
             self.current_time = pg.time.get_ticks()
@@ -151,6 +153,8 @@ class Game:
             self.manage_projectiles()
             self.manage_camera_shake()
             self.manage_entity() 
+
+            self.screen.blit(pg.transform.scale(self.assets["ui"]["title"], (400, 400)), (0, 0))
 
             #화면 렌더
             self.camera.blit(self.screen, (0, 0))
