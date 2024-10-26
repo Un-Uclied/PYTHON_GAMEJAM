@@ -4,7 +4,7 @@ import sys, random, math
 
 from Scripts.utils import load_image, load_images, load_data
 from Scripts.Shadows import Shadow
-from Scripts.Entities import Player, Entity, Strucker, Ratbit, Helli
+from Scripts.Entities import Player, Entity, KillableEnemy, Strucker, Ratbit, Helli, Medicine
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
 from Scripts.Ui import TextUi
@@ -74,8 +74,7 @@ class Game:
             
                 "strucker/idle" :Animation(load_images("Characters/Strucker"), 4, True),
 
-                "helli/idle" : Animation(load_images("Characters/Helli/Idle"), 5, True)
-
+                "helli/idle" : Animation(load_images("Characters/Helli/Idle"), 5, True),
             },
 
             "props" : {
@@ -84,13 +83,20 @@ class Game:
             },
 
             "bg" : {
-                "office" : load_image("Backgrounds/office.png")
+                "office/0" : load_image("Backgrounds/office_0.png"),
+                "office/1" : load_image("Backgrounds/office_1.png")
             },
 
             "particles" : {
                 "dusts" : Animation(load_images("Particles/Dusts"), 5, False),
                 "blood" : Animation(load_images("Particles/Blood"), 5, False),
                 "deep_dusts_loop" : Animation(load_images("Particles/DeepDusts"), 5, True),
+                "flame" : Animation(load_images("Particles/Flame"), 5, False),
+            },
+
+            "items" : {
+                "medicine/idle" : Animation(load_images("Items/Medicine/Idle"), 5, True),
+                "medicine/use" : Animation(load_images("Items/Medicine/Use"), 2, False),
             }
         }
 
@@ -155,7 +161,7 @@ class Game:
                     if event.key == start_key:
                         self.end_scene()
                         #메인 게임 시작
-                        self.state_main_game()
+                        self.state_main_game("Assets/BigBreakout.json")
                         return
 
             self.clock.tick(TARGET_FPS)
@@ -199,7 +205,7 @@ class Game:
 
             #적 감지
             for enemy in self.entities:
-                if projectile.tag == "player's bullet" and enemy.get_rect().collidepoint(projectile.pos) and projectile in self.projectiles and not isinstance(enemy, Strucker):
+                if projectile.tag == "player's bullet" and enemy.get_rect().collidepoint(projectile.pos) and projectile in self.projectiles and isinstance(enemy, KillableEnemy):
                     enemy.take_damage(projectile.damage)
                     self.projectiles.remove(projectile)
                         
@@ -228,39 +234,44 @@ class Game:
 
     def manage_entity(self):
         for entity in self.entities:
-            entity.can_attack()
+            entity.can_interact()
             entity.update()
             entity.render(self.screen)
 
-    def spawn_entity(self):
+    def spawn_entity(self, data):
         #스포닝 에너미
-        if random.randint(1, 200) == 1:
+        if data["entities"]["ratbit"] == 1 and random.randint(1, data["spawn_rates"]["ratbit_spawn_rate"]) == 1:
             self.entities.append(Ratbit(self, "ratbit",
                                         pos=CEIL_SPAWN_POS if random.random() > .5 else FLOOR_SPAWN_POS,
                                         size=(150, 150), anim_size=(150, 150), 
                                         following_speed=25, 
                                         health=1, damage=20, attack_range=100))
-        if random.randint(1, 250) == 1:
+        if data["entities"]["strucker"] == 1 and random.randint(1, data["spawn_rates"]["strucker_spawn_rate"]) == 1:
             self.entities.append(Strucker(self, "strucker", 
                                         pos=(FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1] + 40),
                                         size=(100, 150), anim_size=(150, 150), 
                                         speed=20, damage=20))
-        if random.randint(1, 250) == 1:
+        if data["entities"]["helli"] == 1 and random.randint(1, data["spawn_rates"]["helli_spawn_rate"]) == 1:
             self.entities.append(Helli(self, "helli", 
                                         pos=(FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1]),
                                         size=(200, 200), anim_size=(150, 150), speed=5, health=40, damage=20, 
                                         up=(CEIL_SPAWN_POS[0] - 200, CEIL_SPAWN_POS[1] - 100), 
                                         down=(FLOOR_SPAWN_POS[0] - 200, FLOOR_SPAWN_POS[1] + 100),
-                                        attack_chance=100, bullet_speed=15))
+                                        attack_chance=100, bullet_speed=25))
         #스포닝 에너미 끝
+        if data["entities"]["medicine"] == 1 and random.randint(1, data["spawn_rates"]["medicine_spawn_rate"]) == 1:
+            self.entities.append(
+                Medicine(self, "medicine", FLOOR_SPAWN_POS, (130 , 130), (130, 130), 20, 50)
+            )
 
     #메인 게임
-    def state_main_game(self):
+    def state_main_game(self, load_file):
         #start:
+        DATA = load_data(load_file)
 
         #플레이어 : game, name, pos, hit_box_size, anim_size, max health
         self.player = Player(self, "player", 
-                            pos=(375, 640), size=(70, 170), anim_size=(170, 170),
+                            pos=(400, 640), size=(70, 170), anim_size=(170, 170),
                             max_health=100, 
                             gun_img=self.assets["props"]["player/arm_gun"], shield_img=self.assets["props"]["player/arm_shield"],
                             max_rotation=100,
@@ -286,8 +297,8 @@ class Game:
         #구렁이 끝
 
         #백그라운드 스크롤
-        background1 = self.assets["bg"]["office"]
-        background2 = self.assets["bg"]["office"]
+        background1 = self.assets["bg"]["office/0"]
+        background2 = self.assets["bg"]["office/1"]
         bg_width = background1.get_width()
         bg_scroll_speed = 20
 
@@ -335,7 +346,7 @@ class Game:
             self.player.render(self.screen)
             #플레이어 업데이트 & 렌더 끝
 
-            self.spawn_entity()
+            self.spawn_entity(DATA)
 
             #매니징
             self.manage_projectiles()
@@ -437,6 +448,9 @@ class Game:
             self.end_scene()
             self.state_game_result()
             
+    def on_player_healed(self, amount):
+        self.player.heal(amount)
+        pass
 
     def on_player_blocked(self):
         pass

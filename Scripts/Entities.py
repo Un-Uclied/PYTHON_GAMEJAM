@@ -21,6 +21,9 @@ class Entity:
         self.hit_box = pg.surface.Surface((self.size[0], self.size[1]))
         self.hit_box.fill('red')
 
+    def update(self):
+        self.animation.update()
+
     #히트박스
     def get_rect(self):
         return pg.rect.Rect(self.pos.x, self.pos.y, self.size[0], self.size[1])
@@ -28,13 +31,13 @@ class Entity:
     def get_center_pos(self):
         return pg.math.Vector2(self.pos.x + self.size[0] / 2, self.pos.y + self.size[1] / 2)
 
-    def update(self):
-        self.animation.update()
-
     def set_action(self, action):
         if action != self.action:
             self.action = action
             self.animation = self.game.assets["entities"][self.name + '/' + self.action].copy()
+
+    def can_interact():
+        pass
 
     def render(self, surface, offset = (0, 0)):
         current_frame_img = pg.transform.scale(self.animation.img(), self.anim_size)
@@ -43,9 +46,6 @@ class Entity:
         self.mask = pg.mask.from_surface(current_frame_img)
         self.mask_img = self.mask.to_surface(setcolor=self.mask_color, unsetcolor=(0,0,0,0))
         surface.blit(pg.transform.flip(self.mask_img, self.flipx, 0), (self.pos.x - offset[0] + self.anim_offset[0], self.pos.y - offset[1] + self.anim_offset[1]))
-
-        #디버깅용
-        #surface.blit(self.hit_box, (self.pos.x - offset[0], self.pos.y - offset[1]))
 
 class MoveableEntity(Entity):
     #생성자
@@ -117,6 +117,7 @@ class Player(MoveableEntity):
         super().__init__(game, name, pos, size, anim_size)
 
         #Status / number
+        self.max_health = max_health
         self.health = max_health
 
         self.max_jump_count = 1
@@ -228,6 +229,9 @@ class Player(MoveableEntity):
         #대미지 입히기
         self.health -= damage
 
+    def heal(self, amount : int):
+        self.health = min(self.health + amount, self.max_health)
+
     def gravity(self, max_gravity : float, gravity_strength : float):
         #중력 가속
         self.velocity[1] = min(max_gravity, self.velocity[1] + 0.1 * gravity_strength)
@@ -237,10 +241,7 @@ class Enemy(Entity):
         super().__init__(game, name, pos, size, anim_size)
         self.set_action('idle')
 
-        self.damage = damage
-
-    def can_attack(self):
-        pass
+        self.damage = damage 
 
     def attack(self):
         self.game.on_player_damaged(self.damage)
@@ -301,7 +302,7 @@ class Ratbit(FollowingEnemy):
         if not self.is_returning:
             super().set_target(target_pos)
 
-    def can_attack(self):
+    def can_interact(self):
         if (self.target_pos - self.pos).magnitude() < self.range and not self.is_returning:
             self.attack()
         if (self.target_pos - self.pos).magnitude() < self.range and self.is_returning:
@@ -336,7 +337,7 @@ class Helli(FollowingEnemy):
             elif self.target_pos == self.floor_pos:
                 self.target_pos = self.ceil_pos
 
-    def can_attack(self):
+    def can_interact(self):
         if (random.randint(1, self.attack_chance) == 1):
             self.attack()
 
@@ -361,7 +362,37 @@ class Strucker(Enemy):
         if self.pos.x + self.size[0] < 0:
             self.game.entities.remove(self)
 
-    def can_attack(self):
+    def can_interact(self):
         if self.game.player.get_rect().colliderect(self.get_rect()) and not self.attacked:
             self.attacked = True
             self.attack()
+
+class Medicine(Entity):
+    def __init__(self, game, name, pos, size, anim_size, speed, heal_amount):
+        super().__init__(game, name, pos, size, anim_size)
+        self.set_action("idle")
+        self.speed = speed
+
+        self.heal_amount = heal_amount
+        self.healed = False
+
+    def set_action(self, action):
+        if action != self.action:
+            self.action = action
+            self.animation = self.game.assets["items"][self.name + '/' + self.action].copy()
+    
+    def update(self):
+        super().update()
+        self.pos.x -= self.speed
+
+        #화면 밖으로 나갔을때 릴리즈
+        if self.pos.x + self.size[0] < 0:
+            self.game.entities.remove(self)
+
+    def can_interact(self):
+        if self.game.player.get_rect().colliderect(self.get_rect()) and not self.healed:
+            self.healed = True
+            self.game.on_player_healed(self.heal_amount)
+            self.set_action("use")
+            for i in range(30):
+                self.game.sparks.append(Spark(self.get_center_pos(), math.radians(360 * random.random()), 7, "green"))

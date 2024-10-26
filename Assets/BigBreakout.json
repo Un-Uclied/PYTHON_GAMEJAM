@@ -1,5 +1,5 @@
-{
-    "entities" : {"ratbit" : 1, "stone" : 1},
+{   
+    "entities" : {"ratbit" : 1, "strucker" : 1, "helli" : 1, "medicine" : 1},
 
-    "spawn_rates" : {"ratbit_spawn_rate" : 250, "stone_spawn_rate" : 300}
+    "spawn_rates" : {"ratbit_spawn_rate" : 200, "strucker_spawn_rate" : 250, "helli_spawn_rate" : 250, "medicine_spawn_rate" : 350}
 }
