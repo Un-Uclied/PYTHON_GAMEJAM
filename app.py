@@ -18,8 +18,8 @@ TARGET_FPS = 60
 #입력 설정
 KEY_JUMP = pg.K_SPACE
 #마우스 입력 설정
-MOUSE_ATTACK = 1
-MOUSE_BLOCK = 3
+MOUSE_ATTACK = 0
+MOUSE_BLOCK = 2
 
 #엔티티 스폰 위치
 CEIL_SPAWN_POS = (SCREEN_SCALE[0], 100)
@@ -108,7 +108,8 @@ class Game:
             "enemy_dying" : pg.mixer.Sound('Assets/Sfxs/EnemyDying.wav'),
             "enemy_hit" : pg.mixer.Sound('Assets/Sfxs/EnemyHit.wav'),
             "parry" : pg.mixer.Sound('Assets/Sfxs/Parry.wav'),
-            "swoosh" : pg.mixer.Sound('Assets/Sfxs/Swing.wav')
+            "swoosh" : pg.mixer.Sound('Assets/Sfxs/Swing.wav'),
+            "jump" : pg.mixer.Sound('Assets/Sfxs/Jump.wav')
         }
         self.sfxs["enemy_hit"].set_volume(2)
 
@@ -174,7 +175,7 @@ class Game:
 
             self.clock.tick(TARGET_FPS)
             #카메라 업데이트
-            pg.display.update()
+            pg.display.flip()
     
     def manage_spark(self):
         for spark in self.sparks.copy():
@@ -347,9 +348,8 @@ class Game:
             self.screen.blit(pg.transform.flip(pg.transform.rotate(self.assets["ui"]["bottom_fade"], 90), True, False), (0, 0))
             #배경 렌더 끝
 
-            stat_ui.text = f"못밤 플레이어 | 못밤 체력 : {self.player.health} | 못밤 스코어 : 없음 ㅋ"
+            stat_ui.text = f"체력 : {self.player.health}"
             
-
             #플레이어 업데이트 & 렌더
             self.player.update(self.physic_rects, self.player_movement)
             self.player.render(self.screen)
@@ -357,16 +357,17 @@ class Game:
 
             self.spawn_entity(DATA)
 
+            #구렁이 업데이트 ㅋㅋ
+            worm.pos.x = -self.player.health * 2
+            worm.update()
+            worm.render(self.screen)
+            #구렁이 ㅋㅋ 끝
+
             #매니징
             self.manage_projectiles()
             self.manage_camera_shake()
             self.manage_entity()
             #매니징 끝
-
-            #구렁이 업데이트 ㅋㅋ
-            worm.update()
-            worm.render(self.screen)
-            #구렁이 ㅋㅋ 끝
 
             #매니징
             self.manage_particle()
@@ -387,20 +388,21 @@ class Game:
 
                 if event.type == pg.KEYDOWN:
                     if event.key == KEY_JUMP:
-                        self.player.jump(20)
+                        if self.player.jump(20):
+                            self.sfxs["jump"].play()
             #이벤트 리슨 끝
 
             #플레이어 행동
             mouse_click = pg.mouse.get_pressed(3) #(마우스 좌클릭, 마우스 휠클릭, 마우스 우클릭)
             mouse_pos = pg.mouse.get_pos()
             #플레이어 공격
-            if mouse_click[MOUSE_ATTACK - 1] and self.current_time - last_fire_time >= gun_cooltime:
+            if mouse_click[MOUSE_ATTACK] and self.current_time - last_fire_time >= gun_cooltime:
                 if self.player.gun_fire(mouse_pos):
                     self.sfxs["gun_fire"].play()
                     self.camera_shake_gain += gun_fire_shake
                     last_fire_time = self.current_time
             #플레이어 블록
-            if mouse_click[MOUSE_BLOCK - 1] and self.current_time - last_block_time >= block_cooltime:
+            if mouse_click[MOUSE_BLOCK] and self.current_time - last_block_time >= block_cooltime:
                 self.sfxs["swoosh"].play()
                 self.player.use_shield()
                 last_block_time = self.current_time
@@ -408,7 +410,7 @@ class Game:
 
             self.clock.tick(TARGET_FPS)
             #카메라 업데이트
-            pg.display.update()
+            pg.display.flip()
 
     def state_game_result(self):
         died = TextUi("님 쥬금 ㅋ", (500, 300), self.fonts["galmuri"], 200, "red")
@@ -433,7 +435,7 @@ class Game:
                     sys.exit()
 
             self.clock.tick(TARGET_FPS)
-            pg.display.update()
+            pg.display.flip()
 
     def end_scene(self):
         self.physic_rects.clear()

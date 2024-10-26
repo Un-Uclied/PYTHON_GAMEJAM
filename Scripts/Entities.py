@@ -8,10 +8,11 @@ class Entity:
         self.anim_offset = [0,0]
         self.game = game
         self.name = name
-        self.pos = pg.math.Vector2(pos[0], pos[1])
+        self.pos = pg.Vector2(pos[0], pos[1])
         self.size = size
         self.anim_size = anim_size
         self.mask_color = (0, 0, 0, 0)
+        self.velocity = [0, 0]
 
         self.action = ''
         self.flipx = False
@@ -23,6 +24,9 @@ class Entity:
 
     def update(self):
         self.animation.update()
+
+        self.pos.x += self.velocity[0]
+        self.pos.y += self.velocity[1]
 
     #히트박스
     def get_rect(self):
@@ -51,8 +55,6 @@ class MoveableEntity(Entity):
     #생성자
     def __init__(self, game, name, pos, size, anim_size):
         super().__init__(game, name, pos, size, anim_size)
-
-        self.velocity = [0, 0]
 
         #충돌 가능
         self.collisions = {'up' : False, 'down' : False, 
@@ -212,7 +214,7 @@ class Player(MoveableEntity):
         self.blocking = False
 
     def jump(self, jump_power : float):
-        if self.current_jump_count == self.max_jump_count: return
+        if self.current_jump_count == self.max_jump_count: return False
         self.set_action("jump")
         self.current_jump_count += 1
         self.velocity[1] = -jump_power
@@ -221,6 +223,8 @@ class Player(MoveableEntity):
             self.game.sparks.append(
                     Spark(self.get_foot_pos(), math.radians(90 * random.random() + 45), 5, "grey")
                 )
+        
+        return True
     
     def get_foot_pos(self):
         return (self.pos.x + self.size[0] / 2, self.pos.y + self.size[1])
