@@ -106,7 +106,9 @@ class Game:
         self.sfxs = {
             "gun_fire" : pg.mixer.Sound('Assets/Sfxs/GunFire.wav'),
             "enemy_dying" : pg.mixer.Sound('Assets/Sfxs/EnemyDying.wav'),
-            "enemy_hit" : pg.mixer.Sound('Assets/Sfxs/EnemyHit.wav')
+            "enemy_hit" : pg.mixer.Sound('Assets/Sfxs/EnemyHit.wav'),
+            "parry" : pg.mixer.Sound('Assets/Sfxs/Parry.wav'),
+            "swoosh" : pg.mixer.Sound('Assets/Sfxs/Swing.wav')
         }
         self.sfxs["enemy_hit"].set_volume(2)
 
@@ -189,7 +191,7 @@ class Game:
                 self.particles.remove(particle)
     
     def manage_ui(self):
-        fps_ui = TextUi(f"FPS : {self.clock.get_fps()}", (1500, 50), self.fonts["galmuri"], 12, "white")
+        fps_ui = TextUi(f"FPS : {int(self.clock.get_fps())}", (1540, 0), self.fonts["galmuri"], 12, "white")
         fps_ui.render(self.screen)
 
         for ui in self.uis:
@@ -221,6 +223,7 @@ class Game:
                 #패링 : 적 탄막 => 플레이어 탄막으로 변경
                 if self.player.blocking:
                     projectile.direction = pg.math.Vector2(1, 0).normalize() * projectile.speed
+                    self.on_player_blocked()
                     projectile.timer = projectile.max_timer
                     projectile.tag = "player's bullet"
                 else:
@@ -398,6 +401,7 @@ class Game:
                     last_fire_time = self.current_time
             #플레이어 블록
             if mouse_click[MOUSE_BLOCK - 1] and self.current_time - last_block_time >= block_cooltime:
+                self.sfxs["swoosh"].play()
                 self.player.use_shield()
                 last_block_time = self.current_time
             #플레이어 행동 끝
@@ -459,7 +463,7 @@ class Game:
         pass
 
     def on_player_blocked(self):
-        pass
+        self.sfxs["parry"].play()
         
 
                 
