@@ -151,9 +151,7 @@ class Game:
             self.manage_spark()
             self.manage_particle()
             self.manage_ui()
-            self.manage_projectiles()
             self.manage_camera_shake()
-            self.manage_entity() 
 
             self.screen.blit(self.assets["ui"]["title"], (0, 0))
 
