@@ -390,8 +390,20 @@ class Game:
             pg.display.update()
 
     def state_game_result(self):
+        died = TextUi("님 쥬금 ㅋ", (500, 300), self.fonts["galmuri"], 200, "red")
+        self.uis.append(died)
         while True:
+            self.screen.fill("black")
 
+            #매니징
+            self.manage_projectiles()
+            self.manage_camera_shake()
+            self.manage_entity()
+            self.manage_particle()
+            self.manage_spark()
+            self.manage_ui()
+            #매니징 끝 
+            
             self.camera.blit(self.screen, (0, 0))
 
             for event in pg.event.get():
@@ -399,12 +411,16 @@ class Game:
                     pg.quit()
                     sys.exit()
 
+            self.clock.tick(TARGET_FPS)
+            pg.display.update()
+
     def end_scene(self):
         self.physic_rects.clear()
         self.particles.clear()
         self.sparks.clear()
         self.uis.clear()
         self.projectiles.clear()
+        self.entities.clear()
 
     def on_player_kill(self, killed_entity : Entity):
         self.camera_shake_gain += 5
@@ -416,6 +432,11 @@ class Game:
             return
         self.player.take_damage(damage_amount)
         self.camera_shake_gain += 10
+
+        if self.player.health <= 0:
+            self.end_scene()
+            self.state_game_result()
+            
 
     def on_player_blocked(self):
         pass
