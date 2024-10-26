@@ -59,6 +59,8 @@ class Game:
                 "quit" : load_image("UI/Quit.png"),
 
                 "motbam" : load_image("UI/Motbam.png"),
+                "motbam2" : load_image("UI/Motbam2.png"),
+                "me" : load_image("UI/Me.png"),
 
             },
             
@@ -118,7 +120,8 @@ class Game:
             "enemy_hit" : pg.mixer.Sound('Assets/Sfxs/EnemyHit.wav'),
             "parry" : pg.mixer.Sound('Assets/Sfxs/Parry.wav'),
             "swoosh" : pg.mixer.Sound('Assets/Sfxs/Swing.wav'),
-            "jump" : pg.mixer.Sound('Assets/Sfxs/Jump.wav')
+            "jump" : pg.mixer.Sound('Assets/Sfxs/Jump.wav'),
+            "ui_hover" : pg.mixer.Sound('Assets/Sfxs/Hover.wav')
         }
         self.sfxs["enemy_hit"].set_volume(2)
 
@@ -152,17 +155,19 @@ class Game:
         start_key = pg.K_SPACE
 
         margin = 50
-        map_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 100)), (500, 50))
-        endless_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["endless"], (200, 100)), (500, 150 + margin))
-        records_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["records"], (200, 100)), (500, 250 + margin * 2))
-        credits_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["credits"], (200, 100)), (500, 350 + margin * 3))
-        quit_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (500, 450 + margin * 4))
+        map_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 100)), (500, 50), self.sfxs["ui_hover"])
+        endless_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["endless"], (200, 100)), (500, 150 + margin), self.sfxs["ui_hover"])
+        records_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["records"], (200, 100)), (500, 250 + margin * 2), self.sfxs["ui_hover"])
+        credits_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["credits"], (200, 100)), (500, 350 + margin * 3), self.sfxs["ui_hover"])
+        quit_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (500, 450 + margin * 4), self.sfxs["ui_hover"])
 
         self.uis.append(map_btn)
         self.uis.append(endless_btn)
         self.uis.append(records_btn)
         self.uis.append(credits_btn)
         self.uis.append(quit_btn)
+
+        hover_image = pg.Surface((100, 100))
 
         while(True):
             #update:
@@ -172,28 +177,34 @@ class Game:
             self.screen.fill("black")
 
             #pg.draw.rect(self.screen, "white", (0, 0, 1600, 800))
-            #self.screen.blit(self.assets["ui"]["motbam"], (600, 0))
+            self.screen.blit(hover_image, (600, 0))
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (800, 0))
             pg.draw.rect(self.screen, "black", (0, 0, 800, 800))
 
             mouse_click = pg.mouse.get_pressed(3)[0]
 
-            if map_btn.hovering and mouse_click:
-                print("맵 버튼 누름")
-                pass
-            if endless_btn.hovering and mouse_click:
-                print("엔드레스 버튼 누름")
-                pass
-            if records_btn.hovering and mouse_click:
-                print("리코드 버튼 누름")
-                pass
-            if credits_btn.hovering and mouse_click:
-                print("크레딧 버튼 누름")
-                pass
-            if quit_btn.hovering and mouse_click:
-                pg.quit()
-                sys.exit()
-                pass
+            if map_btn.hovering:
+                hover_image = self.assets["ui"]["motbam"]
+                if mouse_click:
+                    print("맵 버튼 누름")
+            if endless_btn.hovering:
+                hover_image = self.assets["ui"]["motbam2"]
+                if mouse_click:
+                    self.end_scene()
+                    self.state_main_game("Assets/BigBreakout.json")
+            if records_btn.hovering:
+                hover_image = self.assets["ui"]["me"]
+                if mouse_click:
+                    print("리코드 버튼 누름")
+            if credits_btn.hovering:
+                hover_image = self.assets["ui"]["motbam"]
+                if mouse_click:
+                    print("크레딧 버튼 누름")
+            if quit_btn.hovering:
+                hover_image = self.assets["ui"]["me"]
+                if mouse_click:
+                    pg.quit()
+                    sys.exit()
 
             self.manage_spark()
             self.manage_particle()
