@@ -5,8 +5,10 @@ from Scripts.Particles import Spark
 class Bullet:
     def __init__(self, game, spawn_pos : tuple, direction : pg.math.Vector2, speed : float, sprite : pg.Surface, timer : float, tag : str, damage : int):
         self.pos = pg.math.Vector2(spawn_pos[0], spawn_pos[1])
+        self.speed = speed
         self.direction = direction.normalize() * speed
         self.sprite = sprite
+        self.max_timer = timer
         self.timer = timer
         self.tag = tag
         self.rect = pg.Rect(self.pos.x - sprite.get_size()[0], spawn_pos.y - sprite.get_size()[1], sprite.get_size()[0], sprite.get_size()[1])

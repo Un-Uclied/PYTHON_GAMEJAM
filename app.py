@@ -18,7 +18,8 @@ TARGET_FPS = 60
 #입력 설정
 KEY_JUMP = pg.K_SPACE
 #마우스 입력 설정
-WEAPON_ATTACK = 1
+MOUSE_ATTACK = 1
+MOUSE_BLOCK = 3
 
 #엔티티 스폰 위치
 CEIL_SPAWN_POS = (SCREEN_SCALE[0], 100)
@@ -78,7 +79,8 @@ class Game:
             },
 
             "props" : {
-                "player/arm" : load_image("Characters/Player/Arm.png")
+                "player/arm_gun" : load_image("Characters/Player/Arm.png"),
+                "player/arm_shield" : load_image("Characters/Player/ArmShield.png")
             },
 
             "bg" : {
@@ -204,9 +206,15 @@ class Game:
                     
             #플레이어 감지
             if not projectile.tag == "player's bullet" and self.player.get_rect().collidepoint(projectile.pos[0], projectile.pos[1]) and projectile in self.projectiles:
-                projectile.destroy() #플레이어에 맞음
-                self.projectiles.remove(projectile)
-                self.on_player_damaged(projectile.damage)
+                #패링 : 적 탄막 => 플레이어 탄막으로 변경
+                if self.player.blocking:
+                    projectile.direction = pg.math.Vector2(1, 0).normalize() * projectile.speed
+                    projectile.timer = projectile.max_timer
+                    projectile.tag = "player's bullet"
+                else:
+                    projectile.destroy() #플레이어에 맞음
+                    self.projectiles.remove(projectile)
+                    self.on_player_damaged(projectile.damage)
             if projectile.timer <= 0:
                 self.projectiles.remove(projectile) #시간이 지나고, 화면 밖으로 나간것으로 추정
 
@@ -243,7 +251,7 @@ class Game:
                                         size=(200, 200), anim_size=(150, 150), speed=5, health=40, damage=20, 
                                         up=(CEIL_SPAWN_POS[0] - 200, CEIL_SPAWN_POS[1] - 100), 
                                         down=(FLOOR_SPAWN_POS[0] - 200, FLOOR_SPAWN_POS[1] + 100),
-                                        attack_chance=150, bullet_speed=15))
+                                        attack_chance=100, bullet_speed=15))
         #스포닝 에너미 끝
 
     #메인 게임
@@ -251,12 +259,20 @@ class Game:
         #start:
 
         #플레이어 : game, name, pos, hit_box_size, anim_size, max health
-        self.player = Player(self, "player", (375, 640), (70, 170), (170, 170), 100, self.assets["props"]["player/arm"], 100, (55, 75))
+        self.player = Player(self, "player", 
+                            pos=(375, 640), size=(70, 170), anim_size=(170, 170),
+                            max_health=100, 
+                            gun_img=self.assets["props"]["player/arm_gun"], shield_img=self.assets["props"]["player/arm_shield"],
+                            max_rotation=100,
+                            max_block_time=15, attack_damage=20, bullet_speed=45, 
+                            offset=(55, 75))
         self.player.anim_offset = [-25, 20]
         #총 세팅
         gun_cooltime = 300 #.3초
         gun_fire_shake = 4.5
         last_fire_time = pg.time.get_ticks()
+        last_block_time = pg.time.get_ticks()
+        block_cooltime = 800
         # [[좌, 우], [하, 상]]
         self.player_movement = [[False, False], [False, False]]
 
@@ -354,19 +370,34 @@ class Game:
                         self.player.jump(20)
             #이벤트 리슨 끝
 
-            #플레이어 공격
+            #플레이어 행동
             mouse_click = pg.mouse.get_pressed(3) #(마우스 좌클릭, 마우스 휠클릭, 마우스 우클릭)
             mouse_pos = pg.mouse.get_pos()
-            if mouse_click[0] == WEAPON_ATTACK and self.current_time - last_fire_time >= gun_cooltime:
+            #플레이어 공격
+            if mouse_click[MOUSE_ATTACK - 1] and self.current_time - last_fire_time >= gun_cooltime:
                 if self.player.gun_fire(mouse_pos):
                     self.sfxs["gun_fire"].play()
                     self.camera_shake_gain += gun_fire_shake
                     last_fire_time = self.current_time
-            #플레이어 공격 끝
+            #플레이어 블록
+            if mouse_click[MOUSE_BLOCK - 1] and self.current_time - last_block_time >= block_cooltime:
+                self.player.use_shield()
+                last_block_time = self.current_time
+            #플레이어 행동 끝
 
             self.clock.tick(TARGET_FPS)
             #카메라 업데이트
             pg.display.update()
+
+    def state_game_result(self):
+        while True:
+
+            self.camera.blit(self.screen, (0, 0))
+
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    sys.exit()
 
     def end_scene(self):
         self.physic_rects.clear()
@@ -380,8 +411,14 @@ class Game:
         print(f"적 처치! : {killed_entity}")
 
     def on_player_damaged(self, damage_amount):
+        if self.player.blocking: 
+            self.on_player_blocked()
+            return
         self.player.take_damage(damage_amount)
         self.camera_shake_gain += 10
+
+    def on_player_blocked(self):
+        pass
         
 
                 

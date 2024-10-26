@@ -113,7 +113,7 @@ class MoveableEntity(Entity):
             self.flipx = True
 
 class Player(MoveableEntity):
-    def __init__(self, game, name, pos, size, anim_size ,max_health, arm_img : pg.Surface, max_rotation : float, offset = (0, 0)):
+    def __init__(self, game, name, pos, size, anim_size ,max_health, gun_img : pg.Surface, shield_img : pg.Surface, max_rotation : float, attack_damage, bullet_speed, max_block_time,  offset = (0, 0)):
         super().__init__(game, name, pos, size, anim_size)
 
         #Status / number
@@ -126,14 +126,21 @@ class Player(MoveableEntity):
         self.on_ground = False
         
         #총
-        self.arm = arm_img
+        self.gun = gun_img
+        self.shield = shield_img
+
+        self.current_arm = self.gun
         self.arm_offset = offset
         self.arm_rotation = 0
         self.arm_max_roatation = max_rotation
         self.current_mouse_angle = 0
 
-        self.attack_damage = 20
-        self.bullet_speed = 45
+        self.attack_damage = attack_damage
+        self.bullet_speed = bullet_speed
+
+        self.max_block_time = max_block_time
+        self.current_block_time = 0
+        self.blocking = False
 
         self.set_action("run")
 
@@ -163,18 +170,26 @@ class Player(MoveableEntity):
         self.current_mouse_angle = math.degrees(math.atan2(y_dist, x_dist))
         self.arm_rotation = max(min(self.current_mouse_angle, self.arm_max_roatation), -self.arm_max_roatation)
 
+        if self.current_block_time > 0:
+            self.current_block_time -= 1
+        elif self.current_block_time == 0 and self.blocking:
+            self.unuse_shield()
+
         self.animation.update()
+
 
     def render(self, surface : pg.surface.Surface, offset=(0, 0)):
         super().render(surface)
 
         #총 렌더
-        render_arm = pg.transform.rotate(self.arm, self.arm_rotation)
+        render_arm = pg.transform.rotate(self.current_arm, self.arm_rotation)
         rect_arm = render_arm.get_rect(center = (self.pos.x + self.arm_offset[0] + offset[0], self.pos.y + self.arm_offset[1] + offset[1]))
 
         surface.blit(render_arm, rect_arm)
     
     def gun_fire(self, mouse_pos : tuple):
+        if self.blocking: return False
+
         if -self.arm_max_roatation <= self.current_mouse_angle <= self.arm_max_roatation:
             self.game.projectiles.append(
                 PlayerBullet(self.game, self.get_center_pos(), pg.math.Vector2(mouse_pos[0] - self.get_center_pos().x, mouse_pos[1] - self.get_center_pos().y), self.bullet_speed, self.game.assets["projectiles"]["bullet"], 500, "player's bullet", self.attack_damage)
@@ -182,7 +197,18 @@ class Player(MoveableEntity):
             return True
         else:
             return False
-        
+    
+    def use_shield(self):
+        self.current_arm = self.shield
+        self.blocking = True
+        self.current_block_time = self.max_block_time
+        for i in range(10):
+            self.game.sparks.append(Spark(tuple(self.get_center_pos()), math.radians(360) * random.random(), 7, (0, 100, 255)))
+
+
+    def unuse_shield(self):
+        self.current_arm = self.gun
+        self.blocking = False
 
     def jump(self, jump_power : float):
         if self.current_jump_count == self.max_jump_count: return
@@ -317,7 +343,6 @@ class Helli(FollowingEnemy):
     def attack(self):
         #탄막을 쏘기에 super().attack()안함
         self.game.projectiles.append(Bullet(self.game, self.pos, pg.math.Vector2(-1, 0), self.bullet_speed, self.game.assets["projectiles"]["helli_fire_bullet"], 500, "helli's bullet", self.damage))
-
 
 class Strucker(Enemy):
     def __init__(self, game, name, pos, size, anim_size, speed, damage):
