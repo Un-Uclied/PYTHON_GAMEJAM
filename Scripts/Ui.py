@@ -20,6 +20,10 @@ class ButtonUi:
     def update(self):
         if self.rect.collidepoint(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1]):
             self.hovering = True
+            print("ㅇㅇ")
+        else:
+            self.hovering = False
+            print("ㄴㄴ")
 
     def render(self, surface):
         surface.blit(self.image, self.pos)

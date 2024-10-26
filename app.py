@@ -178,7 +178,6 @@ class Game:
 
             mouse_click = pg.mouse.get_pressed(3)[0]
 
-            print(map_btn.hovering)
             if map_btn.hovering and mouse_click:
                 print("맵 버튼 누름")
                 pass
