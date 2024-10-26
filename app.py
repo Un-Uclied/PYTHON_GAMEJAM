@@ -41,7 +41,7 @@ class Game:
         self.current_time = pg.time.get_ticks()
 
         self.camera_shake_gain = 0
-        self.camera_shrink_speed = .5
+        self.camera_shrink_speed = .3
 
         #게임 에셋
         self.assets = {
