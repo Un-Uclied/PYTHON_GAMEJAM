@@ -183,23 +183,28 @@ class Game:
 
             mouse_click = pg.mouse.get_pressed(3)[0]
 
+            #지도 버튼
             if map_btn.hovering:
                 hover_image = self.assets["ui"]["motbam"]
                 if mouse_click:
                     print("맵 버튼 누름")
+            #엔드레스 게임으로
             if endless_btn.hovering:
                 hover_image = self.assets["ui"]["motbam2"]
                 if mouse_click:
                     self.end_scene()
                     self.state_main_game("Assets/BigBreakout.json")
+            #리코드 볼수 있음
             if records_btn.hovering:
                 hover_image = self.assets["ui"]["me"]
                 if mouse_click:
                     print("리코드 버튼 누름")
+            #크레딧
             if credits_btn.hovering:
                 hover_image = self.assets["ui"]["motbam"]
                 if mouse_click:
                     print("크레딧 버튼 누름")
+            #나가기
             if quit_btn.hovering:
                 hover_image = self.assets["ui"]["me"]
                 if mouse_click:
