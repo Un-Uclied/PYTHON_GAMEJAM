@@ -7,7 +7,7 @@ from Scripts.Shadows import Shadow
 from Scripts.Entities import Player, Entity, KillableEnemy, Strucker, Ratbit, Helli, Medicine
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
-from Scripts.Ui import TextUi
+from Scripts.Ui import TextUi, ButtonUi
 from Scripts.Bullets import Bullet, PlayerBullet
 
 #상수 설정
@@ -50,7 +50,14 @@ class Game:
                 "viggnete" : load_image("UI/Vignette.png"),
                 "bottom_fade" : load_image("UI/BottomFade.png"),
 
-                "title" : load_image("UI/Title.png")
+                "title" : load_image("UI/Title.png"),
+
+                "world" : load_image("UI/World.png"),
+                "endless" : load_image("UI/Endless.png"),
+                "credits" : load_image("UI/Credits.png"),
+                "records" : load_image("UI/Record.png"),
+                "quit" : load_image("UI/Quit.png"),
+
             },
             
             #타일맵 이미지 에셋
@@ -141,8 +148,21 @@ class Game:
         
         #스페이스바로 시작
         start_key = pg.K_SPACE
-        self.uis.append(TextUi(f"{GAME_NAME}", (1000, 50), self.fonts["galmuri"], 50, "white"))
-        self.uis.append(TextUi("스페이스바로 빠른 시작", (640, 750), self.fonts["galmuri"], 30, "white"))
+
+        margin = 50
+        map_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 100)), (500, 50))
+        endless_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["endless"], (200, 100)), (500, 150 + margin))
+        records_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["records"], (200, 100)), (500, 250 + margin * 2))
+        credits_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["credits"], (200, 100)), (500, 350 + margin * 3))
+        quit_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (500, 450 + margin * 4))
+
+        self.uis.append(map_btn)
+        self.uis.append(endless_btn)
+        self.uis.append(records_btn)
+        self.uis.append(credits_btn)
+        self.uis.append(quit_btn)
+
+        rect = pg.rect.Rect(0, 0, 800, 800)
 
         while(True):
             #update:
@@ -150,6 +170,10 @@ class Game:
 
             #화면 초기화
             self.screen.fill("black")
+
+            pg.draw.rect(self.screen, "white", (0, 0, 1600, 800))
+            self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (800, 0))
+            pg.draw.rect(self.screen, "black", rect)
 
             self.manage_spark()
             self.manage_particle()
