@@ -58,6 +58,8 @@ class Game:
                 "records" : load_image("UI/Record.png"),
                 "quit" : load_image("UI/Quit.png"),
 
+                "motbam" : load_image("UI/Motbam.png"),
+
             },
             
             #타일맵 이미지 에셋
@@ -162,8 +164,6 @@ class Game:
         self.uis.append(credits_btn)
         self.uis.append(quit_btn)
 
-        rect = pg.rect.Rect(0, 0, 800, 800)
-
         while(True):
             #update:
             self.current_time = pg.time.get_ticks()
@@ -171,9 +171,30 @@ class Game:
             #화면 초기화
             self.screen.fill("black")
 
-            pg.draw.rect(self.screen, "white", (0, 0, 1600, 800))
+            #pg.draw.rect(self.screen, "white", (0, 0, 1600, 800))
+            #self.screen.blit(self.assets["ui"]["motbam"], (600, 0))
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (800, 0))
-            pg.draw.rect(self.screen, "black", rect)
+            pg.draw.rect(self.screen, "black", (0, 0, 800, 800))
+
+            mouse_click = pg.mouse.get_pressed(3)[0]
+
+            print(map_btn.hovering)
+            if map_btn.hovering and mouse_click:
+                print("맵 버튼 누름")
+                pass
+            if endless_btn.hovering and mouse_click:
+                print("엔드레스 버튼 누름")
+                pass
+            if records_btn.hovering and mouse_click:
+                print("리코드 버튼 누름")
+                pass
+            if credits_btn.hovering and mouse_click:
+                print("크레딧 버튼 누름")
+                pass
+            if quit_btn.hovering and mouse_click:
+                pg.quit()
+                sys.exit()
+                pass
 
             self.manage_spark()
             self.manage_particle()
