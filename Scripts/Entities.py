@@ -254,10 +254,13 @@ class KillableEnemy(Enemy):
 
     def take_damage(self, damage_amount):
         self.health -= damage_amount
+        
         if self.health <= 0:
             self.destroy()
             self.game.entities.remove(self)
+            self.game.sfxs["enemy_dying"].play()
         else:
+            self.game.sfxs["enemy_hit"].play()
             for i in range(5):
                 self.game.particles.append(Particle(self.game, "blood", tuple(self.get_center_pos()), (180, 180), [(10 * random.random()), 10 + (20 * random.random())], random.randint(0, 20)))
 

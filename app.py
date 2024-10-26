@@ -102,8 +102,11 @@ class Game:
 
         #게임 효과음
         self.sfxs = {
-            "gun_fire" : pg.mixer.Sound('Assets/Sfxs/gun_fire.wav'),
+            "gun_fire" : pg.mixer.Sound('Assets/Sfxs/GunFire.wav'),
+            "enemy_dying" : pg.mixer.Sound('Assets/Sfxs/EnemyDying.wav'),
+            "enemy_hit" : pg.mixer.Sound('Assets/Sfxs/EnemyHit.wav')
         }
+        self.sfxs["enemy_hit"].set_volume(2)
 
         #게임 폰트
         self.fonts = {
