@@ -138,7 +138,8 @@ class Game:
         
         #스페이스바로 시작
         start_key = pg.K_SPACE
-        self.uis.append(TextUi(f"{GAME_NAME} 메인 메뉴!", (500, 50), self.fonts["galmuri"], 30, "white"))
+        self.uis.append(TextUi(f"{GAME_NAME}", (1000, 50), self.fonts["galmuri"], 50, "white"))
+        self.uis.append(TextUi("스페이스바로 빠른 시작", (640, 750), self.fonts["galmuri"], 30, "white"))
 
         while(True):
             #update:
@@ -154,7 +155,7 @@ class Game:
             self.manage_camera_shake()
             self.manage_entity() 
 
-            self.screen.blit(pg.transform.scale(self.assets["ui"]["title"], (400, 400)), (0, 0))
+            self.screen.blit(self.assets["ui"]["title"], (0, 0))
 
             #화면 렌더
             self.camera.blit(self.screen, (0, 0))
