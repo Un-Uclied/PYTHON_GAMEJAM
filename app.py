@@ -106,6 +106,9 @@ class Game:
             "items" : {
                 "medicine/idle" : Animation(load_images("Items/Medicine/Idle"), 5, True),
                 "medicine/use" : Animation(load_images("Items/Medicine/Use"), 2, False),
+
+                "ammo/idle" : Animation(load_images("Items/Ammo/Idle"), 5, True),
+                "ammo/use" : Animation(load_images("Items/Ammo/Use"), 2, False),
             }
         }
 
