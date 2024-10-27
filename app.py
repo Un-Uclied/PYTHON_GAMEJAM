@@ -4,7 +4,7 @@ import sys, random, math, pytweening as pt
 
 from Scripts.utils import load_image, load_images, load_data
 from Scripts.Shadows import Shadow
-from Scripts.Entities import Player, Entity, KillableEnemy, Strucker, Ratbit, Helli, Medicine, Ammo
+from Scripts.Entities import Player, Entity, KillableEnemy, Strucker, Ratbit, Helli, Brook, Medicine, Ammo
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
 from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi
@@ -112,6 +112,9 @@ class Game:
                 "strucker/idle" : Animation(load_images("Characters/Strucker"), 4, True),
 
                 "helli/idle" : Animation(load_images("Characters/Helli/Idle"), 5, True),
+
+                "brook/idle" : Animation(load_images("Characters/Brook/Idle"), 5, True),
+                "brook/explode" : Animation(load_images("Characters/Brook/Explode"), 5, True),
             },
 
             "props" : {
@@ -128,7 +131,7 @@ class Game:
                 "dusts" : Animation(load_images("Particles/Dusts"), 5, False),
                 "blood" : Animation(load_images("Particles/Blood"), 5, False),
                 "deep_dusts_loop" : Animation(load_images("Particles/DeepDusts"), 5, True),
-                "flame" : Animation(load_images("Particles/Flame"), 5, False),
+                "flame" : Animation(load_images("Particles/Flame"), 3, False),
             },
 
             "items" : {
@@ -354,6 +357,13 @@ class Game:
                                         up=(CEIL_SPAWN_POS[0] - 200, CEIL_SPAWN_POS[1] - 100), 
                                         down=(FLOOR_SPAWN_POS[0] - 200, FLOOR_SPAWN_POS[1] + 100),
                                         attack_chance=90, bullet_speed=30))
+        #어우 눈 아파라
+        if data["entities"]["brook"] == 1 and random.randint(1, data["spawn_rates"]["brook_spawn_rate"]) == 1:
+            self.entities.append(Brook(self, "brook", 
+                                       pos=(CEIL_SPAWN_POS[0] + 100, 350), 
+                                       size=(200, 200), anim_size=(150, 150),
+                                       following_speed=35, max_health=1, damage=0))
+
         #스포닝 에너미 끝
         if data["entities"]["medicine"] == 1 and random.randint(1, data["spawn_rates"]["medicine_spawn_rate"]) == 1:
             self.entities.append(
@@ -504,7 +514,7 @@ class Game:
             pg.display.flip()
 
     def state_game_result(self):
-        died = TextUi("님 쥬금 ㅋ", (500, 300), self.fonts["galmuri"], 200, "red")
+        died = TextUi("님 쥬금 ㅋ", (500, 300), self.fonts["galmuri"], 200, "white")
         self.uis.append(died)
         while True:
             self.screen.fill("black")
@@ -587,7 +597,7 @@ class Game:
 
     def on_player_kill(self, killed_entity : Entity):
         self.camera_shake_gain += 5
-        print(f"적 처치! : {killed_entity}")
+        print(f"killed : {killed_entity.name}")
 
     def on_player_damaged(self, damage_amount):
         if self.player.blocking: 

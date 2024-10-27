@@ -268,8 +268,9 @@ class KillableEnemy(Enemy):
         self.health -= damage_amount
         
         if self.health <= 0:
+            self.game.on_player_kill(self)
             self.destroy()
-            self.game.entities.remove(self)
+            if self in self.game.entities : self.game.entities.remove(self)
             self.game.sfxs["enemy_dying"].play()
         else:
             self.game.sfxs["enemy_hit"].play()
@@ -313,6 +314,11 @@ class Ratbit(FollowingEnemy):
         super().update()
         self.set_target(self.game.player.get_center_pos())
 
+        if self.is_returning:
+            #화면 밖으로 나갔을때 릴리즈
+            if self.pos.x + self.size[0] < 0:
+                if self in self.game.entities : self.game.entities.remove(self)
+
     def set_target(self, target_pos):
         if not self.is_returning:
             super().set_target(target_pos)
@@ -322,10 +328,16 @@ class Ratbit(FollowingEnemy):
             self.attack()
         if (self.target_pos - self.pos).magnitude() < self.range and self.is_returning:
             self.destroy()
-            self.game.entities.remove(self)
+            if self in self.game.entities : self.game.entities.remove(self)
 
     def attack(self):
-        super().attack()
+        #패링 성공시 적 처치로 간주
+        if self.game.player.blocking:
+            self.game.on_player_blocked()
+            self.game.on_player_kill(self)
+        else:
+            super().attack()
+
         self.set_target(pg.math.Vector2((1900, 400)))
         self.is_returning = True
         self.set_action("attack")
@@ -360,6 +372,63 @@ class Helli(FollowingEnemy):
         #탄막을 쏘기에 super().attack()안함
         self.game.projectiles.append(Bullet(self.game, self.pos, pg.math.Vector2(-1, 0), self.bullet_speed, self.game.assets["projectiles"]["helli_fire_bullet"], 500, "helli's bullet", self.damage))
 
+class Brook(FollowingEnemy):
+    def __init__(self, game, name, pos, size, anim_size, following_speed, max_health, damage):
+        super().__init__(game, name, pos, size, anim_size, following_speed, max_health, damage)
+        
+        self.spawn_pos = pg.math.Vector2(pos[0], pos[1])
+        self.target_pos = self.game.player.get_center_pos()
+        self.attack_range = 100
+
+        self.blocked = False
+
+    def update(self):
+        super().update()
+
+        if not self.blocked:
+            self.target_pos = self.game.player.get_center_pos()
+        else:
+            #화면 밖으로 나갔을때 릴리즈
+            if self.pos.x + self.size[0] < 0:
+                if self in self.game.entities : self.game.entities.remove(self)
+
+        if self.blocked and (self.spawn_pos - self.pos).magnitude() < self.attack_range:
+            if self in self.game.entities : self.game.entities.remove(self)
+
+    def take_damage(self, damage_amount):
+        #죽을수 없음 공격했을시 EXPLODE
+        self.attack()
+        if self in self.game.entities : self.game.entities.remove(self)
+        return
+    
+    def can_interact(self):
+        #플레이어에 접근했을시
+        if (self.target_pos - self.pos).magnitude() < self.attack_range and not self.blocked:
+            #패링중
+            if self.game.player.blocking:
+                #튕김
+                self.blocked = True
+                self.target_pos = self.spawn_pos
+                self.game.on_player_blocked()
+                self.game.on_player_kill(self)
+            #패링중이 아님
+            else:
+                #EXPLODE
+                self.attack()
+                if self in self.game.entities : self.game.entities.remove(self)
+
+    def attack(self):
+        for i in range(5):
+            self.game.particles.append(Particle(self.game, "flame", (self.get_center_pos().x, self.get_center_pos().y), (300, 300), (random.randint(-5, 5), random.randint(10, 30))))
+        for i in range(30):
+            self.game.sparks.append(Spark(self.get_center_pos(), math.radians(360 * random.random()), 16, "red"))
+        super().attack()
+
+        for enemy in self.game.entities:
+            if hasattr(enemy, "take_damage") and not isinstance(enemy, Player) and not enemy == self:
+                print(enemy.name)
+                enemy.take_damage(1000)
+
 class Strucker(Enemy):
     def __init__(self, game, name, pos, size, anim_size, speed, damage):
         super().__init__(game, name, pos, size, anim_size, damage)
@@ -375,7 +444,9 @@ class Strucker(Enemy):
 
         #화면 밖으로 나갔을때 릴리즈
         if self.pos.x + self.size[0] < 0:
-            self.game.entities.remove(self)
+            if not self.attacked:
+                self.game.on_player_kill(self)
+            if self in self.game.entities : self.game.entities.remove(self)
 
     def can_interact(self):
         if self.game.player.get_rect().colliderect(self.get_rect()) and not self.attacked:
@@ -402,7 +473,7 @@ class Medicine(Entity):
 
         #화면 밖으로 나갔을때 릴리즈
         if self.pos.x + self.size[0] < 0:
-            self.game.entities.remove(self)
+            if self in self.game.entities : self.game.entities.remove(self)
 
     def can_interact(self):
         if self.game.player.get_rect().colliderect(self.get_rect()) and not self.healed:
@@ -432,7 +503,7 @@ class Ammo(Entity):
 
         #화면 밖으로 나갔을때 릴리즈
         if self.pos.x + self.size[0] < 0:
-            self.game.entities.remove(self)
+            if self in self.game.entities : self.game.entities.remove(self)
 
     def can_interact(self):
         if self.game.player.get_rect().colliderect(self.get_rect()) and not self.used:
