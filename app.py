@@ -506,10 +506,8 @@ class Game:
 
         self.uis.append(TextUi("이준영", (1130, 220), self.fonts["galmuri"], 50, "white"))
         self.uis.append(LinkUi("깃허브", (1150, 520), self.fonts["galmuri"], 40, "white", "blue", self.sfxs["ui_hover"], ""))
-        self.uis.append(LinkUi("유튜브", (1150, 600), self.fonts["galmuri"], 40, "white", "blue", self.sfxs["ui_hover"], ""))
 
         bg = self.assets["bg"]["office/1"]
-        bg.set_alpha(50)
 
         while True:
             self.screen.fill("black")
