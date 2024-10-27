@@ -82,7 +82,7 @@ class Game:
                 "ratbit/idle" : Animation(load_images("Characters/Ratbit/Idle"), 3, True),
                 "ratbit/attack" : Animation(load_images("Characters/Ratbit/Attack"), 8, True),
             
-                "strucker/idle" :Animation(load_images("Characters/Strucker"), 4, True),
+                "strucker/idle" : Animation(load_images("Characters/Strucker"), 4, True),
 
                 "helli/idle" : Animation(load_images("Characters/Helli/Idle"), 5, True),
             },
