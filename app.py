@@ -10,6 +10,34 @@ from Scripts.Particles import Spark, Particle
 from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi
 from Scripts.Bullets import Bullet, PlayerBullet
 
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
+
+
+#firebase 연동
+cred = credentials.Certificate("firebase/firebase-python-key.json")
+app = firebase_admin.initialize_app(cred)
+
+db = firestore.client()
+
+# 데이터를 추가할 컬렉션과 문서 ID를 설정합니다.
+collection_name = 'users'
+document_id = 'user1'
+
+# 추가할 데이터를 딕셔너리 형태로 작성합니다.
+data = {
+    'name': 'John',
+    'age': 30,
+    'email': 'john@example.com'
+}
+
+# 데이터를 컬렉션에 추가합니다.
+doc_ref = db.collection(collection_name).document(document_id)
+doc_ref.set(data)
+
+print('데이터가 성공적으로 추가되었습니다.')
+
 #상수 설정
 SCREEN_SCALE = (1600, 800)
 GAME_NAME = "Break Away"
