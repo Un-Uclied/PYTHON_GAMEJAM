@@ -4,7 +4,7 @@ import sys, random, math, pytweening as pt
 
 from Scripts.utils import load_image, load_images, load_data
 from Scripts.Shadows import Shadow
-from Scripts.Entities import Player, Entity, KillableEnemy, Strucker, Ratbit, Helli, Medicine
+from Scripts.Entities import Player, Entity, KillableEnemy, Strucker, Ratbit, Helli, Medicine, Ammo
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
 from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi
@@ -122,8 +122,8 @@ class Game:
             "jump" : pg.mixer.Sound('Assets/Sfxs/Jump.wav'),
             "ui_hover" : pg.mixer.Sound('Assets/Sfxs/Hover.wav'),
             "heal" : pg.mixer.Sound('Assets/Sfxs/Heal.wav'),
+            "reload" : pg.mixer.Sound('Assets/Sfxs/Reload.wav'),
         }
-        self.sfxs["enemy_hit"].set_volume(2)
 
         #게임 폰트
         self.fonts = {
@@ -331,6 +331,11 @@ class Game:
             self.entities.append(
                 Medicine(self, "medicine", FLOOR_SPAWN_POS, (130 , 130), (130, 130), 20, 50)
             )
+        #추가 탄약은 플레이어가 최대 탄약이 아닐때 생김
+        if self.player.ammo != self.player.max_ammo and data["entities"]["ammo"] == 1 and random.randint(1, data["spawn_rates"]["ammo_spawn_rate"]) == 1:
+            self.entities.append(
+                Ammo(self, "ammo", FLOOR_SPAWN_POS, (130 , 130), (130, 130), 20, 20)
+            )
 
     #메인 게임
     def state_main_game(self, load_file):
@@ -406,7 +411,7 @@ class Game:
             self.screen.blit(pg.transform.flip(pg.transform.rotate(self.assets["ui"]["bottom_fade"], 90), True, False), (0, 0))
             #배경 렌더 끝
 
-            stat_ui.text = f"체력 : {self.player.health}"
+            stat_ui.text = f"{self.player.ammo}"
             
             #플레이어 업데이트 & 렌더
             self.player.update(self.physic_rects, self.player_movement)
@@ -566,10 +571,16 @@ class Game:
         if self.player.health <= 0:
             self.end_scene()
             self.state_game_result()
-            
+
+    def on_player_ammo_refilled(self, amount):
+        self.player.add_ammo(amount)
+        self.sfxs["reload"].play()
+
     def on_player_healed(self, amount):
         self.player.heal(amount)
         self.sfxs["heal"].play()
+
+    def on_cannot_fire(self):
         pass
 
     def on_player_blocked(self):

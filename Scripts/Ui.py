@@ -8,8 +8,11 @@ class TextUi:
         self.pos = pos
         self.text_size = text_size
         self.font = font
+        self.color = color
+        self.render_surf = pg.font.Font(self.font, self.text_size).render(self.text, True, color)
 
-        self.render_surf = pg.font.Font(self.font, self.text_size).render(self.text, True, "white")
+    def update(self):
+        self.render_surf = pg.font.Font(self.font, self.text_size).render(self.text, True, self.color)
 
     def render(self, surface):
         surface.blit(self.render_surf, self.pos)

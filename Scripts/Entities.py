@@ -140,6 +140,8 @@ class Player(MoveableEntity):
 
         self.attack_damage = attack_damage
         self.bullet_speed = bullet_speed
+        self.max_ammo = 20
+        self.ammo = self.max_ammo
 
         self.max_block_time = max_block_time
         self.current_block_time = 0
@@ -180,7 +182,6 @@ class Player(MoveableEntity):
 
         self.animation.update()
 
-
     def render(self, surface : pg.surface.Surface, offset=(0, 0)):
         super().render(surface)
 
@@ -192,6 +193,11 @@ class Player(MoveableEntity):
     
     def gun_fire(self, mouse_pos : tuple):
         if self.blocking: return False
+        if self.ammo == 0: 
+            self.game.on_cannot_fire()
+            return False
+
+        self.ammo -= 1
 
         if -self.arm_max_roatation <= self.current_mouse_angle <= self.arm_max_roatation:
             self.game.projectiles.append(
@@ -207,7 +213,6 @@ class Player(MoveableEntity):
         self.current_block_time = self.max_block_time
         for i in range(10):
             self.game.sparks.append(Spark(tuple(self.get_center_pos()), math.radians(360) * random.random(), 7, (0, 100, 255)))
-
 
     def unuse_shield(self):
         self.current_arm = self.gun
@@ -235,6 +240,9 @@ class Player(MoveableEntity):
 
     def heal(self, amount : int):
         self.health = min(self.health + amount, self.max_health)
+
+    def add_ammo(self, amount):
+        self.ammo = min(self.ammo + amount, self.max_ammo)
 
     def gravity(self, max_gravity : float, gravity_strength : float):
         #중력 가속
@@ -410,8 +418,8 @@ class Ammo(Entity):
         self.set_action("idle")
         self.speed = speed
 
-        self.heal_amount = ammo_refill_amount
-        self.healed = False
+        self.add_amount = ammo_refill_amount
+        self.used = False
 
     def set_action(self, action):
         if action != self.action:
@@ -427,9 +435,9 @@ class Ammo(Entity):
             self.game.entities.remove(self)
 
     def can_interact(self):
-        if self.game.player.get_rect().colliderect(self.get_rect()) and not self.healed:
-            self.healed = True
-            self.game.on_player_healed(self.heal_amount)
+        if self.game.player.get_rect().colliderect(self.get_rect()) and not self.used:
+            self.used = True
+            self.game.on_player_ammo_refilled(self.add_amount)
             self.set_action("use")
             for i in range(30):
                 self.game.sparks.append(Spark(self.get_center_pos(), math.radians(360 * random.random()), 7, "green"))
