@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "python-gamejam-e5761",
+  "private_key_id": "09f14d9c0688abf3dfe25dcc12de89f3282c36cd",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCxx1sqgQgr7BEi\nKGr012a+avF43Ln8sLTR9usim7430ssP3SrmZujLGZBhAy2RAfcYTwMt4LEijpGL\n5SzSl0iRw6MsRUmFC0g0mUJ+Y25F8jthvt8+1NZpYJ/bvyOj7gmzi5RmENAe/si5\n6gZUDUN7ImKhBMiJOuIRCfmgJ08jOg5JeNIDmqUxfVAX3iQScKDESYG4YfYN7jMT\nvst+qnEp/wbosSCRqS2UFdFkaD98xN/+lBMOXhRuqNteIhh1UOttFyUha0A//aH4\nunKp3fgyTmuF4IU5VCZbr+eEct65kDzITf1+O8C/254SWaBuEVVgzGwRGXjDPxqr\nv7GVHVuNAgMBAAECggEAHH9qAEa90hid6H1VI9lxmV2YRrkPQU/sNGoh6CLSG625\nKlpYOaXOdFwtNjflsoR/oRBtYInPq0vyTdwXUsy4b9FOE1cqAV89HF1i+NKkhybc\n2P7ZV3+TvUGlbnrV0j3ipTrfN3tDeWx7Lb4zdH7Jze/Foq0bHlBnk7anIsKaX3l3\nBlpZ9U5hTPOOwsk3m1uUeOLIgj8qjViHNH7PjhHR+Z0OJZuI5j40sEn+sLN5R8xv\ngTBONJFF0mo/L98U+pjb15BAEk2cA2oqON9MgB9ONOWVkRbFY9mgbOvLEmmtLoBl\nnFDHOAs5YHUkCXwQvxxT44Q3znMTNVG3o7XPMEaLiwKBgQDdeEy/dGpGwEIWKeYm\nIWFwtG+79iprHpA/Ya/P9v7bOojx4ZDkR7mmHEFquX1Jd5uIHoyjWBE5wbCIzaws\n1jN+o1SNpcIUfnCAroJaMLYLoqAG8IUiMRoDfBBxQ/dX6tdSqmb56Am2DeHzD0Kn\n/a0y0vaq1Wv0KhCpjmrfreTx/wKBgQDNfy0c3P0CpsWPL3uuJWwI4PKnrOcYlkZi\n/AccQmUAjD7VRtUF3i1N375MstVfCli+gsnvA74rQbY1ifW/U/en3uWz99lQk2fh\nQvgVXkU4Ay3pmuq4lf0WUp+MISay2UJ4X4Q2XLZZzVcewgYv9SjPhfMDXUKTBuOI\n+QlBs89acwKBgB/8NNFdxc+MCr9as8OEBKebV5vE1KF924Vb3WFiobIVxRtx4VQm\ny7gi0ovQWDjZDlxdVSBuIqa9w3oughRDp1I90oNWki4ViLf8/BR8fn41sXjvGbsz\nbjdcnp9NGpbW8twcghzLl0N0w9IvvQe4CmCRuVA43It528gxKlw9qBgPAoGBAMsH\ncZzowZkTCHGVak7+biS/iz8a1yA1qMk3VBcZigzmg1XYq7MmdgBQpQXGUoWaBWAE\nfFqHiiXWwJ1Y9tHXtgHHeY87uxue561pqw4Bm8XhbkU1Z96DYg/iBfw+7KsbeE7R\noCDNrORAumiLLe3H/FA8eYLDa3kz/y5fTkP50U39AoGBAJXhrue9dzvp21WBgNgV\n25Fly2C0Pjj4ZMAKqhSp3ZJqWlgaIHH+Lm450l9eij/lXwHT3Xtgcv/Vjm3Y2C2/\n7kS2MPq4VTDMVEwR+whaHixqZE9G7su3FkU8r4ynnHwojiLTVdVU9C0jGE1vc/Eu\n2Bb0YB7TNg345zr/ySBOrIbW\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-q9wrk@python-gamejam-e5761.iam.gserviceaccount.com",
+  "client_id": "100635900634146698852",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-q9wrk%40python-gamejam-e5761.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
