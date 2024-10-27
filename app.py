@@ -1,13 +1,13 @@
 #라이브러리 임포트
 import pygame as pg
-import sys, random, math
+import sys, random, math, pytweening as pt
 
 from Scripts.utils import load_image, load_images, load_data
 from Scripts.Shadows import Shadow
 from Scripts.Entities import Player, Entity, KillableEnemy, Strucker, Ratbit, Helli, Medicine
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
-from Scripts.Ui import TextUi, ButtonUi
+from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi
 from Scripts.Bullets import Bullet, PlayerBullet
 
 #상수 설정
@@ -42,6 +42,7 @@ class Game:
 
         self.camera_shake_gain = 0
         self.camera_shrink_speed = .3
+        self.shake = (self.camera_shake_gain * random.random(), self.camera_shake_gain * random.random())
 
         #게임 에셋
         self.assets = {
@@ -62,12 +63,8 @@ class Game:
                 "motbam2" : load_image("UI/Motbam2.png"),
                 "me" : load_image("UI/Me.png"),
 
-            },
-            
-            #타일맵 이미지 에셋
-            "tiles" : {
-                "floor" : load_images("Tiles/Floor"),
-                "wall" : load_images("Tiles/Wall"),
+                "credits_서준범_icon" : load_image("서준범.png"),
+
             },
 
             "projectiles" : {
@@ -121,7 +118,8 @@ class Game:
             "parry" : pg.mixer.Sound('Assets/Sfxs/Parry.wav'),
             "swoosh" : pg.mixer.Sound('Assets/Sfxs/Swing.wav'),
             "jump" : pg.mixer.Sound('Assets/Sfxs/Jump.wav'),
-            "ui_hover" : pg.mixer.Sound('Assets/Sfxs/Hover.wav')
+            "ui_hover" : pg.mixer.Sound('Assets/Sfxs/Hover.wav'),
+            "heal" : pg.mixer.Sound('Assets/Sfxs/Heal.wav'),
         }
         self.sfxs["enemy_hit"].set_volume(2)
 
@@ -150,16 +148,13 @@ class Game:
     #타이틀 스크린
     def state_title_screen(self):
         #start:
-        
-        #스페이스바로 시작
-        start_key = pg.K_SPACE
 
         margin = 50
-        map_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 100)), (500, 50), self.sfxs["ui_hover"])
-        endless_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["endless"], (200, 100)), (500, 150 + margin), self.sfxs["ui_hover"])
-        records_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["records"], (200, 100)), (500, 250 + margin * 2), self.sfxs["ui_hover"])
-        credits_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["credits"], (200, 100)), (500, 350 + margin * 3), self.sfxs["ui_hover"])
-        quit_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (500, 450 + margin * 4), self.sfxs["ui_hover"])
+        map_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 100)), (500, 50), self.sfxs["ui_hover"], 1, 20)
+        endless_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["endless"], (200, 100)), (500, 150 + margin), self.sfxs["ui_hover"], 1, 20)
+        records_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["records"], (200, 100)), (500, 250 + margin * 2), self.sfxs["ui_hover"], 1, 20)
+        credits_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["credits"], (200, 100)), (500, 350 + margin * 3), self.sfxs["ui_hover"], 1, 20)
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (500, 450 + margin * 4), self.sfxs["ui_hover"], 1, 20)
 
         self.uis.append(map_btn)
         self.uis.append(endless_btn)
@@ -168,6 +163,8 @@ class Game:
         self.uis.append(quit_btn)
 
         hover_image = pg.Surface((100, 100))
+
+        elapsed_time = 0
 
         while(True):
             #update:
@@ -203,6 +200,8 @@ class Game:
             if credits_btn.hovering:
                 hover_image = self.assets["ui"]["motbam"]
                 if mouse_click:
+                    self.end_scene()
+                    self.state_credits()
                     print("크레딧 버튼 누름")
             #나가기
             if quit_btn.hovering:
@@ -226,14 +225,9 @@ class Game:
                 if event.type == pg.QUIT:
                     pg.quit()
                     sys.exit()
-                if event.type == pg.KEYDOWN:
-                    if event.key == start_key:
-                        self.end_scene()
-                        #메인 게임 시작
-                        self.state_main_game("Assets/BigBreakout.json")
-                        return
 
-            self.clock.tick(TARGET_FPS)
+            dt = self.clock.tick(TARGET_FPS) / 1000
+            elapsed_time += dt
             #카메라 업데이트
             pg.display.flip()
     
@@ -260,6 +254,8 @@ class Game:
                 ui.update()
             if hasattr(ui, "render"):
                 ui.render(self.screen)
+            if hasattr(ui, "wiggle"):
+                    ui.wiggle()
 
     def manage_projectiles(self):
         for projectile in self.projectiles:
@@ -314,7 +310,7 @@ class Game:
             self.entities.append(Ratbit(self, "ratbit",
                                         pos=CEIL_SPAWN_POS if random.random() > .5 else FLOOR_SPAWN_POS,
                                         size=(150, 150), anim_size=(150, 150), 
-                                        following_speed=25, 
+                                        following_speed=30, 
                                         health=1, damage=20, attack_range=100))
         if data["entities"]["strucker"] == 1 and random.randint(1, data["spawn_rates"]["strucker_spawn_rate"]) == 1:
             self.entities.append(Strucker(self, "strucker", 
@@ -327,7 +323,7 @@ class Game:
                                         size=(200, 200), anim_size=(150, 150), speed=5, health=40, damage=20, 
                                         up=(CEIL_SPAWN_POS[0] - 200, CEIL_SPAWN_POS[1] - 100), 
                                         down=(FLOOR_SPAWN_POS[0] - 200, FLOOR_SPAWN_POS[1] + 100),
-                                        attack_chance=100, bullet_speed=25))
+                                        attack_chance=90, bullet_speed=30))
         #스포닝 에너미 끝
         if data["entities"]["medicine"] == 1 and random.randint(1, data["spawn_rates"]["medicine_spawn_rate"]) == 1:
             self.entities.append(
@@ -381,7 +377,7 @@ class Game:
         self.physic_rects = [floor, ceil]
 
         #ui
-        stat_ui = TextUi("못밤 플레이어 | 못밤 체력 : 100 | 못밤 스코어 : 없음 ㅋ", (50, 30), self.fonts["galmuri"], 30, "white")
+        stat_ui = TextUi("98세 못밤할아버지의 마지막 물 한모금", (50, 30), self.fonts["galmuri"], 30, "white")
         self.uis.append(stat_ui)
 
         while(True):
@@ -436,8 +432,8 @@ class Game:
             #매니징 끝 
 
             #화면 렌더
-            shake = (self.camera_shake_gain * random.random(), self.camera_shake_gain * random.random())
-            self.camera.blit(self.screen, shake)
+            
+            self.camera.blit(self.screen, self.shake)
             #화면 렌더 끝
 
             #이벤트 리슨
@@ -497,6 +493,54 @@ class Game:
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
 
+    def state_credits(self):
+
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (70, 650), self.sfxs["ui_hover"], 1, 20)
+        self.uis.append(quit_btn)
+
+        self.uis.append(TextUi("98세 못밤할아버지의 마지막 물 한모금 팀", (600, 50), self.fonts["galmuri"], 50, "white"))
+
+        self.uis.append(TextUi("서준범", (830, 220), self.fonts["galmuri"], 50, "white"))
+        self.uis.append(LinkUi("깃허브", (850, 520), self.fonts["galmuri"], 40, "white", "blue", self.sfxs["ui_hover"], "https://github.com/Un-Uclied"))
+        self.uis.append(LinkUi("유튜브", (850, 600), self.fonts["galmuri"], 40, "white", "blue", self.sfxs["ui_hover"], "https://www.youtube.com/@null_plr/featured"))
+
+        self.uis.append(TextUi("이준영", (1130, 220), self.fonts["galmuri"], 50, "white"))
+        self.uis.append(LinkUi("깃허브", (1150, 520), self.fonts["galmuri"], 40, "white", "blue", self.sfxs["ui_hover"], ""))
+        self.uis.append(LinkUi("유튜브", (1150, 600), self.fonts["galmuri"], 40, "white", "blue", self.sfxs["ui_hover"], ""))
+
+        bg = self.assets["bg"]["office/1"]
+        bg.set_alpha(50)
+
+        while True:
+            self.screen.fill("black")
+
+            self.screen.blit(bg, (0, 0))
+
+            pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
+            self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
+
+            self.screen.blit(self.assets["ui"]["credits_서준범_icon"], (800, 300))
+
+            mouse_click = pg.mouse.get_pressed(3)[0]
+            if quit_btn.hovering and mouse_click:
+                self.end_scene()
+                self.state_title_screen()
+
+            self.manage_spark()
+            self.manage_particle()
+            self.manage_ui()
+            self.manage_camera_shake()
+
+            self.camera.blit(self.screen, self.shake)
+
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    sys.exit()
+    
+            self.clock.tick(TARGET_FPS)
+            pg.display.flip()
+
     def end_scene(self):
         self.physic_rects.clear()
         self.particles.clear()
@@ -522,6 +566,7 @@ class Game:
             
     def on_player_healed(self, amount):
         self.player.heal(amount)
+        self.sfxs["heal"].play()
         pass
 
     def on_player_blocked(self):

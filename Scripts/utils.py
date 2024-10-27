@@ -1,5 +1,6 @@
 import pygame as pg
 import os, json
+import webbrowser
 
 BASE_IMAGE_PATH = "Assets/Sprites/"
 
@@ -22,3 +23,6 @@ def load_data(save_file : str):
     with open(os.path.join(save_file), 'r+') as file:
         dicts = json.load(file)
     return dicts
+
+def open_site(url):
+    webbrowser.open(url)
