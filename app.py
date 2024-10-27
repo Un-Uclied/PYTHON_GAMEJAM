@@ -48,7 +48,6 @@ class Game:
         self.assets = {
             #UI에셋
             "ui" : { 
-                "viggnete" : load_image("UI/Vignette.png"),
                 "bottom_fade" : load_image("UI/BottomFade.png"),
 
                 "title" : load_image("UI/Title.png"),
