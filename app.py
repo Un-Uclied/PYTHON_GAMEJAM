@@ -1,6 +1,9 @@
 #라이브러리 임포트
 import pygame as pg
 import sys, random, math, pytweening as pt
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
 
 from Scripts.utils import load_image, load_images, load_data
 from Scripts.Shadows import Shadow
@@ -9,6 +12,29 @@ from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
 from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi
 from Scripts.Bullets import Bullet, PlayerBullet
+
+#firebase 연동
+cred = credentials.Certificate("firebase/firebase-python-key.json")
+app = firebase_admin.initialize_app(cred)
+
+db = firestore.client()
+
+# 데이터를 추가할 컬렉션과 문서 ID를 설정합니다.
+collection_name = 'users'
+document_id = 'user1'
+
+# 추가할 데이터를 딕셔너리 형태로 작성합니다.
+data = {
+    'name': 'John',
+    'age': 30,
+    'email': 'john@example.com'
+}
+
+# 데이터를 컬렉션에 추가합니다.
+doc_ref = db.collection(collection_name).document(document_id)
+doc_ref.set(data)
+
+print('데이터가 성공적으로 추가되었습니다.')
 
 #상수 설정
 SCREEN_SCALE = (1600, 800)
@@ -47,8 +73,7 @@ class Game:
         #게임 에셋
         self.assets = {
             #UI에셋
-            "ui" : { 
-                "viggnete" : load_image("UI/Vignette.png"),
+            "ui" : {
                 "bottom_fade" : load_image("UI/BottomFade.png"),
 
                 "title" : load_image("UI/Title.png"),
@@ -187,13 +212,13 @@ class Game:
                     print("맵 버튼 누름")
             #엔드레스 게임으로
             if endless_btn.hovering:
-                hover_image = self.assets["ui"]["motbam2"]
+                hover_image = self.assets["ui"]["motbam"]
                 if mouse_click:
                     self.end_scene()
                     self.state_main_game("Assets/BigBreakout.json")
             #리코드 볼수 있음
             if records_btn.hovering:
-                hover_image = self.assets["ui"]["me"]
+                hover_image = self.assets["ui"]["motbam"]
                 if mouse_click:
                     print("리코드 버튼 누름")
             #크레딧
@@ -205,7 +230,7 @@ class Game:
                     print("크레딧 버튼 누름")
             #나가기
             if quit_btn.hovering:
-                hover_image = self.assets["ui"]["me"]
+                hover_image = self.assets["ui"]["motbam"]
                 if mouse_click:
                     pg.quit()
                     sys.exit()
@@ -541,6 +566,9 @@ class Game:
     
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
+
+    def state_world(self):
+        print("sex")
 
     def end_scene(self):
         self.physic_rects.clear()
