@@ -362,12 +362,12 @@ class Game:
             self.entities.append(Brook(self, "brook", 
                                        pos=(CEIL_SPAWN_POS[0] + 100, 350), 
                                        size=(200, 200), anim_size=(150, 150),
-                                       following_speed=35, max_health=1, damage=0))
+                                       following_speed=35, max_health=1, damage=20))
 
         #스포닝 에너미 끝
         if data["entities"]["medicine"] == 1 and random.randint(1, data["spawn_rates"]["medicine_spawn_rate"]) == 1:
             self.entities.append(
-                Medicine(self, "medicine", FLOOR_SPAWN_POS, (130 , 130), (130, 130), 20, 50)
+                Medicine(self, "medicine", FLOOR_SPAWN_POS, (130 , 130), (130, 130), 20, 100)
             )
         #추가 탄약은 플레이어가 최대 탄약이 아닐때 생김
         if self.player.ammo != self.player.max_ammo and data["entities"]["ammo"] == 1 and random.randint(1, data["spawn_rates"]["ammo_spawn_rate"]) == 1:

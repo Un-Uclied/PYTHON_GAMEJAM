@@ -1,5 +1,5 @@
 {   
-    "entities" : {"ratbit" : 0, "strucker" : 0, "helli" : 0, "brook" : 1, "medicine" : 1, "ammo" : 1},
+    "entities" : {"ratbit" : 1, "strucker" : 1, "helli" : 1, "brook" : 1, "medicine" : 1, "ammo" : 1},
 
-    "spawn_rates" : {"ratbit_spawn_rate" : 200, "strucker_spawn_rate" : 180, "helli_spawn_rate" : 250, "brook_spawn_rate" : 150, "medicine_spawn_rate" : 550, "ammo_spawn_rate" : 450}
+    "spawn_rates" : {"ratbit_spawn_rate" : 200, "strucker_spawn_rate" : 180, "helli_spawn_rate" : 250, "brook_spawn_rate" : 550, "medicine_spawn_rate" : 450, "ammo_spawn_rate" : 450}
 }

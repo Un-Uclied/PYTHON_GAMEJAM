@@ -140,7 +140,7 @@ class Player(MoveableEntity):
 
         self.attack_damage = attack_damage
         self.bullet_speed = bullet_speed
-        self.max_ammo = 20
+        self.max_ammo = 25
         self.ammo = self.max_ammo
 
         self.max_block_time = max_block_time
@@ -422,11 +422,12 @@ class Brook(FollowingEnemy):
             self.game.particles.append(Particle(self.game, "flame", (self.get_center_pos().x, self.get_center_pos().y), (300, 300), (random.randint(-5, 5), random.randint(10, 30))))
         for i in range(30):
             self.game.sparks.append(Spark(self.get_center_pos(), math.radians(360 * random.random()), 16, "red"))
+        
         super().attack()
 
+        #Brook, 플레이어를 제외한 모든 적 제거
         for enemy in self.game.entities:
-            if hasattr(enemy, "take_damage") and not isinstance(enemy, Player) and not enemy == self:
-                print(enemy.name)
+            if hasattr(enemy, "take_damage") and not isinstance(enemy, Player) and not isinstance(enemy, Brook):
                 enemy.take_damage(1000)
 
 class Strucker(Enemy):
