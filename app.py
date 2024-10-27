@@ -508,11 +508,14 @@ class Game:
         self.uis.append(LinkUi("깃허브", (1150, 520), self.fonts["galmuri"], 40, "white", "blue", self.sfxs["ui_hover"], ""))
 
         bg = self.assets["bg"]["office/1"]
+        rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
+        rect_surface.fill((0, 0, 0, 200)) 
 
         while True:
             self.screen.fill("black")
 
             self.screen.blit(bg, (0, 0))
+            self.screen.blit(rect_surface, (0, 0))
 
             pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
