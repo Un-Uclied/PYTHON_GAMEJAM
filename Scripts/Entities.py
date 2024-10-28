@@ -373,12 +373,18 @@ class Helli(FollowingEnemy):
         self.game.projectiles.append(Bullet(self.game, self.pos, pg.math.Vector2(-1, 0), self.bullet_speed, self.game.assets["projectiles"]["helli_fire_bullet"], 500, "helli's bullet", self.damage))
 
 class Brook(FollowingEnemy):
-    def __init__(self, game, name, pos, size, anim_size, following_speed, max_health, damage):
-        super().__init__(game, name, pos, size, anim_size, following_speed, max_health, damage)
+    def __init__(self, game, name, pos, size, anim_size, start_following_speed, following_speed, max_health, damage, speed_change_speed):
+        super().__init__(game, name, pos, size, anim_size, start_following_speed, max_health, damage)
         
         self.spawn_pos = pg.math.Vector2(pos[0], pos[1])
         self.target_pos = self.game.player.get_center_pos()
-        self.attack_range = 100
+        self.attack_range = 120
+
+        self.target_speed = following_speed
+        self.speed_change_speed = speed_change_speed
+        self.is_triggered = False
+        self.trigger_timer = random.randint(120, 180)
+        self.current_trigger_timer = 0
 
         self.blocked = False
 
@@ -394,6 +400,17 @@ class Brook(FollowingEnemy):
 
         if self.blocked and (self.spawn_pos - self.pos).magnitude() < self.attack_range:
             if self in self.game.entities : self.game.entities.remove(self)
+        
+        #점화
+        if self.current_trigger_timer < self.trigger_timer:
+            self.current_trigger_timer += 1
+        if not self.is_triggered and self.current_trigger_timer >= self.trigger_timer:
+            self.is_triggered = True
+            self.set_action("triggered")
+
+        # 점화시 움직임 속도 증가  
+        if self.is_triggered and self.move_speed < self.target_speed:
+            self.move_speed += self.speed_change_speed
 
     def take_damage(self, damage_amount):
         #죽을수 없음 공격했을시 EXPLODE
@@ -425,6 +442,8 @@ class Brook(FollowingEnemy):
         
         super().attack()
 
+        self.game.sfxs["explosion"].play()
+
         #Brook, 플레이어를 제외한 모든 적 제거
         for enemy in self.game.entities:
             if hasattr(enemy, "take_damage") and not isinstance(enemy, Player) and not isinstance(enemy, Brook):
@@ -445,8 +464,6 @@ class Strucker(Enemy):
 
         #화면 밖으로 나갔을때 릴리즈
         if self.pos.x + self.size[0] < 0:
-            if not self.attacked:
-                self.game.on_player_kill(self)
             if self in self.game.entities : self.game.entities.remove(self)
 
     def can_interact(self):
