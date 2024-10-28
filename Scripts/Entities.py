@@ -403,3 +403,33 @@ class Medicine(Entity):
             self.set_action("use")
             for i in range(30):
                 self.game.sparks.append(Spark(self.get_center_pos(), math.radians(360 * random.random()), 7, "green"))
+
+class Ammo(Entity):
+    def __init__(self, game, name, pos, size, anim_size, speed, ammo_refill_amount):
+        super().__init__(game, name, pos, size, anim_size)
+        self.set_action("idle")
+        self.speed = speed
+
+        self.heal_amount = ammo_refill_amount
+        self.healed = False
+
+    def set_action(self, action):
+        if action != self.action:
+            self.action = action
+            self.animation = self.game.assets["items"][self.name + '/' + self.action].copy()
+    
+    def update(self):
+        super().update()
+        self.pos.x -= self.speed
+
+        #화면 밖으로 나갔을때 릴리즈
+        if self.pos.x + self.size[0] < 0:
+            self.game.entities.remove(self)
+
+    def can_interact(self):
+        if self.game.player.get_rect().colliderect(self.get_rect()) and not self.healed:
+            self.healed = True
+            self.game.on_player_healed(self.heal_amount)
+            self.set_action("use")
+            for i in range(30):
+                self.game.sparks.append(Spark(self.get_center_pos(), math.radians(360 * random.random()), 7, "green"))

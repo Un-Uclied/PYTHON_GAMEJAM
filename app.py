@@ -73,7 +73,11 @@ class Game:
         #게임 에셋
         self.assets = {
             #UI에셋
+<<<<<<< HEAD
             "ui" : {
+=======
+            "ui" : { 
+>>>>>>> cdba5203daacd1e5b5a1713731bf724cbb97b9d6
                 "bottom_fade" : load_image("UI/BottomFade.png"),
 
                 "title" : load_image("UI/Title.png"),
@@ -132,6 +136,9 @@ class Game:
             "items" : {
                 "medicine/idle" : Animation(load_images("Items/Medicine/Idle"), 5, True),
                 "medicine/use" : Animation(load_images("Items/Medicine/Use"), 2, False),
+
+                "ammo/idle" : Animation(load_images("Items/Ammo/Idle"), 5, True),
+                "ammo/use" : Animation(load_images("Items/Ammo/Use"), 2, False),
             }
         }
 
