@@ -51,14 +51,12 @@ class LinkUi(TextUi):
         self.current_color = self.hover_color
         self.hover_audio.play()
 
-
-class ButtonUi:
-    def __init__(self, image : pg.Surface, pos : tuple, hover_audio : pg.mixer.Sound):
-        self.image = image
+class ClickableUi:
+    def __init__(self, surface : pg.Surface, pos : tuple, hover_audio : pg.mixer.Sound):
+        self.render_surface = surface
         self.hovering = False
         self.pos = pos
-
-        self.rect = pg.Rect(self.pos[0], self.pos[1], image.get_rect().width, image.get_rect().height)
+        self.rect = pg.Rect(self.pos[0], self.pos[1], surface.get_rect().width, surface.get_rect().height)
 
         self.hover_audio = hover_audio
 
@@ -75,7 +73,12 @@ class ButtonUi:
         self.hover_audio.play()
 
     def render(self, surface):
-        surface.blit(self.image, self.pos)
+        surface.blit(self.render_surface, self.pos)
+
+class ButtonUi(ClickableUi):
+    def __init__(self, image : pg.Surface, pos : tuple, hover_audio : pg.mixer.Sound):
+        self.image = image
+        super().__init__(image, pos, hover_audio)
 
 class WiggleButtonUi(ButtonUi):
     def __init__(self, image, pos, hover_audio, wiggle_speed, wiggle_amount):
@@ -95,4 +98,59 @@ class WiggleButtonUi(ButtonUi):
         self.render_offset[0] = math.sin(tween_value * math.pi * 2) * self.wiggle_amount
 
     def render(self, surface):
-        surface.blit(self.image, (self.pos[0] + self.render_offset[0], self.pos[1] + self.render_offset[1]))
+        surface.blit(self.render_surface, (self.pos[0] + self.render_offset[0], self.pos[1] + self.render_offset[1]))
+
+class TextButton(ClickableUi):
+    def __init__(self, text, font : pg.font.Font, text_size, pos, hover_audio, color, hovered_color):
+        super().__init__(pg.font.Font(font, text_size).render(text, True, color), pos, hover_audio)
+
+        self.un_hover_color = color
+        self.hovered_color = hovered_color
+        self.current_color = self.un_hover_color
+
+        self.font = font
+        self.text_size = text_size
+        self.text = text
+
+        self.render_surface = pg.font.Font(self.font, self.text_size).render(self.text, True, self.current_color)
+
+    def update(self):
+        super().update()
+        if self.hovering:
+            self.current_color = self.hovered_color
+        else:
+            self.current_color = self.un_hover_color
+
+        self.render_surface = pg.font.Font(self.font, self.text_size).render(self.text, True, self.current_color)
+
+class InputField:
+    def __init__(self, pos, scale, font, font_size, text_color, bg_color, is_private = False):
+        self.rect = pg.Rect(pos[0], pos[1], scale[0], scale[1])
+        self.text_color = text_color
+        self.color = bg_color
+        self.font = font
+        self.text = ""
+        self.hidden_text = ""
+        self.font_size = font_size
+        self.active = False
+        self.is_private = is_private
+
+    def get_event(self, event):
+        if event.type == pg.MOUSEBUTTONDOWN:
+            self.active = self.rect.collidepoint(event.pos)
+
+        if event.type == pg.KEYDOWN and self.active:
+            if event.key == pg.K_BACKSPACE:
+                self.text = self.text[:-1]
+                self.hidden_text = self.hidden_text[:-1]
+            elif event.key == pg.K_RETURN:
+                self.active = False
+            else:
+                self.text += event.unicode
+                self.hidden_text += "*"
+
+    def render(self, surface):
+        pg.draw.rect(surface, self.color, self.rect)
+        txt_surface = pg.font.Font(self.font, self.font_size).render(self.text if self.is_private else self.hidden_text, True, self.text_color)
+        surface.blit(txt_surface, (self.rect.x + 5, self.rect.y + 5))
+        pg.draw.rect(surface, self.text_color, self.rect, 2)

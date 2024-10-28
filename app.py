@@ -7,7 +7,7 @@ from Scripts.Shadows import Shadow
 from Scripts.Entities import Player, Entity, KillableEnemy, Strucker, Ratbit, Helli, Brook, Medicine, Ammo
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
-from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi
+from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField
 from Scripts.Bullets import Bullet, PlayerBullet
 
 import firebase_admin
@@ -189,11 +189,14 @@ class Game:
         credits_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["credits"], (200, 100)), (500, 350 + margin * 3), self.sfxs["ui_hover"], 1, 20)
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (500, 450 + margin * 4), self.sfxs["ui_hover"], 1, 20)
 
+        login_btn = TextButton("<로그인해주세요 현재 : 익명", self.fonts["galmuri"], 30, (30, 560), self.sfxs["ui_hover"], "white", "blue")
+
         self.uis.append(map_btn)
         self.uis.append(endless_btn)
         self.uis.append(records_btn)
         self.uis.append(credits_btn)
         self.uis.append(quit_btn)
+        self.uis.append(login_btn)
 
         hover_image = pg.Surface((100, 100))
 
@@ -242,6 +245,13 @@ class Game:
                 if mouse_click:
                     pg.quit()
                     sys.exit()
+
+            #로그인
+            if login_btn.hovering:
+                hover_image = self.assets["ui"]["me"]
+                if mouse_click:
+                    self.end_scene()
+                    self.state_login_menu()
 
             self.manage_spark()
             self.manage_particle()
@@ -513,6 +523,7 @@ class Game:
             #카메라 업데이트
             pg.display.flip()
 
+    #게임 종료
     def state_game_result(self):
         died = TextUi("님 쥬금 ㅋ", (500, 300), self.fonts["galmuri"], 200, "white")
         self.uis.append(died)
@@ -538,6 +549,7 @@ class Game:
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
 
+    #크레딧
     def state_credits(self):
 
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (70, 650), self.sfxs["ui_hover"], 1, 20)
@@ -587,6 +599,7 @@ class Game:
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
 
+    #스테이트 종료를 위한 클린업
     def end_scene(self):
         self.physic_rects.clear()
         self.particles.clear()
@@ -594,6 +607,61 @@ class Game:
         self.uis.clear()
         self.projectiles.clear()
         self.entities.clear()
+
+    def state_login_menu(self):
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (70, 650), self.sfxs["ui_hover"], 1, 20)
+        self.uis.append(quit_btn)
+
+        email = InputField((750, 200), (500, 50), self.fonts["galmuri"], 30, "black", "white", True)
+        self.uis.append(email)
+        password = InputField((750, 300), (500, 50), self.fonts["galmuri"], 30, "black", "white")
+        self.uis.append(password)
+
+        self.uis.append(TextUi("로그인", (500, 50), self.fonts["galmuri"], 60, "white"))
+        self.uis.append(TextUi("이메일 : ", (500, 200), self.fonts["galmuri"], 40, "white"))
+        self.uis.append(TextUi("비밀번호 : ", (500, 300), self.fonts["galmuri"], 40, "white"))
+
+        send_btn = TextButton("로그인!", self.fonts["galmuri"], 35, (500, 500), self.sfxs["ui_hover"], "yellow", "blue")
+        self.uis.append(send_btn)
+
+        bg = self.assets["bg"]["office/1"]
+        rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
+        rect_surface.fill((0, 0, 0, 200)) 
+
+        while True:
+            self.screen.fill("black")
+
+            self.screen.blit(bg, (0, 0))
+            self.screen.blit(rect_surface, (0, 0))
+
+            pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
+            self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
+
+            mouse_click = pg.mouse.get_pressed(3)[0]
+            if quit_btn.hovering and mouse_click:
+                self.end_scene()
+                self.state_title_screen()
+            if send_btn.hovering and mouse_click:
+                print(f"{email.text}, {password.text}")       
+
+            self.manage_spark()
+            self.manage_particle()
+            self.manage_ui()
+            self.manage_camera_shake()
+
+            self.camera.blit(self.screen, self.shake)
+
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    sys.exit()
+                
+                #tlqkf 왜 안됨?
+                email.get_event(event)
+                password.get_event(event)
+    
+            self.clock.tick(TARGET_FPS)
+            pg.display.flip()
 
     def on_player_kill(self, killed_entity : Entity):
         self.camera_shake_gain += 5
