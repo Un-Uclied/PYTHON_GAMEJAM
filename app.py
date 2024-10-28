@@ -69,7 +69,7 @@ class Game:
         self.current_time = pg.time.get_ticks()
 
         self.camera_shake_gain = 0
-        self.camera_shrink_speed = .3
+        self.camera_shrink_speed = .6
         self.shake = (self.camera_shake_gain * random.random(), self.camera_shake_gain * random.random())
 
         #게임 에셋
@@ -114,7 +114,7 @@ class Game:
                 "helli/idle" : Animation(load_images("Characters/Helli/Idle"), 5, True),
 
                 "brook/idle" : Animation(load_images("Characters/Brook/Idle"), 5, True),
-                "brook/explode" : Animation(load_images("Characters/Brook/Explode"), 5, True),
+                "brook/triggered" : Animation(load_images("Characters/Brook/Explode"), 5, True),
             },
 
             "props" : {
@@ -154,6 +154,9 @@ class Game:
             "ui_hover" : pg.mixer.Sound('Assets/Sfxs/Hover.wav'),
             "heal" : pg.mixer.Sound('Assets/Sfxs/Heal.wav'),
             "reload" : pg.mixer.Sound('Assets/Sfxs/Reload.wav'),
+            "player_hurt" : pg.mixer.Sound('Assets/Sfxs/PlayerHurt.wav'),
+            "gameover" : pg.mixer.Sound('Assets/Sfxs/Gameover.wav'),
+            "explosion" : pg.mixer.Sound("Assets/Sfxs/Explosion.wav"),
         }
 
         #게임 폰트
@@ -177,102 +180,10 @@ class Game:
 
         #스폰된 탄들
         self.projectiles = []
-    
-    #타이틀 스크린
-    def state_title_screen(self):
-        #start:
 
-        margin = 50
-        map_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 100)), (500, 50), self.sfxs["ui_hover"], 1, 20)
-        endless_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["endless"], (200, 100)), (500, 150 + margin), self.sfxs["ui_hover"], 1, 20)
-        records_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["records"], (200, 100)), (500, 250 + margin * 2), self.sfxs["ui_hover"], 1, 20)
-        credits_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["credits"], (200, 100)), (500, 350 + margin * 3), self.sfxs["ui_hover"], 1, 20)
-        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (500, 450 + margin * 4), self.sfxs["ui_hover"], 1, 20)
-
-        login_btn = TextButton("<로그인해주세요 현재 : 익명", self.fonts["galmuri"], 30, (30, 560), self.sfxs["ui_hover"], "white", "blue")
-
-        self.uis.append(map_btn)
-        self.uis.append(endless_btn)
-        self.uis.append(records_btn)
-        self.uis.append(credits_btn)
-        self.uis.append(quit_btn)
-        self.uis.append(login_btn)
-
-        hover_image = pg.Surface((100, 100))
-
-        elapsed_time = 0
-
-        while(True):
-            #update:
-            self.current_time = pg.time.get_ticks()
-
-            #화면 초기화
-            self.screen.fill("black")
-
-            #pg.draw.rect(self.screen, "white", (0, 0, 1600, 800))
-            self.screen.blit(hover_image, (600, 0))
-            self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (800, 0))
-            pg.draw.rect(self.screen, "black", (0, 0, 800, 800))
-
-            mouse_click = pg.mouse.get_pressed(3)[0]
-
-            #지도 버튼
-            if map_btn.hovering:
-                hover_image = self.assets["ui"]["motbam"]
-                if mouse_click:
-                    print("맵 버튼 누름")
-            #엔드레스 게임으로
-            if endless_btn.hovering:
-                hover_image = self.assets["ui"]["motbam2"]
-                if mouse_click:
-                    self.end_scene()
-                    self.state_main_game("Assets/BigBreakout.json")
-            #리코드 볼수 있음
-            if records_btn.hovering:
-                hover_image = self.assets["ui"]["me"]
-                if mouse_click:
-                    print("리코드 버튼 누름")
-            #크레딧
-            if credits_btn.hovering:
-                hover_image = self.assets["ui"]["motbam"]
-                if mouse_click:
-                    self.end_scene()
-                    self.state_credits()
-                    print("크레딧 버튼 누름")
-            #나가기
-            if quit_btn.hovering:
-                hover_image = self.assets["ui"]["me"]
-                if mouse_click:
-                    pg.quit()
-                    sys.exit()
-
-            #로그인
-            if login_btn.hovering:
-                hover_image = self.assets["ui"]["me"]
-                if mouse_click:
-                    self.end_scene()
-                    self.state_login_menu()
-
-            self.manage_spark()
-            self.manage_particle()
-            self.manage_ui()
-            self.manage_camera_shake()
-
-            self.screen.blit(self.assets["ui"]["title"], (0, 0))
-
-            #화면 렌더
-            self.camera.blit(self.screen, (0, 0))
-
-            #이벤트 리슨
-            for event in pg.event.get():
-                if event.type == pg.QUIT:
-                    pg.quit()
-                    sys.exit()
-
-            dt = self.clock.tick(TARGET_FPS) / 1000
-            elapsed_time += dt
-            #카메라 업데이트
-            pg.display.flip()
+        self.score = 0
+        self.high_score = load_data("Status.json")["high_score"]
+        self.current_level_data = {}
     
     def manage_spark(self):
         for spark in self.sparks.copy():
@@ -340,6 +251,7 @@ class Game:
     
     def manage_camera_shake(self):
         self.camera_shake_gain = max(self.camera_shake_gain - self.camera_shrink_speed, 0)
+        self.shake = (self.camera_shake_gain * random.random(), self.camera_shake_gain * random.random())
 
     def manage_entity(self):
         for entity in self.entities:
@@ -347,48 +259,147 @@ class Game:
             entity.update()
             entity.render(self.screen)
 
-    def spawn_entity(self, data):
+    def spawn_entity(self):
         #스포닝 에너미
-        if data["entities"]["ratbit"] == 1 and random.randint(1, data["spawn_rates"]["ratbit_spawn_rate"]) == 1:
+        if self.current_level_data["entities"]["ratbit"] and random.randint(1, self.current_level_data["spawn_rates"]["ratbit_spawn_rate"]) == 1:
             self.entities.append(Ratbit(self, "ratbit",
                                         pos=CEIL_SPAWN_POS if random.random() > .5 else FLOOR_SPAWN_POS,
                                         size=(150, 150), anim_size=(150, 150), 
                                         following_speed=30, 
-                                        health=1, damage=20, attack_range=100))
-        if data["entities"]["strucker"] == 1 and random.randint(1, data["spawn_rates"]["strucker_spawn_rate"]) == 1:
+                                        health=1, damage=self.current_level_data["damages"]["ratbit_damage"], attack_range=100))
+        if self.current_level_data["entities"]["strucker"] and random.randint(1, self.current_level_data["spawn_rates"]["strucker_spawn_rate"]) == 1:
             self.entities.append(Strucker(self, "strucker", 
                                         pos=(FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1] + 40),
                                         size=(100, 150), anim_size=(150, 150), 
-                                        speed=20, damage=20))
-        if data["entities"]["helli"] == 1 and random.randint(1, data["spawn_rates"]["helli_spawn_rate"]) == 1:
+                                        speed=20, damage=self.current_level_data["damages"]["strucker_damage"]))
+        if self.current_level_data["entities"]["helli"] and random.randint(1, self.current_level_data["spawn_rates"]["helli_spawn_rate"]) == 1:
             self.entities.append(Helli(self, "helli", 
                                         pos=(FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1]),
-                                        size=(200, 200), anim_size=(150, 150), speed=5, health=40, damage=20, 
+                                        size=(200, 200), anim_size=(150, 150), speed=5, health=40, damage=self.current_level_data["damages"]["helli_damage"], 
                                         up=(CEIL_SPAWN_POS[0] - 200, CEIL_SPAWN_POS[1] - 100), 
                                         down=(FLOOR_SPAWN_POS[0] - 200, FLOOR_SPAWN_POS[1] + 100),
                                         attack_chance=90, bullet_speed=30))
         #어우 눈 아파라
-        if data["entities"]["brook"] == 1 and random.randint(1, data["spawn_rates"]["brook_spawn_rate"]) == 1:
+        if self.current_level_data["entities"]["brook"] and random.randint(1, self.current_level_data["spawn_rates"]["brook_spawn_rate"]) == 1:
             self.entities.append(Brook(self, "brook", 
                                        pos=(CEIL_SPAWN_POS[0] + 100, 350), 
                                        size=(200, 200), anim_size=(150, 150),
-                                       following_speed=35, max_health=1, damage=20))
+                                       start_following_speed = 3,
+                                       following_speed=55, max_health=1, damage=self.current_level_data["damages"]["brook_damage"], speed_change_speed = 5))
 
         #스포닝 에너미 끝
-        if data["entities"]["medicine"] == 1 and random.randint(1, data["spawn_rates"]["medicine_spawn_rate"]) == 1:
+        if self.current_level_data["entities"]["medicine"] and random.randint(1, self.current_level_data["spawn_rates"]["medicine_spawn_rate"]) == 1:
             self.entities.append(
-                Medicine(self, "medicine", FLOOR_SPAWN_POS, (130 , 130), (130, 130), 20, 100)
+                Medicine(self, "medicine", FLOOR_SPAWN_POS, (130 , 130), (130, 130), 20, self.current_level_data["amount"]["heal_amount"])
             )
         #추가 탄약은 플레이어가 최대 탄약이 아닐때 생김
-        if self.player.ammo != self.player.max_ammo and data["entities"]["ammo"] == 1 and random.randint(1, data["spawn_rates"]["ammo_spawn_rate"]) == 1:
+        if self.player.ammo != self.player.max_ammo and self.current_level_data["entities"]["ammo"] and random.randint(1, self.current_level_data["spawn_rates"]["ammo_spawn_rate"]) == 1:
             self.entities.append(
-                Ammo(self, "ammo", FLOOR_SPAWN_POS, (130 , 130), (130, 130), 20, 20)
+                Ammo(self, "ammo", FLOOR_SPAWN_POS, (130 , 130), (130, 130), 20, self.current_level_data["amount"]["ammo_amount"])
             )
 
-    #메인 게임
-    def state_main_game(self, load_file):
+    #타이틀 스크린
+    def state_title_screen(self):
         #start:
-        DATA = load_data(load_file)
+
+        margin = 50
+        map_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 100)), (500, 50), self.sfxs["ui_hover"], 1, 20)
+        endless_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["endless"], (200, 100)), (500, 150 + margin), self.sfxs["ui_hover"], 1, 20)
+        records_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["records"], (200, 100)), (500, 250 + margin * 2), self.sfxs["ui_hover"], 1, 20)
+        credits_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["credits"], (200, 100)), (500, 350 + margin * 3), self.sfxs["ui_hover"], 1, 20)
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (500, 450 + margin * 4), self.sfxs["ui_hover"], 1, 20)
+
+        login_btn = TextButton("<로그인해주세요 현재 : 익명", self.fonts["galmuri"], 30, (30, 560), self.sfxs["ui_hover"], "white", "blue")
+
+        self.uis.append(map_btn)
+        self.uis.append(endless_btn)
+        self.uis.append(records_btn)
+        self.uis.append(credits_btn)
+        self.uis.append(quit_btn)
+        self.uis.append(login_btn)
+
+        hover_image = pg.Surface((100, 100))
+
+        elapsed_time = 0
+
+        while(True):
+            #update:
+            self.current_time = pg.time.get_ticks()
+
+            #화면 초기화
+            self.screen.fill("black")
+            self.camera.fill("black")
+
+            #pg.draw.rect(self.screen, "white", (0, 0, 1600, 800))
+            self.screen.blit(hover_image, (600, 0))
+            self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (800, 0))
+            pg.draw.rect(self.screen, "black", (0, 0, 800, 800))
+
+            mouse_click = pg.mouse.get_pressed(3)[0]
+
+            #지도 버튼
+            if map_btn.hovering:
+                hover_image = self.assets["ui"]["motbam"]
+                if mouse_click:
+                    print("맵 버튼 누름")
+            #엔드레스 게임으로
+            if endless_btn.hovering:
+                hover_image = self.assets["ui"]["motbam2"]
+                if mouse_click:
+                    self.end_scene()
+                    self.current_level_data = load_data("Assets/BigBreakout.json")
+                    self.state_main_game()
+            #리코드 볼수 있음
+            if records_btn.hovering:
+                hover_image = self.assets["ui"]["me"]
+                if mouse_click:
+                    print("리코드 버튼 누름")
+            #크레딧
+            if credits_btn.hovering:
+                hover_image = self.assets["ui"]["motbam"]
+                if mouse_click:
+                    self.end_scene()
+                    self.state_credits()
+                    print("크레딧 버튼 누름")
+            #나가기
+            if quit_btn.hovering:
+                hover_image = self.assets["ui"]["me"]
+                if mouse_click:
+                    pg.quit()
+                    sys.exit()
+
+            #로그인
+            if login_btn.hovering:
+                hover_image = self.assets["ui"]["me"]
+                if mouse_click:
+                    self.end_scene()
+                    self.state_login_menu()
+
+            self.manage_spark()
+            self.manage_particle()
+            self.manage_ui()
+            self.manage_camera_shake()
+
+            self.screen.blit(self.assets["ui"]["title"], (0, 0))
+
+            #화면 렌더
+            self.camera.blit(self.screen, (0, 0))
+
+            #이벤트 리슨
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    sys.exit()
+
+            dt = self.clock.tick(TARGET_FPS) / 1000
+            elapsed_time += dt
+            #카메라 업데이트
+            pg.display.flip()
+
+    #메인 게임
+    def state_main_game(self):
+        #start:
+        PAUSED = False #상수는 아니지만 그래도 중요하니까 ^^ 아시져?
 
         #플레이어 : game, name, pos, hit_box_size, anim_size, max health
         self.player = Player(self, "player", 
@@ -435,61 +446,101 @@ class Game:
         stat_ui = TextUi("98세 못밤할아버지의 마지막 물 한모금", (50, 30), self.fonts["galmuri"], 30, "white")
         self.uis.append(stat_ui)
 
+        #일시 정지 UI
+        pause_bg = self.assets["bg"]["office/1"]
+        pause_rect_surface = pg.Surface(pause_bg.get_size(), pg.SRCALPHA)
+        pause_rect_surface.fill((0, 0, 0, 200))
+
         while(True):
             #update:
-            self.current_time = pg.time.get_ticks()
-
             #화면 초기화
             self.screen.fill("black")
+            self.camera.fill("black")
             
-            #배경 렌더
-            bg_x1 -= bg_scroll_speed
-            bg_x2 -= bg_scroll_speed
+            #일시 정지에 영향을 받음
+            if not PAUSED:
+                self.current_time = pg.time.get_ticks()
 
-            if bg_x1 <= -bg_width:
-                bg_x1 = bg_width
-            if bg_x2 <= -bg_width:
-                bg_x2 = bg_width
- 
-            self.screen.blit(background1, (bg_x1, 0))
-            self.screen.blit(background2, (bg_x2, 0))
+                #배경 렌더
+                bg_x1 -= bg_scroll_speed
+                bg_x2 -= bg_scroll_speed
 
-            self.screen.blit(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), (0, 700))
-            self.screen.blit(pg.transform.flip(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), False, True), (0, 0))
-            self.screen.blit(pg.transform.flip(pg.transform.rotate(self.assets["ui"]["bottom_fade"], 90), True, False), (0, 0))
-            #배경 렌더 끝
+                if bg_x1 <= -bg_width:
+                    bg_x1 = bg_width
+                if bg_x2 <= -bg_width:
+                    bg_x2 = bg_width
+    
+                self.screen.blit(background1, (bg_x1, 0))
+                self.screen.blit(background2, (bg_x2, 0))
 
-            stat_ui.text = f"{self.player.ammo}"
+                self.screen.blit(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), (0, 700))
+                self.screen.blit(pg.transform.flip(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), False, True), (0, 0))
+                self.screen.blit(pg.transform.flip(pg.transform.rotate(self.assets["ui"]["bottom_fade"], 90), True, False), (0, 0))
+                #배경 렌더 끝
+
+                stat_ui.text = f"남은 탄: {self.player.ammo} | {self.score} | 거대 괴물로부터 남은 거리 : {self.player.health}m"
+                
+                #플레이어 업데이트 & 렌더
+                self.player.update(self.physic_rects, self.player_movement)
+                self.player.render(self.screen)
+                #플레이어 업데이트 & 렌더 끝
+
+                self.spawn_entity()
+
+                #구렁이 업데이트 ㅋㅋ
+                worm.pos.x = -self.player.health * 2
+                worm.update()
+                worm.render(self.screen)
+                #구렁이 ㅋㅋ 끝
+                #매니징
+                self.manage_projectiles()
+                self.manage_camera_shake()
+                self.manage_entity()
+                #매니징 끝
+
+                #매니징
+                self.manage_particle()
+                self.manage_spark()
+                self.manage_ui()
+                #매니징 끝 
+
+                #화면 렌더
+                
+                self.camera.blit(self.screen, self.shake)
+                #화면 렌더 끝
+
+                #플레이어 행동
+                mouse_click = pg.mouse.get_pressed(3) #(마우스 좌클릭, 마우스 휠클릭, 마우스 우클릭)
+                mouse_pos = pg.mouse.get_pos()
+                #플레이어 공격
+                if mouse_click[MOUSE_ATTACK] and self.current_time - last_fire_time >= gun_cooltime:
+                    if self.player.gun_fire(mouse_pos):
+                        self.sfxs["gun_fire"].play()
+                        self.camera_shake_gain += gun_fire_shake
+                        last_fire_time = self.current_time
+                #플레이어 블록
+                if mouse_click[MOUSE_BLOCK] and self.current_time - last_block_time >= block_cooltime:
+                    self.sfxs["swoosh"].play()
+                    self.player.use_shield()
+                    last_block_time = self.current_time
+                #플레이어 행동 끝
+            #일시 정지에 영향을 받음 끝
             
-            #플레이어 업데이트 & 렌더
-            self.player.update(self.physic_rects, self.player_movement)
-            self.player.render(self.screen)
-            #플레이어 업데이트 & 렌더 끝
+            if PAUSED:
+                self.screen.blit(pause_bg, (0, 0))
+                self.screen.blit(pause_rect_surface, (0, 0))
 
-            self.spawn_entity(DATA)
+                pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
+                self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
 
-            #구렁이 업데이트 ㅋㅋ
-            worm.pos.x = -self.player.health * 2
-            worm.update()
-            worm.render(self.screen)
-            #구렁이 ㅋㅋ 끝
+                paused_txt = TextUi("일시정지", (100, 300), self.fonts["galmuri"], 100, "white")
+                paused_txt.update()
+                paused_txt.render(self.screen)
+                paused_txt = TextUi("ESC로 게임으로 돌아가기", (100, 420), self.fonts["galmuri"], 30, "white")
+                paused_txt.update()
+                paused_txt.render(self.screen)
 
-            #매니징
-            self.manage_projectiles()
-            self.manage_camera_shake()
-            self.manage_entity()
-            #매니징 끝
-
-            #매니징
-            self.manage_particle()
-            self.manage_spark()
-            self.manage_ui()
-            #매니징 끝 
-
-            #화면 렌더
-            
-            self.camera.blit(self.screen, self.shake)
-            #화면 렌더 끝
+                self.camera.blit(self.screen, (0, 0))
 
             #이벤트 리슨
             for event in pg.event.get():
@@ -501,23 +552,9 @@ class Game:
                     if event.key == KEY_JUMP:
                         if self.player.jump(20):
                             self.sfxs["jump"].play()
+                    if event.key == pg.K_ESCAPE:
+                        PAUSED = not PAUSED
             #이벤트 리슨 끝
-
-            #플레이어 행동
-            mouse_click = pg.mouse.get_pressed(3) #(마우스 좌클릭, 마우스 휠클릭, 마우스 우클릭)
-            mouse_pos = pg.mouse.get_pos()
-            #플레이어 공격
-            if mouse_click[MOUSE_ATTACK] and self.current_time - last_fire_time >= gun_cooltime:
-                if self.player.gun_fire(mouse_pos):
-                    self.sfxs["gun_fire"].play()
-                    self.camera_shake_gain += gun_fire_shake
-                    last_fire_time = self.current_time
-            #플레이어 블록
-            if mouse_click[MOUSE_BLOCK] and self.current_time - last_block_time >= block_cooltime:
-                self.sfxs["swoosh"].play()
-                self.player.use_shield()
-                last_block_time = self.current_time
-            #플레이어 행동 끝
 
             self.clock.tick(TARGET_FPS)
             #카메라 업데이트
@@ -527,8 +564,10 @@ class Game:
     def state_game_result(self):
         died = TextUi("님 쥬금 ㅋ", (500, 300), self.fonts["galmuri"], 200, "white")
         self.uis.append(died)
+        self.sfxs["gameover"].play()
         while True:
             self.screen.fill("black")
+            self.camera.fill("black")
 
             #매니징
             self.manage_projectiles()
@@ -570,6 +609,7 @@ class Game:
 
         while True:
             self.screen.fill("black")
+            self.camera.fill("black")
 
             self.screen.blit(bg, (0, 0))
             self.screen.blit(rect_surface, (0, 0))
@@ -608,6 +648,7 @@ class Game:
         self.projectiles.clear()
         self.entities.clear()
 
+    #로그인
     def state_login_menu(self):
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (70, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
@@ -630,6 +671,7 @@ class Game:
 
         while True:
             self.screen.fill("black")
+            self.camera.fill("black")
 
             self.screen.blit(bg, (0, 0))
             self.screen.blit(rect_surface, (0, 0))
@@ -666,6 +708,7 @@ class Game:
     def on_player_kill(self, killed_entity : Entity):
         self.camera_shake_gain += 5
         print(f"killed : {killed_entity.name}")
+        self.score += self.current_level_data["scores"][f"{killed_entity.name}_add_score"]
 
     def on_player_damaged(self, damage_amount):
         if self.player.blocking: 
@@ -677,6 +720,8 @@ class Game:
         if self.player.health <= 0:
             self.end_scene()
             self.state_game_result()
+        else:
+            self.sfxs["player_hurt"].play()
 
     def on_player_ammo_refilled(self, amount):
         self.player.add_ammo(amount)
@@ -691,9 +736,9 @@ class Game:
 
     def on_player_blocked(self):
         self.sfxs["parry"].play()
-        
+        self.camera_shake_gain += 10
 
-                
+     
 #게임 실행
 if __name__ == '__main__':
     game = Game()
