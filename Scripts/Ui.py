@@ -151,6 +151,6 @@ class InputField:
 
     def render(self, surface):
         pg.draw.rect(surface, self.color, self.rect)
-        txt_surface = pg.font.Font(self.font, self.font_size).render(self.text if self.is_private else self.hidden_text, True, self.text_color)
+        txt_surface = pg.font.Font(self.font, self.font_size).render(self.hidden_text if self.is_private else self.text, True, self.text_color)
         surface.blit(txt_surface, (self.rect.x + 5, self.rect.y + 5))
         pg.draw.rect(surface, self.text_color, self.rect, 2)

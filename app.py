@@ -653,9 +653,9 @@ class Game:
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (70, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
 
-        email = InputField((750, 200), (500, 50), self.fonts["galmuri"], 30, "black", "white", True)
+        email = InputField((750, 200), (500, 50), self.fonts["galmuri"], 30, "black", "white")
         self.uis.append(email)
-        password = InputField((750, 300), (500, 50), self.fonts["galmuri"], 30, "black", "white")
+        password = InputField((750, 300), (500, 50), self.fonts["galmuri"], 30, "black", "white", True)
         self.uis.append(password)
 
         self.uis.append(TextUi("로그인", (500, 50), self.fonts["galmuri"], 60, "white"))
@@ -664,6 +664,8 @@ class Game:
 
         send_btn = TextButton("로그인!", self.fonts["galmuri"], 35, (500, 500), self.sfxs["ui_hover"], "yellow", "blue")
         self.uis.append(send_btn)
+        create_btn = TextButton("전 계정이 없어요!", self.fonts["galmuri"], 35, (500, 600), self.sfxs["ui_hover"], "yellow", "blue")
+        self.uis.append(create_btn)
 
         bg = self.assets["bg"]["office/1"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
@@ -684,7 +686,10 @@ class Game:
                 self.end_scene()
                 self.state_title_screen()
             if send_btn.hovering and mouse_click:
-                print(f"{email.text}, {password.text}")       
+                print(f"{email.text}, {password.text}")
+            if create_btn.hovering and mouse_click:
+                self.end_scene()
+                self.state_make_account()
 
             self.manage_spark()
             self.manage_particle()
@@ -701,6 +706,67 @@ class Game:
                 #tlqkf 왜 안됨?
                 email.get_event(event)
                 password.get_event(event)
+    
+            self.clock.tick(TARGET_FPS)
+            pg.display.flip()
+
+    def state_make_account(self):
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (70, 650), self.sfxs["ui_hover"], 1, 20)
+        self.uis.append(quit_btn)
+
+        account_id = InputField((750, 200), (500, 50), self.fonts["galmuri"], 30, "black", "white")
+        self.uis.append(account_id)
+        email = InputField((750, 300), (500, 50), self.fonts["galmuri"], 30, "black", "white")
+        self.uis.append(email)
+        password = InputField((750, 400), (500, 50), self.fonts["galmuri"], 30, "black", "white", True)
+        self.uis.append(password)
+
+        self.uis.append(TextUi("계정 생성", (500, 50), self.fonts["galmuri"], 60, "white"))
+        self.uis.append(TextUi("아이디 : ", (500, 200), self.fonts["galmuri"], 40, "white"))
+        self.uis.append(TextUi("이메일 : ", (500, 300), self.fonts["galmuri"], 40, "white"))
+        self.uis.append(TextUi("비밀번호 : ", (500, 400), self.fonts["galmuri"], 40, "white"))
+
+        send_btn = TextButton("계정 만들기", self.fonts["galmuri"], 35, (500, 500), self.sfxs["ui_hover"], "yellow", "blue")
+        self.uis.append(send_btn)
+
+        bg = self.assets["bg"]["office/1"]
+        rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
+        rect_surface.fill((0, 0, 0, 200)) 
+
+        while True:
+            self.screen.fill("black")
+            self.camera.fill("black")
+
+            self.screen.blit(bg, (0, 0))
+            self.screen.blit(rect_surface, (0, 0))
+
+            pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
+            self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
+
+            mouse_click = pg.mouse.get_pressed(3)[0]
+            if quit_btn.hovering and mouse_click:
+                self.end_scene()
+                self.state_login_menu()
+            if send_btn.hovering and mouse_click:
+                #계정 만들기 로직
+                print(f"{account_id.text} {email.text}, {password.text}")
+
+            self.manage_spark()
+            self.manage_particle()
+            self.manage_ui()
+            self.manage_camera_shake()
+
+            self.camera.blit(self.screen, self.shake)
+
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    sys.exit()
+                
+                #tlqkf 왜 안됨?
+                email.get_event(event)
+                password.get_event(event)
+                account_id.get_event(event)
     
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
