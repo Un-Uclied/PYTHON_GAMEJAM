@@ -1,0 +1,15 @@
+{   
+    "entities" : {"ratbit" : true, "strucker" : true, "helli" : true, "brook" : false, "bluglogger" : false, "stalker" : false, "medicine" : true, "ammo" : true},
+
+    "spawn_rates" : {"ratbit_spawn_rate" : 350, "strucker_spawn_rate" : 240, "helli_spawn_rate" : 500, "brook_spawn_rate" : 800, "bluglogger_spawn_rate" : 900, "stalker_spawn_rate" : 300, "medicine_spawn_rate" : 450, "ammo_spawn_rate" : 450},
+
+    "scores" : {"ratbit_add_score" : 2000, "helli_add_score" : 3500, "brook_add_score" : 5000, "bluglogger_add_score" : 4500},
+
+    "damages" : {"ratbit_damage" : 20, "strucker_damage" : 20, "helli_damage" : 20, "brook_damage" : 30, "bluglogger_damage" : 10, "stalker_damage" : 30},
+
+    "healths" : {"helli_health" : 40, "bluglogger_health" : 60},
+
+    "amount" : {"heal_amount" : 100, "ammo_amount" : 35},
+
+    "bg_name" : "office"
+}

@@ -4,7 +4,7 @@ import sys, random, math, pytweening as pt
 
 from Scripts.utils import load_image, load_images, load_data
 from Scripts.Shadows import Shadow
-from Scripts.Entities import Player, Entity, KillableEnemy, Strucker, Ratbit, Helli, Brook, Medicine, Ammo
+from Scripts.Entities import Player, Entity, KillableEnemy, Obstacle, Ratbit, Helli, Brook, BlugLogger, Medicine, Ammo
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
 from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField
@@ -85,12 +85,18 @@ class Game:
                 "credits" : load_image("UI/Credits.png"),
                 "records" : load_image("UI/Record.png"),
                 "quit" : load_image("UI/Quit.png"),
+                "escape" : load_image("UI/Escape.png"),
 
                 "motbam" : load_image("UI/Motbam.png"),
                 "motbam2" : load_image("UI/Motbam2.png"),
                 "me" : load_image("UI/Me.png"),
 
                 "credits_서준범_icon" : load_image("서준범.png"),
+                "credits_이준영_icon" : load_image("못밤.png"),
+
+                "node" : load_image("UI/Node.png"),
+                "exit_node" : load_image("UI/ExitNode.png"),
+                "locked_node" : load_image("UI/Locked.png")
 
             },
 
@@ -113,8 +119,14 @@ class Game:
 
                 "helli/idle" : Animation(load_images("Characters/Helli/Idle"), 5, True),
 
-                "brook/idle" : Animation(load_images("Characters/Brook/Idle"), 5, True),
+                "brook/idle" : Animation(load_images("Characters/Brook/Idle"), 8, True),
                 "brook/triggered" : Animation(load_images("Characters/Brook/Explode"), 5, True),
+
+                "bluglogger/idle" : Animation(load_images("Characters/Bluglogger/Idle"), 5, True),
+                "bluglogger/attack" : Animation(load_images("Characters/Bluglogger/Attack"), 5, True),
+                "beam" : load_image("Characters/Bluglogger/Beam.png"),
+
+                "stalker/idle" : Animation(load_images("Characters/Stalker/Idle"), 5, True),
             },
 
             "props" : {
@@ -142,7 +154,9 @@ class Game:
 
                 "ammo/idle" : Animation(load_images("Items/Ammo/Idle"), 5, True),
                 "ammo/use" : Animation(load_images("Items/Ammo/Use"), 2, False),
-            }
+            },
+
+            "level_world" : load_image("background.png")
         }
 
         #게임 효과음
@@ -184,8 +198,8 @@ class Game:
         self.projectiles = []
 
         self.score = 0
-        self.high_score = load_data("Status.json")["high_score"]
         self.current_level_data = {}
+        self.status = load_data("Status.json")
     
     def manage_spark(self):
         for spark in self.sparks.copy():
@@ -263,31 +277,48 @@ class Game:
 
     def spawn_entity(self):
         #스포닝 에너미
+        #RATBIT
         if self.current_level_data["entities"]["ratbit"] and random.randint(1, self.current_level_data["spawn_rates"]["ratbit_spawn_rate"]) == 1:
             self.entities.append(Ratbit(self, "ratbit",
                                         pos=CEIL_SPAWN_POS if random.random() > .5 else FLOOR_SPAWN_POS,
                                         size=(150, 150), anim_size=(150, 150), 
                                         following_speed=30, 
                                         health=1, damage=self.current_level_data["damages"]["ratbit_damage"], attack_range=100))
+        #STRUCKER
         if self.current_level_data["entities"]["strucker"] and random.randint(1, self.current_level_data["spawn_rates"]["strucker_spawn_rate"]) == 1:
-            self.entities.append(Strucker(self, "strucker", 
+            self.entities.append(Obstacle(self, "strucker", 
                                         pos=(FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1] + 40),
                                         size=(100, 150), anim_size=(150, 150), 
                                         speed=20, damage=self.current_level_data["damages"]["strucker_damage"]))
+        #STALKER
+        if self.current_level_data["entities"]["stalker"] and random.randint(1, self.current_level_data["spawn_rates"]["stalker_spawn_rate"]) == 1:
+            self.entities.append(Obstacle(self, "stalker", 
+                                        pos=(CEIL_SPAWN_POS[0], CEIL_SPAWN_POS[1] - 100),
+                                        size=(150, 400), anim_size=(150, 400), 
+                                        speed=20, damage=self.current_level_data["damages"]["stalker_damage"]))
+        #HELLI
         if self.current_level_data["entities"]["helli"] and random.randint(1, self.current_level_data["spawn_rates"]["helli_spawn_rate"]) == 1:
             self.entities.append(Helli(self, "helli", 
                                         pos=(FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1]),
-                                        size=(200, 200), anim_size=(150, 150), speed=5, health=40, damage=self.current_level_data["damages"]["helli_damage"], 
+                                        size=(200, 200), anim_size=(150, 150), speed=5, health=self.current_level_data["healths"]["helli_health"], damage=self.current_level_data["damages"]["helli_damage"], 
                                         up=(CEIL_SPAWN_POS[0] - 200, CEIL_SPAWN_POS[1] - 100), 
                                         down=(FLOOR_SPAWN_POS[0] - 200, FLOOR_SPAWN_POS[1] + 100),
                                         attack_chance=90, bullet_speed=30))
-        #어우 눈 아파라
+        #BROOK
         if self.current_level_data["entities"]["brook"] and random.randint(1, self.current_level_data["spawn_rates"]["brook_spawn_rate"]) == 1:
             self.entities.append(Brook(self, "brook", 
                                        pos=(CEIL_SPAWN_POS[0] + 100, 350), 
                                        size=(200, 200), anim_size=(150, 150),
                                        start_following_speed = 3,
                                        following_speed=55, max_health=1, damage=self.current_level_data["damages"]["brook_damage"], speed_change_speed = 5))
+        #BLUGLOGGER
+        if self.current_level_data["entities"]["bluglogger"] and random.randint(1, self.current_level_data["spawn_rates"]["bluglogger_spawn_rate"]) == 1:
+            #블러그로거는 한 장면에 하나만 나옴
+            if not any(isinstance(entity, BlugLogger) for entity in self.entities):
+                self.entities.append(BlugLogger(self, "bluglogger", 
+                                                pos= (FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1] + 35), size=(150, 150), anim_size=(150, 150), 
+                                                following_speed=10, max_health=self.current_level_data["healths"]["bluglogger_health"], damage=self.current_level_data["damages"]["bluglogger_damage"], 
+                                                wait_time=90, attack_rate=50))
 
         #스포닝 에너미 끝
         if self.current_level_data["entities"]["medicine"] and random.randint(1, self.current_level_data["spawn_rates"]["medicine_spawn_rate"]) == 1:
@@ -336,14 +367,15 @@ class Game:
             self.screen.blit(hover_image, (600, 0))
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (800, 0))
             pg.draw.rect(self.screen, "black", (0, 0, 800, 800))
-
+        
             mouse_click = pg.mouse.get_pressed(3)[0]
-
             #지도 버튼
             if map_btn.hovering:
                 hover_image = self.assets["ui"]["motbam"]
                 if mouse_click:
                     print("맵 버튼 누름")
+                    self.end_scene()
+                    self.state_main_world()
             #엔드레스 게임으로
             if endless_btn.hovering:
                 hover_image = self.assets["ui"]["motbam2"]
@@ -489,16 +521,17 @@ class Game:
 
                 self.spawn_entity()
 
-                #구렁이 업데이트 ㅋㅋ
-                worm.pos.x = -self.player.health * 2
-                worm.update()
-                worm.render(self.screen)
-                #구렁이 ㅋㅋ 끝
                 #매니징
                 self.manage_projectiles()
                 self.manage_camera_shake()
                 self.manage_entity()
                 #매니징 끝
+
+                #구렁이 업데이트 ㅋㅋ
+                worm.pos.x = -self.player.health * 2
+                worm.update()
+                worm.render(self.screen)
+                #구렁이 ㅋㅋ 끝
 
                 #매니징
                 self.manage_particle()
@@ -566,6 +599,77 @@ class Game:
             self.clock.tick(TARGET_FPS)
             #카메라 업데이트
             pg.display.flip()
+    
+    #지도
+    def state_main_world(self):
+
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (70, 650), self.sfxs["ui_hover"], 1, 20)
+        self.uis.append(quit_btn)
+
+        bg = self.assets["level_world"]
+
+        button_pos = [(390, 40), (500, 200), (920, 340), (1250, 450), (1070, 580), (1200, 700), (1500, 680)]
+        buttons = []
+        for i in range(6):
+            btn = ButtonUi(pg.transform.scale(self.assets["ui"]["node"] if i < self.status["level"] + 1 else self.assets["ui"]["locked_node"], (50, 50)), button_pos[i], self.sfxs["ui_hover"])
+            buttons.append(btn)
+            self.uis.append(btn)
+
+        boss_btn = ButtonUi(pg.transform.scale(self.assets["ui"]["exit_node"], (50, 50)), button_pos[6], self.sfxs["ui_hover"])
+        self.uis.append(boss_btn)
+
+        selected_level = 0
+        text = TextUi("", (10, 10), self.fonts["galmuri"], 40, "white")
+        self.uis.append(text)
+        escape_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["escape"], (200, 100)), (70, 500), self.sfxs["ui_hover"], 1, 20)
+        self.uis.append(escape_btn)
+
+
+        while True:
+            self.screen.fill("black")
+            self.camera.fill("black")
+
+            self.screen.blit(bg, (-200, 0))
+
+            pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
+            self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
+            
+            pg.draw.lines(self.screen, "red", False, button_pos, 5)
+
+            mouse_click = pg.mouse.get_pressed(3)[0]
+            if quit_btn.hovering and mouse_click:
+                self.end_scene()
+                self.state_title_screen()
+
+            #레벨 선택
+            for btn in buttons:
+                if btn.hovering and mouse_click:
+                    selected_level = buttons.index(btn) + 1
+                    text.text = f"{selected_level} 레벨"
+            if boss_btn.hovering and mouse_click:
+                selected_level = "Boss"
+                text.text = f"{selected_level} 레벨"
+            
+            #게임 시작
+            if escape_btn.hovering and mouse_click:
+                self.end_scene()
+                self.current_level_data = load_data(f"Assets/Levels/{selected_level}.json")
+                self.state_main_game()
+
+            self.manage_spark()
+            self.manage_particle()
+            self.manage_ui()
+            self.manage_camera_shake()
+
+            self.camera.blit(self.screen, self.shake)
+
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    sys.exit()
+    
+            self.clock.tick(TARGET_FPS)
+            pg.display.flip()
 
     #게임 종료
     def state_game_result(self):
@@ -625,6 +729,7 @@ class Game:
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
 
             self.screen.blit(self.assets["ui"]["credits_서준범_icon"], (800, 300))
+            self.screen.blit(self.assets["ui"]["credits_이준영_icon"], (1100, 300))
 
             mouse_click = pg.mouse.get_pressed(3)[0]
             if quit_btn.hovering and mouse_click:
@@ -645,15 +750,6 @@ class Game:
     
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
-
-    #스테이트 종료를 위한 클린업
-    def end_scene(self):
-        self.physic_rects.clear()
-        self.particles.clear()
-        self.sparks.clear()
-        self.uis.clear()
-        self.projectiles.clear()
-        self.entities.clear()
 
     #로그인
     def state_login_menu(self):
@@ -717,6 +813,7 @@ class Game:
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
 
+    #계정 생성
     def state_make_account(self):
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (70, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
@@ -777,6 +874,15 @@ class Game:
     
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
+
+    #스테이트 종료를 위한 클린업
+    def end_scene(self):
+        self.physic_rects.clear()
+        self.particles.clear()
+        self.sparks.clear()
+        self.uis.clear()
+        self.projectiles.clear()
+        self.entities.clear()
 
     def on_player_kill(self, killed_entity : Entity):
         self.camera_shake_gain += 5

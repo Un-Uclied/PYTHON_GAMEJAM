@@ -292,6 +292,8 @@ class FollowingEnemy(KillableEnemy):
         #한 지점을 따라가는 적
         self.target_pos = pg.math.Vector2(0, 0)
         self.move_speed = following_speed
+        self.target_magnitude = 0
+        self.threshold = 100
 
     def set_target(self, target_pos):
         self.target_pos = target_pos
@@ -299,9 +301,11 @@ class FollowingEnemy(KillableEnemy):
     def update(self):
         super().update()
 
-        self.move_direction = pg.math.Vector2(self.target_pos.x - self.pos.x, self.target_pos.y - self.get_center_pos().y).normalize()
-        self.pos.x += self.move_direction.x * self.move_speed
-        self.pos.y += self.move_direction.y * self.move_speed
+        self.target_magnitude = (self.target_pos - self.pos).magnitude()
+        if self.target_magnitude > self.threshold:
+            self.move_direction = pg.math.Vector2(self.target_pos.x - self.pos.x, self.target_pos.y - self.get_center_pos().y).normalize()
+            self.pos.x += self.move_direction.x * self.move_speed
+            self.pos.y += self.move_direction.y * self.move_speed
 
 class Ratbit(FollowingEnemy):
     def __init__(self, game, name, pos, size, anim_size, following_speed : float, health : int, damage : int, attack_range : float):
@@ -449,7 +453,7 @@ class Brook(FollowingEnemy):
             if hasattr(enemy, "take_damage") and not isinstance(enemy, Player) and not isinstance(enemy, Brook):
                 enemy.take_damage(1000)
 
-class Strucker(Enemy):
+class Obstacle(Enemy):
     def __init__(self, game, name, pos, size, anim_size, speed, damage):
         super().__init__(game, name, pos, size, anim_size, damage)
         self.speed = speed 
@@ -470,6 +474,42 @@ class Strucker(Enemy):
         if self.game.player.get_rect().colliderect(self.get_rect()) and not self.attacked:
             self.attacked = True
             self.attack()
+
+class BlugLogger(FollowingEnemy):
+    def __init__(self, game, name, pos, size, anim_size, following_speed, max_health, damage, wait_time, attack_rate):
+        super().__init__(game, name, pos, size, anim_size, following_speed, max_health, damage)
+        self.wait_time = wait_time
+        self.current_wait_time = 0
+        self.is_attack = False
+
+        self.target_pos = pg.math.Vector2(self.pos.x - 400, self.pos[1] + 80)
+
+        self.beam : pg.Surface = self.game.assets["entities"]["beam"]
+
+        self.current_attack_time = 0
+        self.attack_rate = attack_rate
+        
+    def can_interact(self):
+        if self.current_wait_time < self.wait_time and not self.is_attack:
+            self.current_wait_time += 1
+        else:
+            self.is_attack = True
+            self.set_action("attack")
+
+        if self.is_attack and self.game.player.pos.y + 100 >= self.pos.y and self.current_attack_time > self.attack_rate:
+            self.attack()
+            self.current_attack_time = 0
+
+    def update(self):
+        super().update()
+        self.current_attack_time += 1
+
+            
+    def render(self, surface, offset=(0, 0)):
+        super().render(surface, offset)
+        if self.is_attack:
+            surface.blit(self.beam, (self.pos.x - self.beam.get_size()[0] + 20, self.pos.y))
+
 
 class Medicine(Entity):
     def __init__(self, game, name, pos, size, anim_size, speed, heal_amount):
