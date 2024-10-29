@@ -124,7 +124,9 @@ class Game:
 
             "bg" : {
                 "office/0" : load_image("Backgrounds/office_0.png"),
-                "office/1" : load_image("Backgrounds/office_1.png")
+                "office/1" : load_image("Backgrounds/office_1.png"),
+                "steam_room/0" : load_image("Backgrounds/steam_room_0.png"),
+                "steam_room/1" : load_image("Backgrounds/steam_room_1.png"),
             },
 
             "particles" : {
@@ -309,7 +311,7 @@ class Game:
         credits_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["credits"], (200, 100)), (500, 350 + margin * 3), self.sfxs["ui_hover"], 1, 20)
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (500, 450 + margin * 4), self.sfxs["ui_hover"], 1, 20)
 
-        login_btn = TextButton("<로그인해주세요 현재 : 익명", self.fonts["galmuri"], 30, (30, 560), self.sfxs["ui_hover"], "white", "blue")
+        login_btn = TextButton("<로그인해주세요 현재 : 익명", self.fonts["galmuri"], 30, (30, 560), self.sfxs["ui_hover"], "yellow", "blue")
 
         self.uis.append(map_btn)
         self.uis.append(endless_btn)
@@ -429,8 +431,8 @@ class Game:
         #구렁이 끝
 
         #백그라운드 스크롤
-        background1 = self.assets["bg"]["office/0"]
-        background2 = self.assets["bg"]["office/1"]
+        background1 = self.assets["bg"][f"{self.current_level_data["bg_name"]}/0"]
+        background2 = self.assets["bg"][f"{self.current_level_data["bg_name"]}/1"]
         bg_width = background1.get_width()
         bg_scroll_speed = 20
 
@@ -554,6 +556,11 @@ class Game:
                             self.sfxs["jump"].play()
                     if event.key == pg.K_ESCAPE:
                         PAUSED = not PAUSED
+                
+                #마우스가 창밖에 나가면 PAUSE
+                if event.type == pg.ACTIVEEVENT:
+                    if event.gain == 0:
+                        PAUSED = True
             #이벤트 리슨 끝
 
             self.clock.tick(TARGET_FPS)

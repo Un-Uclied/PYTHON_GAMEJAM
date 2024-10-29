@@ -7,5 +7,7 @@
 
     "damages" : {"ratbit_damage" : 20, "strucker_damage" : 20, "helli_damage" : 20, "brook_damage" : 30},
 
-    "amount" : {"heal_amount" : 100, "ammo_amount" : 35}
+    "amount" : {"heal_amount" : 100, "ammo_amount" : 35},
+
+    "bg_name" : "office"
 }
