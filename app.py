@@ -1,6 +1,7 @@
 #라이브러리 임포트
 import pygame as pg
 import sys, random, math, pytweening as pt
+import requests
 
 from Scripts.utils import load_image, load_images, load_data
 from Scripts.Shadows import Shadow
@@ -11,8 +12,7 @@ from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, Inp
 from Scripts.Bullets import Bullet, PlayerBullet
 
 import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import firestore
+from firebase_admin import credentials, firestore, auth
 
 
 #firebase 연동
@@ -20,23 +20,6 @@ cred = credentials.Certificate("firebase/firebase-python-key.json")
 app = firebase_admin.initialize_app(cred)
 
 db = firestore.client()
-
-# 데이터를 추가할 컬렉션과 문서 ID를 설정합니다.
-collection_name = 'users'
-document_id = 'user1'
-
-# 추가할 데이터를 딕셔너리 형태로 작성합니다.
-data = {
-    'name': 'John',
-    'age': 30,
-    'email': 'john@example.com'
-}
-
-# 데이터를 컬렉션에 추가합니다.
-doc_ref = db.collection(collection_name).document(document_id)
-doc_ref.set(data)
-
-print('데이터가 성공적으로 추가되었습니다.')
 
 #상수 설정
 SCREEN_SCALE = (1600, 800)
@@ -463,8 +446,8 @@ class Game:
         #구렁이 끝
 
         #백그라운드 스크롤
-        background1 = self.assets["bg"][f"{self.current_level_data["bg_name"]}/0"]
-        background2 = self.assets["bg"][f"{self.current_level_data["bg_name"]}/1"]
+        background1 = self.assets["bg"][f"{self.current_level_data['bg_name']}/0"]
+        background2 = self.assets["bg"][f"{self.current_level_data['bg_name']}/1"]
         bg_width = background1.get_width()
         bg_scroll_speed = 20
 
@@ -853,7 +836,22 @@ class Game:
                 self.state_login_menu()
             if send_btn.hovering and mouse_click:
                 #계정 만들기 로직
-                print(f"{account_id.text} {email.text}, {password.text}")
+                url = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyDGpmnNcJ2ZOShNz371uqmV3647ct7i4KE"
+                payload = {
+                    "email": email.text,
+                    "password": password.text,
+                    "returnSecureToken": True
+                }
+                response = requests.post(url, json=payload)
+                if response.status_code == 200:
+                    # 회원가입 성공 시 사용자 ID 토큰 반환
+                    id_token = response.json().get('idToken')
+                    print(f"User signed up successfully, ID Token: {id_token}")
+                else:
+                    print("Failed to sign up:", response.json())
+                
+                self.end_scene()
+                self.state_title_screen()
 
             self.manage_spark()
             self.manage_particle()
