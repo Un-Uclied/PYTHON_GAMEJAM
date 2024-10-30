@@ -1,7 +1,7 @@
 {   
     "entities" : {"ratbit" : true, "strucker" : true, "helli" : true, "brook" : true, "bluglogger" : true, "stalker" : true,"medicine" : true, "ammo" : true},
 
-    "spawn_rates" : {"ratbit_spawn_rate" : 250, "strucker_spawn_rate" : 180, "helli_spawn_rate" : 400, "brook_spawn_rate" : 800, "bluglogger_spawn_rate" : 900, "stalker_spawn_rate" : 300, "medicine_spawn_rate" : 450, "ammo_spawn_rate" : 450},
+    "spawn_rates" : {"ratbit_spawn_rate" : 300, "strucker_spawn_rate" : 200, "helli_spawn_rate" : 500, "brook_spawn_rate" : 800, "bluglogger_spawn_rate" : 900, "stalker_spawn_rate" : 300, "medicine_spawn_rate" : 450, "ammo_spawn_rate" : 450},
 
     "scores" : {"ratbit_add_score" : 2000, "helli_add_score" : 3500, "brook_add_score" : 5000, "bluglogger_add_score" : 4500},
 
@@ -10,6 +10,10 @@
     "healths" : {"helli_health" : 40, "bluglogger_health" : 100},
 
     "amount" : {"heal_amount" : 100, "ammo_amount" : 35},
+
+    "speed" : {"ratbit_speed" : 30, "strucker_speed" : 20, "stalker_speed" : 20, "helli_bullet_speed" : 30, "blug_logger_wait_time" : 120},
+
+    "attack_chance" : {"helli_attack_chance" : 90},
 
     "bg_name" : "steam_room"
 }

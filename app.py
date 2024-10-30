@@ -266,20 +266,20 @@ class Game:
             self.entities.append(Ratbit(self, "ratbit",
                                         pos=CEIL_SPAWN_POS if random.random() > .5 else FLOOR_SPAWN_POS,
                                         size=(150, 150), anim_size=(150, 150), 
-                                        following_speed=30, 
+                                        following_speed=self.current_level_data["speed"]["ratbit_speed"], 
                                         health=1, damage=self.current_level_data["damages"]["ratbit_damage"], attack_range=100))
         #STRUCKER
         if self.current_level_data["entities"]["strucker"] and random.randint(1, self.current_level_data["spawn_rates"]["strucker_spawn_rate"]) == 1:
             self.entities.append(Obstacle(self, "strucker", 
                                         pos=(FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1] + 40),
                                         size=(100, 150), anim_size=(150, 150), 
-                                        speed=20, damage=self.current_level_data["damages"]["strucker_damage"]))
+                                        speed=self.current_level_data["speed"]["strucker_speed"], damage=self.current_level_data["damages"]["strucker_damage"]))
         #STALKER
         if self.current_level_data["entities"]["stalker"] and random.randint(1, self.current_level_data["spawn_rates"]["stalker_spawn_rate"]) == 1:
             self.entities.append(Obstacle(self, "stalker", 
                                         pos=(CEIL_SPAWN_POS[0], CEIL_SPAWN_POS[1] - 100),
                                         size=(150, 400), anim_size=(150, 400), 
-                                        speed=20, damage=self.current_level_data["damages"]["stalker_damage"]))
+                                        speed=self.current_level_data["speed"]["stalker_speed"], damage=self.current_level_data["damages"]["stalker_damage"]))
         #HELLI
         if self.current_level_data["entities"]["helli"] and random.randint(1, self.current_level_data["spawn_rates"]["helli_spawn_rate"]) == 1:
             self.entities.append(Helli(self, "helli", 
@@ -287,7 +287,7 @@ class Game:
                                         size=(200, 200), anim_size=(150, 150), speed=5, health=self.current_level_data["healths"]["helli_health"], damage=self.current_level_data["damages"]["helli_damage"], 
                                         up=(CEIL_SPAWN_POS[0] - 200, CEIL_SPAWN_POS[1] - 100), 
                                         down=(FLOOR_SPAWN_POS[0] - 200, FLOOR_SPAWN_POS[1] + 100),
-                                        attack_chance=90, bullet_speed=30))
+                                        attack_chance=self.current_level_data["attack_chance"]["helli_attack_chance"], bullet_speed=self.current_level_data["speed"]["helli_bullet_speed"]))
         #BROOK
         if self.current_level_data["entities"]["brook"] and random.randint(1, self.current_level_data["spawn_rates"]["brook_spawn_rate"]) == 1:
             self.entities.append(Brook(self, "brook", 
@@ -302,7 +302,7 @@ class Game:
                 self.entities.append(BlugLogger(self, "bluglogger", 
                                                 pos= (FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1] + 35), size=(150, 150), anim_size=(150, 150), 
                                                 following_speed=10, max_health=self.current_level_data["healths"]["bluglogger_health"], damage=self.current_level_data["damages"]["bluglogger_damage"], 
-                                                wait_time=90, attack_rate=50))
+                                                wait_time=self.current_level_data["speed"]["blug_logger_wait_time"], attack_rate=50))
 
         #스포닝 에너미 끝
         if self.current_level_data["entities"]["medicine"] and random.randint(1, self.current_level_data["spawn_rates"]["medicine_spawn_rate"]) == 1:
@@ -364,7 +364,7 @@ class Game:
                 hover_image = self.assets["ui"]["motbam2"]
                 if mouse_click:
                     self.end_scene()
-                    self.current_level_data = load_data("Assets/BigBreakout.json")
+                    self.current_level_data = load_data("Assets/Levels/BigBreakout.json")
                     self.state_main_game()
             #리코드 볼수 있음
             if records_btn.hovering:
@@ -772,6 +772,7 @@ class Game:
                 self.end_scene()
                 self.state_title_screen()
             if send_btn.hovering and mouse_click:
+                #로그인 로직
                 print(f"{email.text}, {password.text}")
             if create_btn.hovering and mouse_click:
                 self.end_scene()
