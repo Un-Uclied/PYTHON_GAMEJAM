@@ -2,6 +2,8 @@
 import pygame as pg
 import sys, random, math, pytweening as pt
 import requests
+import time
+import json
 
 from Scripts.utils import load_image, load_images, load_data
 from Scripts.Shadows import Shadow
@@ -43,7 +45,6 @@ class Game:
     def __init__(self):
         #init함수
         pg.init()
-
         pg.display.set_caption(GAME_NAME)
 
         self.camera = pg.display.set_mode(SCREEN_SCALE)
@@ -266,20 +267,20 @@ class Game:
             self.entities.append(Ratbit(self, "ratbit",
                                         pos=CEIL_SPAWN_POS if random.random() > .5 else FLOOR_SPAWN_POS,
                                         size=(150, 150), anim_size=(150, 150), 
-                                        following_speed=self.current_level_data["speed"]["ratbit_speed"], 
+                                        following_speed=30, 
                                         health=1, damage=self.current_level_data["damages"]["ratbit_damage"], attack_range=100))
         #STRUCKER
         if self.current_level_data["entities"]["strucker"] and random.randint(1, self.current_level_data["spawn_rates"]["strucker_spawn_rate"]) == 1:
             self.entities.append(Obstacle(self, "strucker", 
                                         pos=(FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1] + 40),
                                         size=(100, 150), anim_size=(150, 150), 
-                                        speed=self.current_level_data["speed"]["strucker_speed"], damage=self.current_level_data["damages"]["strucker_damage"]))
+                                        speed=20, damage=self.current_level_data["damages"]["strucker_damage"]))
         #STALKER
         if self.current_level_data["entities"]["stalker"] and random.randint(1, self.current_level_data["spawn_rates"]["stalker_spawn_rate"]) == 1:
             self.entities.append(Obstacle(self, "stalker", 
                                         pos=(CEIL_SPAWN_POS[0], CEIL_SPAWN_POS[1] - 100),
                                         size=(150, 400), anim_size=(150, 400), 
-                                        speed=self.current_level_data["speed"]["stalker_speed"], damage=self.current_level_data["damages"]["stalker_damage"]))
+                                        speed=20, damage=self.current_level_data["damages"]["stalker_damage"]))
         #HELLI
         if self.current_level_data["entities"]["helli"] and random.randint(1, self.current_level_data["spawn_rates"]["helli_spawn_rate"]) == 1:
             self.entities.append(Helli(self, "helli", 
@@ -287,7 +288,7 @@ class Game:
                                         size=(200, 200), anim_size=(150, 150), speed=5, health=self.current_level_data["healths"]["helli_health"], damage=self.current_level_data["damages"]["helli_damage"], 
                                         up=(CEIL_SPAWN_POS[0] - 200, CEIL_SPAWN_POS[1] - 100), 
                                         down=(FLOOR_SPAWN_POS[0] - 200, FLOOR_SPAWN_POS[1] + 100),
-                                        attack_chance=self.current_level_data["attack_chance"]["helli_attack_chance"], bullet_speed=self.current_level_data["speed"]["helli_bullet_speed"]))
+                                        attack_chance=90, bullet_speed=30))
         #BROOK
         if self.current_level_data["entities"]["brook"] and random.randint(1, self.current_level_data["spawn_rates"]["brook_spawn_rate"]) == 1:
             self.entities.append(Brook(self, "brook", 
@@ -302,7 +303,7 @@ class Game:
                 self.entities.append(BlugLogger(self, "bluglogger", 
                                                 pos= (FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1] + 35), size=(150, 150), anim_size=(150, 150), 
                                                 following_speed=10, max_health=self.current_level_data["healths"]["bluglogger_health"], damage=self.current_level_data["damages"]["bluglogger_damage"], 
-                                                wait_time=self.current_level_data["speed"]["blug_logger_wait_time"], attack_rate=50))
+                                                wait_time=90, attack_rate=50))
 
         #스포닝 에너미 끝
         if self.current_level_data["entities"]["medicine"] and random.randint(1, self.current_level_data["spawn_rates"]["medicine_spawn_rate"]) == 1:
@@ -326,7 +327,25 @@ class Game:
         credits_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["credits"], (200, 100)), (500, 350 + margin * 3), self.sfxs["ui_hover"], 1, 20)
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (500, 450 + margin * 4), self.sfxs["ui_hover"], 1, 20)
 
-        login_btn = TextButton("<로그인해주세요 현재 : 익명", self.fonts["galmuri"], 30, (30, 560), self.sfxs["ui_hover"], "yellow", "blue")
+        with open("status.json", 'r') as file:
+            data = json.load(file)
+
+        user = 0
+        if data["idToken"]:
+            try:
+                # ID 토큰을 검증하여 사용자 정보 가져오기
+                decoded_token = auth.verify_id_token(data["idToken"])
+                uid = decoded_token['uid']
+                user = auth.get_user(uid)
+                
+                # 사용자 정보 출력
+                print("User ID:", user.uid)
+                print("Email:", user.email)
+                
+            except Exception as e:
+                print("Error verifying ID token:", e)
+
+        login_btn = TextButton("로그인하셨습니다." if data["idToken"] and user else "<로그인해주세요 현재 : 익명", self.fonts["galmuri"], 30, (30, 560), self.sfxs["ui_hover"], "yellow", "blue")
 
         self.uis.append(map_btn)
         self.uis.append(endless_btn)
@@ -357,6 +376,7 @@ class Game:
             if map_btn.hovering:
                 hover_image = self.assets["ui"]["motbam"]
                 if mouse_click:
+                    print("맵 버튼 누름")
                     self.end_scene()
                     self.state_main_world()
             #엔드레스 게임으로
@@ -364,7 +384,7 @@ class Game:
                 hover_image = self.assets["ui"]["motbam2"]
                 if mouse_click:
                     self.end_scene()
-                    self.current_level_data = load_data("Assets/Levels/BigBreakout.json")
+                    self.current_level_data = load_data("Assets/BigBreakout.json")
                     self.state_main_game()
             #리코드 볼수 있음
             if records_btn.hovering:
@@ -388,7 +408,7 @@ class Game:
             #로그인
             if login_btn.hovering:
                 hover_image = self.assets["ui"]["me"]
-                if mouse_click:
+                if mouse_click and data["idToken"] == "":
                     self.end_scene()
                     self.state_login_menu()
 
@@ -656,7 +676,7 @@ class Game:
 
     #게임 종료
     def state_game_result(self):
-        died = TextUi(f"님 쥬금 ㅋ 점수 : {self.score}", (100, 300), self.fonts["galmuri"], 100, "white")
+        died = TextUi("님 쥬금 ㅋ", (500, 300), self.fonts["galmuri"], 200, "white")
         self.uis.append(died)
         self.sfxs["gameover"].play()
         while True:
@@ -772,8 +792,34 @@ class Game:
                 self.end_scene()
                 self.state_title_screen()
             if send_btn.hovering and mouse_click:
-                #로그인 로직
-                print(f"{email.text}, {password.text}")
+                url = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyDGpmnNcJ2ZOShNz371uqmV3647ct7i4KE"
+
+                payload = {
+                    "email": email.text,
+                    "password": password.text,
+                    "returnSecureToken": True
+                }
+
+                response = requests.post(url, json = payload)
+
+                if response.status_code == 200:
+                    # 로그인 성공 시 ID 토큰 반환
+                    id_token = response.json().get('idToken')
+                    print(f"ID Token: {id_token}")
+
+                    with open("status.json", 'r') as file:
+                        data = json.load(file)
+                
+                    # idToken 필드를 업데이트
+                    data["idToken"] = id_token
+                
+                    # 업데이트된 내용을 다시 파일에 저장
+                    with open("status.json", 'w') as file:
+                        json.dump(data, file, indent = 4)
+
+                else:
+                    print("Failed to sign in:", response.json())
+
             if create_btn.hovering and mouse_click:
                 self.end_scene()
                 self.state_make_account()
@@ -838,16 +884,43 @@ class Game:
             if send_btn.hovering and mouse_click:
                 #계정 만들기 로직
                 url = "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyDGpmnNcJ2ZOShNz371uqmV3647ct7i4KE"
+
                 payload = {
                     "email": email.text,
                     "password": password.text,
                     "returnSecureToken": True
                 }
-                response = requests.post(url, json=payload)
+
+                response = requests.post(url, json = payload)
+
                 if response.status_code == 200:
                     # 회원가입 성공 시 사용자 ID 토큰 반환
                     id_token = response.json().get('idToken')
                     print(f"User signed up successfully, ID Token: {id_token}")
+
+                    with open("status.json", 'r') as file:
+                        data = json.load(file)
+                
+                    # idToken 필드를 업데이트
+                    data["idToken"] = id_token
+                
+                    # 업데이트된 내용을 다시 파일에 저장
+                    with open("status.json", 'w') as file:
+                        json.dump(data, file, indent = 4)
+
+                    try:
+                        # ID 토큰을 검증하여 사용자 정보 가져오기
+                        decoded_token = auth.verify_id_token(data["idToken"])
+                        uid = decoded_token['uid']
+                        user = auth.get_user(uid)
+                        
+                        # 사용자 정보 출력
+                        print("User ID:", user.uid)
+                        print("Email:", user.email)
+                        
+                    except Exception as e:
+                        print("Error verifying ID token:", e)
+
                 else:
                     print("Failed to sign up:", response.json())
                 
