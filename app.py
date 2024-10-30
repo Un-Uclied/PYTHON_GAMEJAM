@@ -43,6 +43,7 @@ class Game:
     def __init__(self):
         #init함수
         pg.init()
+
         pg.display.set_caption(GAME_NAME)
 
         self.camera = pg.display.set_mode(SCREEN_SCALE)
@@ -356,7 +357,6 @@ class Game:
             if map_btn.hovering:
                 hover_image = self.assets["ui"]["motbam"]
                 if mouse_click:
-                    print("맵 버튼 누름")
                     self.end_scene()
                     self.state_main_world()
             #엔드레스 게임으로
@@ -656,7 +656,7 @@ class Game:
 
     #게임 종료
     def state_game_result(self):
-        died = TextUi("님 쥬금 ㅋ", (500, 300), self.fonts["galmuri"], 200, "white")
+        died = TextUi(f"님 쥬금 ㅋ 점수 : {self.score}", (100, 300), self.fonts["galmuri"], 200, "white")
         self.uis.append(died)
         self.sfxs["gameover"].play()
         while True:
