@@ -1,11 +1,11 @@
 #라이브러리 임포트
 import pygame as pg
-import sys, random, math, pytweening as pt
+import sys, random, math, time
 import requests
 import time
 import json
 
-from Scripts.utils import load_image, load_images, load_data
+from Scripts.utils import load_image, load_images, load_data, set_data
 from Scripts.Shadows import Shadow
 from Scripts.Entities import Player, Entity, KillableEnemy, Obstacle, Ratbit, Helli, Brook, BlugLogger, Medicine, Ammo
 from Scripts.Animations import Animation
@@ -81,7 +81,9 @@ class Game:
 
                 "node" : load_image("UI/Node.png"),
                 "exit_node" : load_image("UI/ExitNode.png"),
-                "locked_node" : load_image("UI/Locked.png")
+                "locked_node" : load_image("UI/Locked.png"),
+
+                "pawn" : load_image("UI/Pawn.png"),
 
             },
 
@@ -141,6 +143,10 @@ class Game:
                 "ammo/use" : Animation(load_images("Items/Ammo/Use"), 2, False),
             },
 
+            "cutscenes" : {
+                "start" : load_images("Cutscenes/Start")
+            },
+
             "level_world" : load_image("background.png")
         }
 
@@ -163,6 +169,7 @@ class Game:
         #게임 폰트
         self.fonts = {
             "galmuri" : 'Assets/Fonts/Galmuri11-Bold.ttf',
+            "aggro" : "Assets/Fonts/SB 어그로 B.ttf"
         }
 
         self.physic_rects = []
@@ -384,8 +391,13 @@ class Game:
                 hover_image = self.assets["ui"]["motbam2"]
                 if mouse_click:
                     self.end_scene()
+<<<<<<< HEAD
                     self.current_level_data = load_data("Assets/BigBreakout.json")
                     self.state_main_game()
+=======
+                    self.current_level_data = load_data("Assets/Levels/BigBreakout.json")
+                    self.state_main_game(is_endless= True)
+>>>>>>> 60fc2aa9ce954cc01e260bdbb2f87eb3830063c9
             #리코드 볼수 있음
             if records_btn.hovering:
                 hover_image = self.assets["ui"]["me"]
@@ -434,7 +446,7 @@ class Game:
             pg.display.flip()
 
     #메인 게임
-    def state_main_game(self):
+    def state_main_game(self, is_endless = False):
         #start:
         PAUSED = False #상수는 아니지만 그래도 중요하니까 ^^ 아시져?
 
@@ -488,6 +500,11 @@ class Game:
         pause_rect_surface = pg.Surface(pause_bg.get_size(), pg.SRCALPHA)
         pause_rect_surface.fill((0, 0, 0, 200))
 
+        duration = self.current_level_data["level_length"]
+        start_pos = (1000, 22)
+        end_pos = (1520, 22)
+        start_time = time.time()
+            
         while(True):
             #update:
             #화면 초기화
@@ -515,6 +532,21 @@ class Game:
                 self.screen.blit(pg.transform.flip(pg.transform.rotate(self.assets["ui"]["bottom_fade"], 90), True, False), (0, 0))
                 #배경 렌더 끝
 
+                #쿠키런 마냥 움직이는 바 어쩌구 유남생?
+                current_pos = [0, 0]
+                if not is_endless:
+                    elapsed_time = time.time() - start_time
+                    t = min(elapsed_time / duration, 1)
+
+                    x = start_pos[0] + (end_pos[0] - start_pos[0]) * t
+                    y = start_pos[1] + (end_pos[1] - start_pos[1]) * t
+                    current_pos = [x, y]
+                    pg.draw.line(self.screen, "white", (start_pos[0], start_pos[1] + 30), (end_pos[0], end_pos[1] + 30), 20)
+
+                    if elapsed_time >= duration:
+                        self.end_scene()
+                        self.state_game_result(True)
+
                 stat_ui.text = f"남은 탄: {self.player.ammo} | {self.score} | 거대 괴물로부터 남은 거리 : {self.player.health}m"
                 
                 #플레이어 업데이트 & 렌더
@@ -541,6 +573,10 @@ class Game:
                 self.manage_spark()
                 self.manage_ui()
                 #매니징 끝 
+                
+                #ui인데 그 뭐냐 그거 움직이는거
+                if not is_endless:
+                    self.screen.blit(pg.transform.scale(self.assets["ui"]["pawn"], (60, 60)), (current_pos[0] - 30, current_pos[1]))
 
                 #화면 렌더
                 
@@ -614,7 +650,7 @@ class Game:
         button_pos = [(390, 40), (500, 200), (920, 340), (1250, 450), (1070, 580), (1200, 700), (1500, 680)]
         buttons = []
         for i in range(6):
-            btn = ButtonUi(pg.transform.scale(self.assets["ui"]["node"] if i < self.status["level"] + 1 else self.assets["ui"]["locked_node"], (50, 50)), button_pos[i], self.sfxs["ui_hover"])
+            btn = ButtonUi(pg.transform.scale(self.assets["ui"]["node"] if i < self.status["level"] else self.assets["ui"]["locked_node"], (50, 50)), button_pos[i], self.sfxs["ui_hover"])
             buttons.append(btn)
             self.uis.append(btn)
 
@@ -622,11 +658,19 @@ class Game:
         self.uis.append(boss_btn)
 
         selected_level = 0
-        text = TextUi("", (10, 10), self.fonts["galmuri"], 40, "white")
+        text = TextUi("", (10, 10), self.fonts["aggro"], 60, "white")
         self.uis.append(text)
         escape_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["escape"], (200, 100)), (70, 500), self.sfxs["ui_hover"], 1, 20)
-        self.uis.append(escape_btn)
 
+        level_name = TextUi("", (10, 100), self.fonts["aggro"], 40, "white")
+        self.uis.append(level_name)
+        high_score = TextUi("", (10, 150), self.fonts["aggro"], 30, "white")
+        self.uis.append(high_score)
+
+        #처음 플레이한다면 컷씬 시작
+        if self.status["is_first_play"]:
+            self.end_scene()
+            self.state_cut_scene(self.assets["cutscenes"]["start"])
 
         while True:
             self.screen.fill("black")
@@ -646,12 +690,20 @@ class Game:
 
             #레벨 선택
             for btn in buttons:
-                if btn.hovering and mouse_click:
+                if btn.hovering and mouse_click and buttons.index(btn) + 1 <= self.status["level"]:
                     selected_level = buttons.index(btn) + 1
                     text.text = f"{selected_level} 레벨"
-            if boss_btn.hovering and mouse_click:
+                    high_score.text = f"하이스코어 : {self.status["high_scores"][str(buttons.index(btn) + 1)]}"
+                    level_name.text = f"\"{load_data(f"Assets/Levels/{selected_level}.json")["level_name"]}\""
+                    if not escape_btn in self.uis:
+                        self.uis.append(escape_btn)
+            if boss_btn.hovering and mouse_click and self.status["level"] > 6:
                 selected_level = "Boss"
                 text.text = f"{selected_level} 레벨"
+                high_score.text = f"하이스코어 : {self.status["high_scores"]["boss"]}"
+                level_name.text = f"\"{load_data(f"Assets/Levels/{selected_level}.json")["level_name"]}\""
+                if not escape_btn in self.uis:
+                        self.uis.append(escape_btn)
             
             #게임 시작
             if escape_btn.hovering and mouse_click:
@@ -675,30 +727,63 @@ class Game:
             pg.display.flip()
 
     #게임 종료
+<<<<<<< HEAD
     def state_game_result(self):
         died = TextUi("님 쥬금 ㅋ", (500, 300), self.fonts["galmuri"], 200, "white")
         self.uis.append(died)
         self.sfxs["gameover"].play()
+=======
+    def state_game_result(self, level, won = False):
+        
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (450, 40), self.sfxs["ui_hover"], 1, 20)
+        self.uis.append(quit_btn)
+        map_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 100)), (500, 50), self.sfxs["ui_hover"], 1, 20)
+        self.uis.append(map_btn)
+
+        bg = self.assets["bg"][f"{self.current_level_data["bg_name"]}/0"]
+        rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
+        rect_surface.fill((0, 0, 0, 200))
+
+        self.uis.append(TextUi("탈출 성공!" if won else "탈출실패..", (300, 50), self.fonts["aggro"], 45, "white"))
+        self.uis.append(TextUi(f"{self.score}점", (400, 100), self.fonts["aggro"], 45, "white"))
+
+        if won:
+            set_data("Status.json", "level", self.status["level"] + 1)
+        if self.score > self.status["high_scores"][f"{level}"]:
+            set_data("Status.json", "level", self.status["level"] + 1)
+
+>>>>>>> 60fc2aa9ce954cc01e260bdbb2f87eb3830063c9
         while True:
             self.screen.fill("black")
             self.camera.fill("black")
 
-            #매니징
-            self.manage_projectiles()
-            self.manage_camera_shake()
-            self.manage_entity()
-            self.manage_particle()
+            self.screen.blit(bg, (0, 0))
+            self.screen.blit(rect_surface, (0, 0))
+
+            pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
+            self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
+
+            mouse_click = pg.mouse.get_pressed(3)[0]
+            if quit_btn.hovering and mouse_click:
+                self.end_scene()
+                self.state_title_screen()
+            if map_btn.hovering:
+                if mouse_click:
+                    self.end_scene()
+                    self.state_main_world()
+
             self.manage_spark()
+            self.manage_particle()
             self.manage_ui()
-            #매니징 끝 
-            
-            self.camera.blit(self.screen, (0, 0))
+            self.manage_camera_shake()
+
+            self.camera.blit(self.screen, self.shake)
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     pg.quit()
                     sys.exit()
-
+    
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
 
@@ -867,6 +952,9 @@ class Game:
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
         rect_surface.fill((0, 0, 0, 200)) 
 
+        error = TextUi("", (500, 550), self.fonts["galmuri"], 35, "white")
+        self.uis.append(error)
+
         while True:
             self.screen.fill("black")
             self.camera.fill("black")
@@ -897,6 +985,7 @@ class Game:
                     # 회원가입 성공 시 사용자 ID 토큰 반환
                     id_token = response.json().get('idToken')
                     print(f"User signed up successfully, ID Token: {id_token}")
+<<<<<<< HEAD
 
                     with open("status.json", 'r') as file:
                         data = json.load(file)
@@ -921,11 +1010,15 @@ class Game:
                     except Exception as e:
                         print("Error verifying ID token:", e)
 
+=======
+                    self.end_scene()
+                    self.state_title_screen()
+>>>>>>> 60fc2aa9ce954cc01e260bdbb2f87eb3830063c9
                 else:
                     print("Failed to sign up:", response.json())
+                    error.text = f"오류! : {response.json()["error"]["message"]}"
                 
-                self.end_scene()
-                self.state_title_screen()
+                
 
             self.manage_spark()
             self.manage_particle()
@@ -947,6 +1040,49 @@ class Game:
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
 
+    #컷씬
+    def state_cut_scene(self, images):
+        current_index = 0
+        cutscene_len = len(images) - 1
+        cutscene_time = 10
+        cutscene_current_time = 0
+        can_next = False
+        while True:
+            self.screen.fill("black")
+            self.camera.fill("black")
+
+            self.manage_spark()
+            self.manage_particle()
+            self.manage_ui()
+            self.manage_camera_shake()
+
+            self.screen.blit(images[min(current_index, cutscene_len)], (0, 0))
+
+            self.camera.blit(self.screen, self.shake)
+
+            cutscene_current_time += 1
+            if cutscene_current_time > cutscene_time:
+                can_next = True
+            else:
+                can_next = False
+
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    sys.exit()
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_SPACE:
+                        if can_next:
+                            current_index += 1
+                            cutscene_current_time = 0
+                            if current_index > cutscene_len:
+                                set_data("Status.json", "is_first_play", False)
+                                self.end_scene()
+                                self.state_main_world()
+    
+            self.clock.tick(TARGET_FPS)
+            pg.display.flip()
+
     #스테이트 종료를 위한 클린업
     def end_scene(self):
         self.physic_rects.clear()
@@ -955,6 +1091,7 @@ class Game:
         self.uis.clear()
         self.projectiles.clear()
         self.entities.clear()
+        self.status = load_data("Status.json")
 
     def on_player_kill(self, killed_entity : Entity):
         self.camera_shake_gain += 5

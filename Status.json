@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
     "is_first_play": true,
+=======
+    "is_first_play": false,
+>>>>>>> 60fc2aa9ce954cc01e260bdbb2f87eb3830063c9
     "high_scores": {
         "BigBreakOut": 0,
         "1": 0,
@@ -8,6 +12,7 @@
         "4": 0,
         "5": 0,
         "6": 0,
+<<<<<<< HEAD
         "7": 0,
         "8": 0,
         "9": 0,
@@ -15,4 +20,9 @@
     },
     "level": 0,
     "idToken": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImU2YWMzNTcyNzY3ZGUyNjE0ZmM1MTA4NjMzMDg3YTQ5MjMzMDNkM2IiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vcHl0aG9uLWdhbWVqYW0tZTU3NjEiLCJhdWQiOiJweXRob24tZ2FtZWphbS1lNTc2MSIsImF1dGhfdGltZSI6MTczMDMwMjk5NywidXNlcl9pZCI6IjN3V3hSdU43Tk9Pa2VzZDBUUWRoVXlnbGpPOTMiLCJzdWIiOiIzd1d4UnVON05PT2tlc2QwVFFkaFV5Z2xqTzkzIiwiaWF0IjoxNzMwMzAyOTk3LCJleHAiOjE3MzAzMDY1OTcsImVtYWlsIjoibWlja29yZWF5dEBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZW1haWwiOlsibWlja29yZWF5dEBnbWFpbC5jb20iXX0sInNpZ25faW5fcHJvdmlkZXIiOiJwYXNzd29yZCJ9fQ.BI_8LCVPDrEb9rkSF6MxFxiQE_nmV9aYEq1OqmsveL2PTyyQKZnWxhLSXZ9kwU3fUU1LA8xPO0SRuawh9hO1P8PHS9XM-VIs3CK7uc9dYYOBFyLoLnNx7u9GjS1Uk0qqGnDzqIlnA8enMOT8qkKe3tstbPYwZF0odJcGZqMdxtkjAPxzoPC23LcQ7H-Kuxv-LzbKsoFJMaVvuf8HRnsQQOtiLGPFeAjDpQ003ZtUyIW-3oEE-kJsgHyeaZaIV2CYzFp52kbAkmYmEwD28TwY9P79lzddgIFchZlijUKuy7QIryAJYSZHYgqBfPV01aF7vF4zEW3TpFvj1hG_QG61EQ"
+=======
+        "boss": 0
+    },
+    "level": 1
+>>>>>>> 60fc2aa9ce954cc01e260bdbb2f87eb3830063c9
 }

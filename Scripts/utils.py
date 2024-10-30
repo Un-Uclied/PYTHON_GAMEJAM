@@ -20,9 +20,18 @@ def load_images(path):
     return images
 
 def load_data(save_file : str):
-    with open(os.path.join(save_file), 'r+') as file:
+    with open(os.path.join(save_file), 'r+', encoding="utf-8") as file:
         dicts = json.load(file)
     return dicts
+
+def set_data(file_dir : str, property_name : str, new_value):
+    with open(file_dir, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    data[property_name] = new_value
+
+    with open(file_dir, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4)
 
 def open_site(url):
     webbrowser.open(url)

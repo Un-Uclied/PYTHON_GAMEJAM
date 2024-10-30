@@ -11,9 +11,11 @@
 
     "amount" : {"heal_amount" : 100, "ammo_amount" : 35},
 
-    "speed" : {"ratbit_speed" : 30, "strucker_speed" : 20, "stalker_speed" : 20, "helli_bullet_speed" : 30, "blug_logger_wait_time" : 120},
+    "speed" : {"ratbit_speed" : 30, "strucker_speed" : 20, "stalker_speed" : 20, "helli_bullet_speed" : 35, "blug_logger_wait_time" : 120},
 
     "attack_chance" : {"helli_attack_chance" : 90},
 
-    "bg_name" : "steam_room"
+    "bg_name" : "steam_room",
+    "level_name" : "",
+    "level_length" : 0
 }
