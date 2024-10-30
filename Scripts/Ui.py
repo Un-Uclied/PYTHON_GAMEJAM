@@ -147,7 +147,8 @@ class InputField:
                 self.active = False
             else:
                 self.text += event.unicode
-                self.hidden_text += "*"
+                if (event.unicode.isalnum() or event.unicode in "-=_+[]{};:'\",.<>/?|\\!@#$%^&*()") and not event.key in (pg.K_LSHIFT, pg.K_RSHIFT, pg.K_LCTRL, pg.K_RCTRL, pg.K_LALT, pg.K_RALT):
+                    self.hidden_text += "*"
 
     def render(self, surface):
         pg.draw.rect(surface, self.color, self.rect)
