@@ -656,7 +656,7 @@ class Game:
 
     #게임 종료
     def state_game_result(self):
-        died = TextUi(f"님 쥬금 ㅋ 점수 : {self.score}", (100, 300), self.fonts["galmuri"], 200, "white")
+        died = TextUi(f"님 쥬금 ㅋ 점수 : {self.score}", (100, 300), self.fonts["galmuri"], 100, "white")
         self.uis.append(died)
         self.sfxs["gameover"].play()
         while True:
