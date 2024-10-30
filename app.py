@@ -836,7 +836,7 @@ class Game:
                 self.state_login_menu()
             if send_btn.hovering and mouse_click:
                 #계정 만들기 로직
-                url = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyDGpmnNcJ2ZOShNz371uqmV3647ct7i4KE"
+                url = "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyDGpmnNcJ2ZOShNz371uqmV3647ct7i4KE"
                 payload = {
                     "email": email.text,
                     "password": password.text,
