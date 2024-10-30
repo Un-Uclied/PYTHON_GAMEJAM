@@ -391,13 +391,8 @@ class Game:
                 hover_image = self.assets["ui"]["motbam2"]
                 if mouse_click:
                     self.end_scene()
-<<<<<<< HEAD
-                    self.current_level_data = load_data("Assets/BigBreakout.json")
-                    self.state_main_game()
-=======
                     self.current_level_data = load_data("Assets/Levels/BigBreakout.json")
                     self.state_main_game(is_endless= True)
->>>>>>> 60fc2aa9ce954cc01e260bdbb2f87eb3830063c9
             #리코드 볼수 있음
             if records_btn.hovering:
                 hover_image = self.assets["ui"]["me"]
@@ -727,12 +722,6 @@ class Game:
             pg.display.flip()
 
     #게임 종료
-<<<<<<< HEAD
-    def state_game_result(self):
-        died = TextUi("님 쥬금 ㅋ", (500, 300), self.fonts["galmuri"], 200, "white")
-        self.uis.append(died)
-        self.sfxs["gameover"].play()
-=======
     def state_game_result(self, level, won = False):
         
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (450, 40), self.sfxs["ui_hover"], 1, 20)
@@ -752,7 +741,6 @@ class Game:
         if self.score > self.status["high_scores"][f"{level}"]:
             set_data("Status.json", "level", self.status["level"] + 1)
 
->>>>>>> 60fc2aa9ce954cc01e260bdbb2f87eb3830063c9
         while True:
             self.screen.fill("black")
             self.camera.fill("black")
@@ -985,7 +973,6 @@ class Game:
                     # 회원가입 성공 시 사용자 ID 토큰 반환
                     id_token = response.json().get('idToken')
                     print(f"User signed up successfully, ID Token: {id_token}")
-<<<<<<< HEAD
 
                     with open("status.json", 'r') as file:
                         data = json.load(file)
@@ -1010,10 +997,8 @@ class Game:
                     except Exception as e:
                         print("Error verifying ID token:", e)
 
-=======
                     self.end_scene()
                     self.state_title_screen()
->>>>>>> 60fc2aa9ce954cc01e260bdbb2f87eb3830063c9
                 else:
                     print("Failed to sign up:", response.json())
                     error.text = f"오류! : {response.json()["error"]["message"]}"
