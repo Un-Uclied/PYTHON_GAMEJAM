@@ -130,6 +130,10 @@ class Game:
                 "foyer/1" : load_image("Backgrounds/foyer_1.png"),
                 "secure_room/0" : load_image("Backgrounds/secure_room_0.png"),
                 "secure_room/1" : load_image("Backgrounds/secure_room_1.png"),
+                "horror_office/0" : load_image("Backgrounds/horror_office_0.png"),
+                "horror_office/1" : load_image("Backgrounds/horror_office_1.png"),
+                "dark_office/0" : load_image("Backgrounds/dark_office_0.png"),
+                "dark_office/1" : load_image("Backgrounds/dark_office_1.png"),
 
                 "light" : load_image("Backgrounds/Light.png"),
             },
@@ -522,7 +526,7 @@ class Game:
                 elapsed_time = time.time() - start_time
                 
                 #레벨 끝나기 1초전에 엔딩애니메이션 보여주기
-                if duration - elapsed_time <= 1:
+                if duration - elapsed_time <= 1 and not is_endless:
                     ENDING = True
                     self.player.pos.x += 25
                     self.player.invincible = True

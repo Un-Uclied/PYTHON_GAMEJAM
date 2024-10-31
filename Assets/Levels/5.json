@@ -1,0 +1,22 @@
+{   
+    "entities" : {"ratbit" : true, "strucker" : true, "helli" : true, "brook" : true, "bluglogger" : true, "stalker" : true, "medicine" : true, "ammo" : true},
+
+    "spawn_rates" : {"ratbit_spawn_rate" : 250, "strucker_spawn_rate" : 230, "helli_spawn_rate" : 350, "brook_spawn_rate" : 780, "bluglogger_spawn_rate" : 900, "stalker_spawn_rate" : 300, "medicine_spawn_rate" : 220, "ammo_spawn_rate" : 350},
+
+    "scores" : {"ratbit_add_score" : 2000, "helli_add_score" : 3500, "brook_add_score" : 5000, "bluglogger_add_score" : 4500},
+
+    "damages" : {"ratbit_damage" : 20, "strucker_damage" : 20, "helli_damage" : 20, "brook_damage" : 30, "bluglogger_damage" : 10, "stalker_damage" : 30},
+
+    "healths" : {"helli_health" : 80, "bluglogger_health" : 100},
+
+    "amount" : {"heal_amount" : 100, "ammo_amount" : 25},
+
+    "speed" : {"ratbit_speed" : 40, "strucker_speed" : 30, "stalker_speed" : 30, "helli_bullet_speed" : 40, "blug_logger_wait_time" : 180},
+
+    "attack_chance" : {"helli_attack_chance" : 75},
+
+    "bg_name" : "horror_office",
+    "level_name" : "연구실동 C",
+    "level_length" : 160,
+    "level_index" : "5"
+}
