@@ -172,9 +172,9 @@ class Game:
             "heal" : pg.mixer.Sound('Assets/Sfxs/Heal.wav'),
             "reload" : pg.mixer.Sound('Assets/Sfxs/Reload.wav'),
             "player_hurt" : pg.mixer.Sound('Assets/Sfxs/PlayerHurt.wav'),
-            "gameover" : pg.mixer.Sound('Assets/Sfxs/Gameover.wav'),
+            "gameover" : pg.mixer.Sound('Assets/Sfxs/GameOver.mp3'),
+            "gamewon" : pg.mixer.Sound('Assets/Sfxs/GameWin.wav'),
             "explosion" : pg.mixer.Sound("Assets/Sfxs/Explosion.wav"),
-            
         }
 
         #게임 폰트
@@ -773,8 +773,10 @@ class Game:
         self.uis.append(TextUi(f"{self.score}점", (300, 200), self.fonts["aggro"], 55, "white"))
 
         if won:
+            self.sfxs["gamewon"].play()
             set_data("Status.json", "level", max(int(self.current_level_data["level_index"]) + 1, int(self.status["level"])))
         if self.score > self.status["high_scores"][f"{self.current_level_data["level_index"]}"]:
+            self.sfxs["gameover"].play()
             set_data("Status.json", f"high_scores/{self.current_level_data['level_index']}", self.score)
         
         self.status = load_data("Status.json")
