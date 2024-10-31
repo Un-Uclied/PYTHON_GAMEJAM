@@ -126,6 +126,12 @@ class Game:
                 "office/1" : load_image("Backgrounds/office_1.png"),
                 "steam_room/0" : load_image("Backgrounds/steam_room_0.png"),
                 "steam_room/1" : load_image("Backgrounds/steam_room_1.png"),
+                "foyer/0" : load_image("Backgrounds/foyer_0.png"),
+                "foyer/1" : load_image("Backgrounds/foyer_1.png"),
+                "secure_room/0" : load_image("Backgrounds/secure_room_0.png"),
+                "secure_room/1" : load_image("Backgrounds/secure_room_1.png"),
+
+                "light" : load_image("Backgrounds/Light.png"),
             },
 
             "particles" : {
@@ -164,6 +170,7 @@ class Game:
             "player_hurt" : pg.mixer.Sound('Assets/Sfxs/PlayerHurt.wav'),
             "gameover" : pg.mixer.Sound('Assets/Sfxs/Gameover.wav'),
             "explosion" : pg.mixer.Sound("Assets/Sfxs/Explosion.wav"),
+            
         }
 
         #게임 폰트
@@ -444,6 +451,7 @@ class Game:
     def state_main_game(self, is_endless = False):
         #start:
         PAUSED = False #상수는 아니지만 그래도 중요하니까 ^^ 아시져?
+        ENDING = False
 
         #플레이어 : game, name, pos, hit_box_size, anim_size, max health
         self.player = Player(self, "player", 
@@ -481,13 +489,15 @@ class Game:
         bg_x1 = 0
         bg_x2 = bg_width
 
+        light_pos = [1600, 0]
+
         #천장 & 바닥 & 배경
         floor = pg.rect.Rect(200, 700, SCREEN_SCALE[0], 100)
         ceil = pg.rect.Rect(200, 0, SCREEN_SCALE[0], 100)
         self.physic_rects = [floor, ceil]
 
         #ui
-        stat_ui = TextUi("98세 못밤할아버지의 마지막 물 한모금", (50, 30), self.fonts["galmuri"], 30, "white")
+        stat_ui = TextUi("", (50, 30), self.fonts["galmuri"], 30, "white")
         self.uis.append(stat_ui)
 
         #일시 정지 UI
@@ -509,10 +519,19 @@ class Game:
             #일시 정지에 영향을 받음
             if not PAUSED:
                 self.current_time = pg.time.get_ticks()
+                elapsed_time = time.time() - start_time
+                
+                #레벨 끝나기 1초전에 엔딩애니메이션 보여주기
+                if duration - elapsed_time <= 1:
+                    ENDING = True
+                    self.player.pos.x += 25
+                    self.player.invincible = True
+                    worm.pos.x -= 10
 
-                #배경 렌더
-                bg_x1 -= bg_scroll_speed
-                bg_x2 -= bg_scroll_speed
+                #배경 움직이기
+                if not ENDING:
+                    bg_x1 -= bg_scroll_speed
+                    bg_x2 -= bg_scroll_speed
 
                 if bg_x1 <= -bg_width:
                     bg_x1 = bg_width
@@ -522,15 +541,20 @@ class Game:
                 self.screen.blit(background1, (bg_x1, 0))
                 self.screen.blit(background2, (bg_x2, 0))
 
+                #엔딩 빛 애니메이션
+                if ENDING:
+                    light_pos[0] = max(light_pos[0] - 10, 1400)
+                    self.screen.blit(self.assets["bg"]["light"], (light_pos[0], light_pos[1]))
+
+                #UI렌더
+                stat_ui.text = f"남은 탄: {self.player.ammo} | {self.score} | 거대 괴물로부터 남은 거리 : {self.player.health}cm"
                 self.screen.blit(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), (0, 700))
                 self.screen.blit(pg.transform.flip(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), False, True), (0, 0))
                 self.screen.blit(pg.transform.flip(pg.transform.rotate(self.assets["ui"]["bottom_fade"], 90), True, False), (0, 0))
-                #배경 렌더 끝
 
                 #쿠키런 마냥 움직이는 바 어쩌구 유남생?
                 current_pos = [0, 0]
                 if not is_endless:
-                    elapsed_time = time.time() - start_time
                     t = min(elapsed_time / duration, 1)
 
                     x = start_pos[0] + (end_pos[0] - start_pos[0]) * t
@@ -538,18 +562,19 @@ class Game:
                     current_pos = [x, y]
                     pg.draw.line(self.screen, "white", (start_pos[0], start_pos[1] + 30), (end_pos[0], end_pos[1] + 30), 20)
 
+                    #레벨 승리
                     if elapsed_time >= duration:
                         self.end_scene()
                         self.state_game_result(True)
-
-                stat_ui.text = f"남은 탄: {self.player.ammo} | {self.score} | 거대 괴물로부터 남은 거리 : {self.player.health}m"
                 
                 #플레이어 업데이트 & 렌더
                 self.player.update(self.physic_rects, self.player_movement)
                 self.player.render(self.screen)
                 #플레이어 업데이트 & 렌더 끝
 
-                self.spawn_entity()
+                #적 스폰
+                if not ENDING:
+                    self.spawn_entity()
 
                 #매니징
                 self.manage_projectiles()
@@ -558,7 +583,8 @@ class Game:
                 #매니징 끝
 
                 #구렁이 업데이트 ㅋㅋ
-                worm.pos.x = -self.player.health * 2
+                if not ENDING: #체력에 따라서 구렁이 앞뒤로
+                    worm.pos.x = -self.player.health * 2
                 worm.update()
                 worm.render(self.screen)
                 #구렁이 ㅋㅋ 끝
@@ -724,9 +750,9 @@ class Game:
     #게임 종료
     def state_game_result(self, won = False):
         
-        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (50, 500), self.sfxs["ui_hover"], 1, 20)
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (1000, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
-        map_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 100)), (50, 650), self.sfxs["ui_hover"], 1, 20)
+        map_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 100)), (700, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(map_btn)
 
         bg = self.assets["bg"][f"{self.current_level_data["bg_name"]}/0"]
@@ -737,9 +763,12 @@ class Game:
         self.uis.append(TextUi(f"{self.score}점", (300, 200), self.fonts["aggro"], 55, "white"))
 
         if won:
-            set_data("Status.json", "level", self.status["level"] + 1)
+            set_data("Status.json", "level", max(int(self.current_level_data["level_index"]) + 1, int(self.status["level"])))
         if self.score > self.status["high_scores"][f"{self.current_level_data["level_index"]}"]:
-            set_data("Status.json", self.status[f"high_scores/{self.current_level_data["level_index"]}"], self.score)
+            set_data("Status.json", f"high_scores/{self.current_level_data['level_index']}", self.score)
+        
+        self.status = load_data("Status.json")
+        self.uis.append(TextUi(f"최고 점수 : {self.status["high_scores"][f"{self.current_level_data["level_index"]}"]}점", (300, 260), self.fonts["aggro"], 32, "white"))
 
         while True:
             self.screen.fill("black")
@@ -1083,6 +1112,8 @@ class Game:
         self.score += self.current_level_data["scores"][f"{killed_entity.name}_add_score"]
 
     def on_player_damaged(self, damage_amount):
+        if self.player.invincible:
+            return
         if self.player.blocking: 
             self.on_player_blocked()
             return
@@ -1111,6 +1142,6 @@ class Game:
         self.camera_shake_gain += 10
 
      
-#게임 실행
+# #게임 실행
 game = Game()
 game.state_title_screen()

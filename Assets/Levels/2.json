@@ -1,0 +1,22 @@
+{   
+    "entities" : {"ratbit" : true, "strucker" : true, "helli" : true, "brook" : false, "bluglogger" : false, "stalker" : false, "medicine" : true, "ammo" : true},
+
+    "spawn_rates" : {"ratbit_spawn_rate" : 300, "strucker_spawn_rate" : 270, "helli_spawn_rate" : 520, "brook_spawn_rate" : 800, "bluglogger_spawn_rate" : 900, "stalker_spawn_rate" : 300, "medicine_spawn_rate" : 650, "ammo_spawn_rate" : 550},
+
+    "scores" : {"ratbit_add_score" : 2000, "helli_add_score" : 3500, "brook_add_score" : 5000, "bluglogger_add_score" : 4500},
+
+    "damages" : {"ratbit_damage" : 20, "strucker_damage" : 10, "helli_damage" : 20, "brook_damage" : 30, "bluglogger_damage" : 10, "stalker_damage" : 30},
+
+    "healths" : {"helli_health" : 40, "bluglogger_health" : 100},
+
+    "amount" : {"heal_amount" : 100, "ammo_amount" : 20},
+
+    "speed" : {"ratbit_speed" : 35, "strucker_speed" : 22, "stalker_speed" : 20, "helli_bullet_speed" : 32, "blug_logger_wait_time" : 120},
+
+    "attack_chance" : {"helli_attack_chance" : 100},
+
+    "bg_name" : "foyer",
+    "level_name" : "연구실동 B",
+    "level_length" : 90,
+    "level_index" : "2"
+}

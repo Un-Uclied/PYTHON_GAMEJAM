@@ -121,6 +121,7 @@ class Player(MoveableEntity):
         #Status / number
         self.max_health = max_health
         self.health = max_health
+        self.invincible = False
 
         self.max_jump_count = 1
         self.current_jump_count = 0
