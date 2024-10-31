@@ -202,7 +202,7 @@ class Player(MoveableEntity):
 
         if -self.arm_max_roatation <= self.current_mouse_angle <= self.arm_max_roatation:
             self.game.projectiles.append(
-                PlayerBullet(self.game, self.get_center_pos(), pg.math.Vector2(mouse_pos[0] - self.get_center_pos().x, mouse_pos[1] - self.get_center_pos().y), self.bullet_speed, self.game.assets["projectiles"]["bullet"], 500, "player's bullet", self.attack_damage)
+                PlayerBullet(self.game, self.get_center_pos(), pg.math.Vector2(mouse_pos[0] - self.get_center_pos().x, mouse_pos[1] - self.get_center_pos().y), self.bullet_speed, self.game.assets["projectiles"]["bullet"], 60, "player's bullet", self.attack_damage)
             )
             return True
         else:
@@ -375,7 +375,7 @@ class Helli(FollowingEnemy):
 
     def attack(self):
         #탄막을 쏘기에 super().attack()안함
-        self.game.projectiles.append(Bullet(self.game, self.pos, pg.math.Vector2(-1, 0), self.bullet_speed, self.game.assets["projectiles"]["helli_fire_bullet"], 500, "helli's bullet", self.damage))
+        self.game.projectiles.append(Bullet(self.game, self.pos, pg.math.Vector2(-1, 0), self.bullet_speed, self.game.assets["projectiles"]["helli_fire_bullet"], 60, "helli's bullet", self.damage))
 
 class Brook(FollowingEnemy):
     def __init__(self, game, name, pos, size, anim_size, start_following_speed, following_speed, max_health, damage, speed_change_speed):
