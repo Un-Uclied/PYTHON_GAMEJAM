@@ -24,14 +24,19 @@ def load_data(save_file : str):
         dicts = json.load(file)
     return dicts
 
-def set_data(file_dir : str, property_name : str, new_value):
+def set_data(file_dir: str, property_name: str, new_value):
     with open(file_dir, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    data[property_name] = new_value
+    keys = property_name.split("/")
+    
+    temp = data
+    for key in keys[:-1]:
+        temp = temp.get(key, {})
+    temp[keys[-1]] = new_value
 
     with open(file_dir, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
+        json.dump(data, f, indent=4, ensure_ascii=False)
 
 def open_site(url):
     webbrowser.open(url)

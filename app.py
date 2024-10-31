@@ -722,24 +722,24 @@ class Game:
             pg.display.flip()
 
     #게임 종료
-    def state_game_result(self, level, won = False):
+    def state_game_result(self, won = False):
         
-        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (450, 40), self.sfxs["ui_hover"], 1, 20)
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (50, 500), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
-        map_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 100)), (500, 50), self.sfxs["ui_hover"], 1, 20)
+        map_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 100)), (50, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(map_btn)
 
         bg = self.assets["bg"][f"{self.current_level_data["bg_name"]}/0"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
         rect_surface.fill((0, 0, 0, 200))
 
-        self.uis.append(TextUi("탈출 성공!" if won else "탈출실패..", (300, 50), self.fonts["aggro"], 45, "white"))
-        self.uis.append(TextUi(f"{self.score}점", (400, 100), self.fonts["aggro"], 45, "white"))
+        self.uis.append(TextUi("탈출 성공!" if won else "탈출실패..", (300, 50), self.fonts["aggro"], 100, "white"))
+        self.uis.append(TextUi(f"{self.score}점", (300, 200), self.fonts["aggro"], 55, "white"))
 
         if won:
             set_data("Status.json", "level", self.status["level"] + 1)
-        if self.score > self.status["high_scores"][f"{level}"]:
-            set_data("Status.json", "level", self.status["level"] + 1)
+        if self.score > self.status["high_scores"][f"{self.current_level_data["level_index"]}"]:
+            set_data("Status.json", self.status[f"high_scores/{self.current_level_data["level_index"]}"], self.score)
 
         while True:
             self.screen.fill("black")
@@ -755,10 +755,9 @@ class Game:
             if quit_btn.hovering and mouse_click:
                 self.end_scene()
                 self.state_title_screen()
-            if map_btn.hovering:
-                if mouse_click:
-                    self.end_scene()
-                    self.state_main_world()
+            if map_btn.hovering and mouse_click:
+                self.end_scene()
+                self.state_main_world()
 
             self.manage_spark()
             self.manage_particle()
@@ -1092,7 +1091,7 @@ class Game:
 
         if self.player.health <= 0:
             self.end_scene()
-            self.state_game_result()
+            self.state_game_result(False)
         else:
             self.sfxs["player_hurt"].play()
 
@@ -1113,6 +1112,5 @@ class Game:
 
      
 #게임 실행
-if __name__ == '__main__':
-    game = Game()
-    game.state_title_screen()
+game = Game()
+game.state_title_screen()

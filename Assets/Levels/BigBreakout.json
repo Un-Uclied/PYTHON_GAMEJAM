@@ -17,5 +17,6 @@
 
     "bg_name" : "steam_room",
     "level_name" : "",
-    "level_length" : 0
+    "level_length" : 0,
+    "level_index" : "BigBreakOut"
 }
