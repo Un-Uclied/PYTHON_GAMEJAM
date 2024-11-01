@@ -57,6 +57,10 @@ class Game:
         self.camera_shrink_speed = .6
         self.shake = (self.camera_shake_gain * random.random(), self.camera_shake_gain * random.random())
 
+        self.score = 0
+        self.current_level_data = {}
+        self.status = load_data("Status.json")
+
         #게임 에셋
         self.assets = {
             #UI에셋
@@ -179,6 +183,13 @@ class Game:
             "explosion" : pg.mixer.Sound("Assets/Sfxs/Explosion.wav"),
         }
 
+        self.bgm = {
+            
+        }
+
+        #음량 설정
+        self.set_volumes()
+
         #게임 폰트
         self.fonts = {
             "galmuri" : 'Assets/Fonts/Galmuri11-Bold.ttf',
@@ -201,10 +212,6 @@ class Game:
 
         #스폰된 탄들
         self.projectiles = []
-
-        self.score = 0
-        self.current_level_data = {}
-        self.status = load_data("Status.json")
     
     def manage_spark(self):
         for spark in self.sparks.copy():
@@ -1160,21 +1167,17 @@ class Game:
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
 
+    #도감
     def state_dogam(self):
          
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (50, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
 
-        bg = self.assets["bg"]["office/0"]
-        rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
-        rect_surface.fill((0, 0, 0, 200))
-
         while True:
             self.screen.fill("black")
             self.camera.fill("black")
 
-            self.screen.blit(bg, (0, 0))
-            self.screen.blit(rect_surface, (0, 0))
+            pg.draw.rect(self.screen, "white", (0, 0, SCREEN_SCALE[0], SCREEN_SCALE[1]))
 
             pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
@@ -1199,7 +1202,8 @@ class Game:
     
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
-        
+    
+    #음량 설정
     def state_settings(self):
          
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (50, 650), self.sfxs["ui_hover"], 1, 20)
@@ -1209,6 +1213,11 @@ class Game:
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
         rect_surface.fill((0, 0, 0, 200))
 
+        sfx_vol = TextUi("효과음 음량 : {:.1f}(화살표 위 아래로 설정)".format(self.status["sfx_volume"]), (300, 100), self.fonts["galmuri"], 50, "white")
+        self.uis.append(sfx_vol)
+        bgm_vol = TextUi("배경음악 음량 : {:.1f}(화살표 좌 우로 설정)".format(self.status["bgm_volume"]), (300, 200), self.fonts["galmuri"], 50, "white")
+        self.uis.append(bgm_vol)
+
         while True:
             self.screen.fill("black")
             self.camera.fill("black")
@@ -1229,6 +1238,7 @@ class Game:
             self.manage_ui()
             self.manage_camera_shake()
 
+
             self.camera.blit(self.screen, self.shake)
 
             for event in pg.event.get():
@@ -1236,9 +1246,32 @@ class Game:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
-    
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_UP:
+                        set_data("Status.json", "sfx_volume", min(load_data("Status.json")["sfx_volume"] + .1, 1))
+                        self.status = load_data("Status.json")
+                    if event.key == pg.K_DOWN:
+                        set_data("Status.json", "sfx_volume", max(load_data("Status.json")["sfx_volume"] - .1, 0))
+                        self.status = load_data("Status.json")
+                    if event.key == pg.K_RIGHT:
+                        set_data("Status.json", "bgm_volume", min(load_data("Status.json")["bgm_volume"] + .1, 1))
+                        self.status = load_data("Status.json")
+                    if event.key == pg.K_LEFT:
+                        set_data("Status.json", "bgm_volume", max(load_data("Status.json")["bgm_volume"] - .1, 0))
+                        self.status = load_data("Status.json")
+
+            self.set_volumes()
+            sfx_vol.text = "효과음 음량 : {:.1f}(화살표 위 아래로 설정)".format(self.status["sfx_volume"])
+            bgm_vol.text = "배경음악 음량 : {:.1f}(화살표 좌 우로 설정)".format(self.status["bgm_volume"])
+            
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
+
+    def set_volumes(self):
+        for sfx in self.sfxs.values():
+            sfx.set_volume(self.status["sfx_volume"])
+        for 브금 in self.bgm.values():
+            브금.set_volume(self.status["bgm_volume"])
 
     #컷씬
     def state_cut_scene(self, images):

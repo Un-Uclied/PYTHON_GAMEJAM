@@ -11,5 +11,7 @@
         "boss": 0
     },
     "level": 7,
-    "idToken": ""
+    "idToken": "",
+    "sfx_volume": 0.5999999999999993,
+    "bgm_volume": 0.7000000000000001
 }
