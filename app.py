@@ -660,8 +660,12 @@ class Game:
                     if event.key == KEY_JUMP:
                         if self.player.jump(20):
                             self.sfxs["jump"].play()
-                    if event.key == pg.K_ESCAPE:
+                    if event.key == pg.K_SPACE:
                         PAUSED = not PAUSED
+                    if event.key == pg.K_ESCAPE and PAUSED:
+                        self.end_scene()
+                        self.state_main_world()
+
                 
                 #마우스가 창밖에 나가면 PAUSE
                 if event.type == pg.ACTIVEEVENT:
