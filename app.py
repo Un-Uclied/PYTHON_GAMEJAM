@@ -71,6 +71,8 @@ class Game:
                 "records" : load_image("UI/Record.png"),
                 "quit" : load_image("UI/Quit.png"),
                 "escape" : load_image("UI/Escape.png"),
+                "dogam" : load_image("UI/Dogam.png"),
+                "setting" : load_image("UI/Settings.png"),
 
                 "motbam" : load_image("UI/Motbam.png"),
                 "motbam2" : load_image("UI/Motbam2.png"),
@@ -338,12 +340,24 @@ class Game:
     def state_title_screen(self):
         #start:
 
-        margin = 50
-        map_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 100)), (500, 50), self.sfxs["ui_hover"], 1, 20)
-        endless_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["endless"], (200, 100)), (500, 150 + margin), self.sfxs["ui_hover"], 1, 20)
-        records_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["records"], (200, 100)), (500, 250 + margin * 2), self.sfxs["ui_hover"], 1, 20)
-        credits_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["credits"], (200, 100)), (500, 350 + margin * 3), self.sfxs["ui_hover"], 1, 20)
-        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (500, 450 + margin * 4), self.sfxs["ui_hover"], 1, 20)
+        margin = 150
+        y_offset = 0
+        scroll_speed = 30
+        map_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 150)), (500, 20), self.sfxs["ui_hover"], 1, 20)
+        endless_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["endless"], (200, 150)), (500, 20 + margin), self.sfxs["ui_hover"], 1, 20)
+        records_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["records"], (200, 150)), (500, 20 + margin * 2), self.sfxs["ui_hover"], 1, 20)
+        credits_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["credits"], (200, 150)), (500, 20 + margin * 3), self.sfxs["ui_hover"], 1, 20)
+        dogam_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["dogam"], (200, 150)), (500, 20 + margin * 4), self.sfxs["ui_hover"], 1, 20)
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (500, 20 + margin * 5), self.sfxs["ui_hover"], 1, 20)
+        setting_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["setting"], (200, 150)), (500, 20 + margin * 6), self.sfxs["ui_hover"], 1, 20)
+
+        self.uis.append(map_btn)
+        self.uis.append(endless_btn)
+        self.uis.append(records_btn)
+        self.uis.append(credits_btn)
+        self.uis.append(dogam_btn)
+        self.uis.append(quit_btn)
+        self.uis.append(setting_btn)
 
         with open("status.json", 'r') as file:
             data = json.load(file)
@@ -364,12 +378,6 @@ class Game:
                 print("Error verifying ID token:", e)
 
         login_btn = TextButton("로그인하셨습니다." if data["idToken"] and user else "<로그인해주세요 현재 : 익명", self.fonts["galmuri"], 30, (30, 560), self.sfxs["ui_hover"], "yellow", "blue")
-
-        self.uis.append(map_btn)
-        self.uis.append(endless_btn)
-        self.uis.append(records_btn)
-        self.uis.append(credits_btn)
-        self.uis.append(quit_btn)
         self.uis.append(login_btn)
 
         hover_image = pg.Surface((100, 100))
@@ -388,6 +396,16 @@ class Game:
             self.screen.blit(hover_image, (600, 0))
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (800, 0))
             pg.draw.rect(self.screen, "black", (0, 0, 800, 800))
+
+            #버튼 위치 조정     tlqkf 나도 좀 똥코드인건 아는데 어쩔수가;
+            map_btn.pos[1] = 20 + y_offset
+            endless_btn.pos[1] = 20 + margin + y_offset
+            records_btn.pos[1] = 20 + margin * 2 + y_offset
+            credits_btn.pos[1] = 20 + margin * 3 + y_offset
+            dogam_btn.pos[1] = 20 + margin * 4 + y_offset
+            quit_btn.pos[1] = 20 + margin * 5 + y_offset
+            setting_btn.pos[1] = 20 + margin * 6 + y_offset
+
         
             mouse_click = pg.mouse.get_pressed(3)[0]
             #지도 버튼
@@ -449,6 +467,12 @@ class Game:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
+                if event.type == pg.MOUSEWHEEL:
+                    if event.y < 0:
+                        y_offset = max(y_offset - scroll_speed, -320)
+                    else:
+                        y_offset = min(y_offset + scroll_speed, 0)
+
 
             dt = self.clock.tick(TARGET_FPS) / 1000
             elapsed_time += dt
@@ -685,7 +709,7 @@ class Game:
     #지도
     def state_main_world(self):
 
-        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (70, 650), self.sfxs["ui_hover"], 1, 20)
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (70, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
 
         bg = self.assets["level_world"]
@@ -703,7 +727,7 @@ class Game:
         selected_level = 0
         text = TextUi("", (10, 10), self.fonts["aggro"], 60, "white")
         self.uis.append(text)
-        escape_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["escape"], (200, 100)), (70, 500), self.sfxs["ui_hover"], 1, 20)
+        escape_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["escape"], (200, 150)), (70, 500), self.sfxs["ui_hover"], 1, 20)
 
         level_name = TextUi("", (10, 100), self.fonts["aggro"], 40, "white")
         self.uis.append(level_name)
@@ -773,9 +797,9 @@ class Game:
     #게임 종료
     def state_game_result(self, won = False):
         
-        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (1000, 650), self.sfxs["ui_hover"], 1, 20)
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (1000, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
-        map_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 100)), (700, 650), self.sfxs["ui_hover"], 1, 20)
+        map_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 150)), (700, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(map_btn)
 
         bg = self.assets["bg"][f"{self.current_level_data["bg_name"]}/0"]
@@ -832,7 +856,7 @@ class Game:
     #크레딧
     def state_credits(self):
 
-        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (70, 650), self.sfxs["ui_hover"], 1, 20)
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (70, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
 
         self.uis.append(TextUi("98세 못밤할아버지의 마지막 물 한모금 팀", (600, 50), self.fonts["galmuri"], 50, "white"))
@@ -884,7 +908,7 @@ class Game:
 
     #로그인
     def state_login_menu(self):
-        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (70, 650), self.sfxs["ui_hover"], 1, 20)
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (70, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
 
         email = InputField((750, 200), (500, 50), self.fonts["galmuri"], 30, "black", "white")
@@ -974,7 +998,7 @@ class Game:
 
     #계정 생성
     def state_make_account(self):
-        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (70, 650), self.sfxs["ui_hover"], 1, 20)
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (70, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
 
         account_id = InputField((750, 200), (500, 50), self.fonts["galmuri"], 30, "black", "white")
@@ -1085,7 +1109,7 @@ class Game:
     #레코드
     def state_records(self):
         
-        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 100)), (50, 650), self.sfxs["ui_hover"], 1, 20)
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (50, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
 
         bg = self.assets["bg"]["office/0"]

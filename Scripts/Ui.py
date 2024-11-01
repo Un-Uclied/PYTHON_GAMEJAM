@@ -55,12 +55,13 @@ class ClickableUi:
     def __init__(self, surface : pg.Surface, pos : tuple, hover_audio : pg.mixer.Sound):
         self.render_surface = surface
         self.hovering = False
-        self.pos = pos
+        self.pos = pg.math.Vector2(pos[0], pos[1])
         self.rect = pg.Rect(self.pos[0], self.pos[1], surface.get_rect().width, surface.get_rect().height)
 
         self.hover_audio = hover_audio
 
     def update(self):
+        self.rect = pg.Rect(self.pos[0], self.pos[1], surface.get_rect().width, surface.get_rect().height)
         if self.rect.collidepoint(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1]):
             if not self.hovering:
                 self.on_hovered()
