@@ -443,6 +443,19 @@ class Game:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
+            #도감
+            if dogam_btn.hovering:
+                hover_image = self.assets["ui"]["motbam"]
+                if mouse_click:
+                    self.end_scene()
+                    self.state_dogam()
+            #설정 드가자
+            if setting_btn.hovering:
+                hover_image = self.assets["ui"]["motbam2"]
+                if mouse_click:
+                    self.end_scene()
+                    self.state_settings()
+
 
             #로그인
             if login_btn.hovering:
@@ -1109,6 +1122,86 @@ class Game:
     #레코드
     def state_records(self):
         
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (50, 650), self.sfxs["ui_hover"], 1, 20)
+        self.uis.append(quit_btn)
+
+        bg = self.assets["bg"]["office/0"]
+        rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
+        rect_surface.fill((0, 0, 0, 200))
+
+        while True:
+            self.screen.fill("black")
+            self.camera.fill("black")
+
+            self.screen.blit(bg, (0, 0))
+            self.screen.blit(rect_surface, (0, 0))
+
+            pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
+            self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
+
+            mouse_click = pg.mouse.get_pressed(3)[0]
+            if quit_btn.hovering and mouse_click:
+                self.end_scene()
+                self.state_title_screen()
+
+            self.manage_spark()
+            self.manage_particle()
+            self.manage_ui()
+            self.manage_camera_shake()
+
+            self.camera.blit(self.screen, self.shake)
+
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    self.end_scene()
+                    pg.quit()
+                    sys.exit()
+    
+            self.clock.tick(TARGET_FPS)
+            pg.display.flip()
+
+    def state_dogam(self):
+         
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (50, 650), self.sfxs["ui_hover"], 1, 20)
+        self.uis.append(quit_btn)
+
+        bg = self.assets["bg"]["office/0"]
+        rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
+        rect_surface.fill((0, 0, 0, 200))
+
+        while True:
+            self.screen.fill("black")
+            self.camera.fill("black")
+
+            self.screen.blit(bg, (0, 0))
+            self.screen.blit(rect_surface, (0, 0))
+
+            pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
+            self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
+
+            mouse_click = pg.mouse.get_pressed(3)[0]
+            if quit_btn.hovering and mouse_click:
+                self.end_scene()
+                self.state_title_screen()
+
+            self.manage_spark()
+            self.manage_particle()
+            self.manage_ui()
+            self.manage_camera_shake()
+
+            self.camera.blit(self.screen, self.shake)
+
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    self.end_scene()
+                    pg.quit()
+                    sys.exit()
+    
+            self.clock.tick(TARGET_FPS)
+            pg.display.flip()
+        
+    def state_settings(self):
+         
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (50, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
 

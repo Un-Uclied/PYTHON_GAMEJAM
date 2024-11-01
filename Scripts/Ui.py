@@ -61,7 +61,7 @@ class ClickableUi:
         self.hover_audio = hover_audio
 
     def update(self):
-        self.rect = pg.Rect(self.pos[0], self.pos[1], surface.get_rect().width, surface.get_rect().height)
+        self.rect = pg.Rect(self.pos[0], self.pos[1], self.render_surface.get_rect().width, self.render_surface.get_rect().height)
         if self.rect.collidepoint(pg.mouse.get_pos()[0], pg.mouse.get_pos()[1]):
             if not self.hovering:
                 self.on_hovered()
