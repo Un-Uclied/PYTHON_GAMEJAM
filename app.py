@@ -639,9 +639,13 @@ class Game:
                 paused_txt = TextUi("일시정지", (100, 300), self.fonts["galmuri"], 100, "white")
                 paused_txt.update()
                 paused_txt.render(self.screen)
-                paused_txt = TextUi("ESC로 게임으로 돌아가기", (100, 420), self.fonts["galmuri"], 30, "white")
-                paused_txt.update()
-                paused_txt.render(self.screen)
+                esc_txt = TextUi("스페이스바로 게임으로 돌아가기", (100, 420), self.fonts["galmuri"], 30, "white")
+                esc_txt.update()
+                esc_txt.render(self.screen)
+                esc_txt = TextUi("ESC로 월드로 돌아가기", (100, 490), self.fonts["galmuri"], 20, "white")
+                esc_txt.update()
+                esc_txt.render(self.screen)
+                
 
                 self.camera.blit(self.screen, (0, 0))
 
@@ -656,8 +660,12 @@ class Game:
                     if event.key == KEY_JUMP:
                         if self.player.jump(20):
                             self.sfxs["jump"].play()
-                    if event.key == pg.K_ESCAPE:
+                    if event.key == pg.K_SPACE:
                         PAUSED = not PAUSED
+                    if event.key == pg.K_ESCAPE and PAUSED:
+                        self.end_scene()
+                        self.state_main_world()
+
                 
                 #마우스가 창밖에 나가면 PAUSE
                 if event.type == pg.ACTIVEEVENT:
