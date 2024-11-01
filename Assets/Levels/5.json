@@ -1,7 +1,7 @@
 {   
     "entities" : {"ratbit" : true, "strucker" : true, "helli" : true, "brook" : true, "bluglogger" : true, "stalker" : true, "medicine" : true, "ammo" : true},
 
-    "spawn_rates" : {"ratbit_spawn_rate" : 250, "strucker_spawn_rate" : 230, "helli_spawn_rate" : 350, "brook_spawn_rate" : 780, "bluglogger_spawn_rate" : 900, "stalker_spawn_rate" : 300, "medicine_spawn_rate" : 220, "ammo_spawn_rate" : 350},
+    "spawn_rates" : {"ratbit_spawn_rate" : 250, "strucker_spawn_rate" : 230, "helli_spawn_rate" : 350, "brook_spawn_rate" : 780, "bluglogger_spawn_rate" : 900, "stalker_spawn_rate" : 300, "medicine_spawn_rate" : 220, "ammo_spawn_rate" : 220},
 
     "scores" : {"ratbit_add_score" : 2000, "helli_add_score" : 3500, "brook_add_score" : 5000, "bluglogger_add_score" : 4500},
 
