@@ -300,7 +300,7 @@ class Game:
             if not projectile.tag == "player's bullet" and self.player.get_rect().collidepoint(projectile.pos[0], projectile.pos[1]) and projectile in self.projectiles:
                 #패링 : 적 탄막 => 플레이어 탄막으로 변경
                 if self.player.blocking:
-                    projectile.direction = pg.math.Vector2(1, 0).normalize() * projectile.speed
+                    projectile.direction =  pg.math.Vector2(projectile.shoot_by.get_center_pos().x - projectile.pos.x, projectile.shoot_by.get_center_pos().y - projectile.pos.y).normalize() * projectile.speed
                     self.on_player_blocked()
                     projectile.timer = projectile.max_timer
                     projectile.tag = "player's bullet"
@@ -906,7 +906,7 @@ class Game:
         #보스
         boss = Boss(self, "boss", (1200, 150), (500, 500), (500, 500), 5000, self.assets["props"]["boss/arm"], 20, self.current_level_data["speed"]["boss_bullet_speed"], self.current_level_data["attack_chance"]["boss_attack_chance"], (280, 190))
         self.entities.append(boss)
-        boss_soul = BossSoul(self, "world_doom", (1100, 300), (150, 150), (150, 150), 100)
+        boss_soul = BossSoul(self, "world_doom", (1100, 300), (150, 150), (150, 150), 100, self.current_level_data["speed"]["world_doom_speed"])
         self.entities.append(boss_soul)
 
         while(True):
@@ -1131,7 +1131,8 @@ class Game:
                 if btn.hovering and mouse_click and buttons.index(btn) + 1 <= self.status["level"]:
                     selected_level = buttons.index(btn) + 1
                     text.text = f"{selected_level} 레벨"
-                    high_score.text = "하이스코어 : {}".format(self.status["high_scores"][str(buttons.index(btn) + 1)])
+                    high_score.text = f"하이스코어: {self.status['high_scores'][str(buttons.index(btn) + 1)]}"
+                    #high_score.text = "하이스코어 : {}".format(self.status["high_scores"][str(buttons.index(btn) + 1)])
                     level_name.text = f"\"{load_data(f"Assets/Levels/{selected_level}.json")["level_name"]}\""
                     if not escape_btn in self.uis:
                         self.uis.append(escape_btn)
