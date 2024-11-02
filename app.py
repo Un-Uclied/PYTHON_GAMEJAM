@@ -419,14 +419,14 @@ class Game:
         self.uis.append(quit_btn)
         self.uis.append(setting_btn)
 
-        with open("status.json", 'r') as file:
-            data = json.load(file)
+        tokenFile = open("test.txt", "r")
+        token = tokenFile.read()
 
         user = 0
-        if data["idToken"]:
+        if token:
             try:
                 # ID 토큰을 검증하여 사용자 정보 가져오기
-                decoded_token = auth.verify_id_token(data["idToken"])
+                decoded_token = auth.verify_id_token(token, clock_skew_in_seconds=10)
                 uid = decoded_token['uid']
                 user = auth.get_user(uid)
                 
@@ -437,7 +437,7 @@ class Game:
             except Exception as e:
                 print("Error verifying ID token:", e)
 
-        login_btn = TextButton("로그인하셨습니다." if data["idToken"] and user else "<로그인해주세요 현재 : 익명", self.fonts["galmuri"], 30, (30, 560), self.sfxs["ui_hover"], "yellow", "blue")
+        login_btn = TextButton("로그인하셨습니다." if token and user else "<로그인해주세요 현재 : 익명", self.fonts["galmuri"], 30, (30, 560), self.sfxs["ui_hover"], "yellow", "blue")
         self.uis.append(login_btn)
 
         hover_image = pg.Surface((100, 100))
@@ -519,7 +519,8 @@ class Game:
                     self.state_settings()
             #로그인
             if login_btn.hovering:
-                if mouse_click and data["idToken"] == "":
+                hover_image = self.assets["ui"]["me"]
+                if mouse_click and token == "":
                     self.end_scene()
                     self.state_login_menu()
 
@@ -785,7 +786,6 @@ class Game:
                             esc_txt.text = "계속 누르고 계세요.."
                         else :
                             PAUSED = True
-                
 
                 if event.type == pg.KEYUP:
                     if event.key == pg.K_ESCAPE:
@@ -1299,15 +1299,9 @@ class Game:
                     id_token = response.json().get('idToken')
                     print(f"ID Token: {id_token}")
 
-                    with open("status.json", 'r') as file:
-                        data = json.load(file)
-                
-                    # idToken 필드를 업데이트
-                    data["idToken"] = id_token
-                
-                    # 업데이트된 내용을 다시 파일에 저장
-                    with open("status.json", 'w') as file:
-                        json.dump(data, file, indent = 4)
+                    tokenFile = open("test.txt", "w")
+                    w = tokenFile.write(id_token)
+                    tokenFile.close()
 
                 else:
                     print("Failed to sign in:", response.json())
@@ -1394,19 +1388,17 @@ class Game:
                     id_token = response.json().get('idToken')
                     print(f"User signed up successfully, ID Token: {id_token}")
 
-                    with open("status.json", 'r') as file:
-                        data = json.load(file)
-                
-                    # idToken 필드를 업데이트
-                    data["idToken"] = id_token
-                
-                    # 업데이트된 내용을 다시 파일에 저장
-                    with open("status.json", 'w') as file:
-                        json.dump(data, file, indent = 4)
+                    tokenFile = open("test.txt", "w")
+                    w = tokenFile.write(id_token)
+                    tokenFile.close()
 
                     try:
                         # ID 토큰을 검증하여 사용자 정보 가져오기
-                        decoded_token = auth.verify_id_token(data["idToken"])
+
+                        tokenFile = open("test.txt", "r")
+                        token = tokenFile.read()
+
+                        decoded_token = auth.verify_id_token(token, clock_skew_in_seconds=10)
                         uid = decoded_token['uid']
                         user = auth.get_user(uid)
                         
@@ -1423,8 +1415,6 @@ class Game:
                     print("Failed to sign up:", response.json())
                     error.text = f"오류! : {response.json()["error"]["message"]}"
                 
-                
-
             self.manage_spark()
             self.manage_particle()
             self.manage_ui()
