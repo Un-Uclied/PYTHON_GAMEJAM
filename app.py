@@ -1091,7 +1091,7 @@ class Game:
                 if btn.hovering and mouse_click and buttons.index(btn) + 1 <= self.status["level"]:
                     selected_level = buttons.index(btn) + 1
                     text.text = f"{selected_level} 레벨"
-                    high_score.text = f"하이스코어 : {self.status["high_scores"][str(buttons.index(btn) + 1)]}"
+                    high_score.text = "하이스코어 : {}".format(self.status["high_scores"][str(buttons.index(btn) + 1)])
                     level_name.text = f"\"{load_data(f"Assets/Levels/{selected_level}.json")["level_name"]}\""
                     if not escape_btn in self.uis:
                         self.uis.append(escape_btn)

@@ -1,5 +1,5 @@
 {
-    "is_first_play": true,
+    "is_first_play": false,
     "high_scores": {
         "BigBreakOut": 105500,
         "1": 35000,
