@@ -1,6 +1,6 @@
 안녕하세여 98세 못밤할아버지의 마지막 물 한모금 팀입니다 (서준범, 이준영)
 
-거의 모든 SFX들은 jsfxr.me에서 만들거나 freesound.org에서 찾을수 있으나 (CC0 라이선스),
- 저희 팀이 자체 제작하거나 합성한 SFX들도 있습니다
+모든 음향 효과와 배경음악은
+freesound.org opengameart.org pixabay.com의 CC0라이선스 음향 효과를 썼습니다
 
 모든 그래픽은 저희팀이 자체제작하였습니다

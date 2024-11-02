@@ -7,10 +7,10 @@ import json
 
 from Scripts.utils import load_image, load_images, load_data, set_data
 from Scripts.Shadows import Shadow
-from Scripts.Entities import Player, Entity, KillableEnemy, Obstacle, Ratbit, Helli, Brook, BlugLogger, Medicine, Ammo
+from Scripts.Entities import Player, Entity, KillableEnemy, Obstacle, Ratbit, Helli, Brook, BlugLogger, Medicine, Ammo, Boss
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
-from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField
+from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField, Slider
 from Scripts.Bullets import Bullet, PlayerBullet
 
 import firebase_admin
@@ -49,6 +49,7 @@ class Game:
 
         self.camera = pg.display.set_mode(SCREEN_SCALE)
         self.screen = pg.surface.Surface(SCREEN_SCALE, pg.SRCALPHA)
+        pg.display.set_icon(load_image("UI/ExitNode.png"))
 
         self.clock = pg.time.Clock()
         self.current_time = pg.time.get_ticks()
@@ -56,6 +57,10 @@ class Game:
         self.camera_shake_gain = 0
         self.camera_shrink_speed = .6
         self.shake = (self.camera_shake_gain * random.random(), self.camera_shake_gain * random.random())
+
+        self.score = 0
+        self.current_level_data = {}
+        self.status = load_data("Status.json")
 
         #게임 에셋
         self.assets = {
@@ -74,9 +79,13 @@ class Game:
                 "dogam" : load_image("UI/Dogam.png"),
                 "setting" : load_image("UI/Settings.png"),
 
-                "motbam" : load_image("UI/Motbam.png"),
-                "motbam2" : load_image("UI/Motbam2.png"),
-                "me" : load_image("UI/Me.png"),
+                "world_bg" : load_image("UI/WorldBg.png"),
+                "endless_bg" : load_image("UI/EndlessBg.png"),
+                "credits_bg" : load_image("UI/CreditBg.png"),
+                "records_bg" : load_image("UI/RankingBg.png"),
+                "quit_bg" : load_image("UI/QuitBg.png"),
+                "dogam_bg" : load_image("UI/DogamBg.png"),
+                "setting_bg" : load_image("UI/SettingBg.png"),
 
                 "credits_서준범_icon" : load_image("서준범.png"),
                 "credits_이준영_icon" : load_image("못밤.png"),
@@ -116,11 +125,16 @@ class Game:
                 "beam" : load_image("Characters/Bluglogger/Beam.png"),
 
                 "stalker/idle" : Animation(load_images("Characters/Stalker/Idle"), 5, True),
+
+                "boss/idle" : Animation(load_images("Characters/Boss/Idle"), 8, True),
+                "boss/change" : Animation(load_images("Characters/Boss/Change"), 8, True),
+                "boss/attack" : Animation(load_images("Characters/Boss/Attack"), 8, True),
             },
 
             "props" : {
                 "player/arm_gun" : load_image("Characters/Player/Arm.png"),
-                "player/arm_shield" : load_image("Characters/Player/ArmShield.png")
+                "player/arm_shield" : load_image("Characters/Player/ArmShield.png"),
+                "boss/arm" : load_image("Characters/Boss/Arm.png")
             },
 
             "bg" : {
@@ -159,6 +173,15 @@ class Game:
                 "start" : load_images("Cutscenes/Start")
             },
 
+            "dogam" : {
+                "ratbit" : load_image("Characters/Ratbit/Idle/0.png"),
+                "helli" : load_image("Characters/Helli/Idle/0.png"),
+                "strucker" : load_image("Characters/Strucker/0.png"),
+                "stalker" : load_image("Characters/Stalker/Idle/0.png"),
+                "brook" : load_image("Characters/Brook/Idle/0.png"),
+                "bluglogger" : load_image("Characters/Bluglogger/Idle/0.png")
+            },
+
             "level_world" : load_image("background.png")
         }
 
@@ -178,6 +201,18 @@ class Game:
             "gamewon" : pg.mixer.Sound('Assets/Sfxs/GameWin.wav'),
             "explosion" : pg.mixer.Sound("Assets/Sfxs/Explosion.wav"),
         }
+
+        self.bgm = {
+            "main_title" : pg.mixer.Sound("Assets/Bgms/Lab.mp3"),
+            "run1" : pg.mixer.Sound("Assets/Bgms/Run1.mp3"),
+            "run2" : pg.mixer.Sound("Assets/Bgms/Run2.wav"),
+            "world" : pg.mixer.Sound("Assets/Bgms/World.wav"),
+            "result" : pg.mixer.Sound("Assets/Bgms/GameResult.ogg"),
+            "dogam" : pg.mixer.Sound("Assets/Bgms/Dogam.wav")
+        }
+
+        #음량 설정
+        self.set_volumes()
 
         #게임 폰트
         self.fonts = {
@@ -201,10 +236,6 @@ class Game:
 
         #스폰된 탄들
         self.projectiles = []
-
-        self.score = 0
-        self.current_level_data = {}
-        self.status = load_data("Status.json")
     
     def manage_spark(self):
         for spark in self.sparks.copy():
@@ -384,6 +415,8 @@ class Game:
 
         elapsed_time = 0
 
+        self.set_bgm("main_title")
+
         while(True):
             #update:
             self.current_time = pg.time.get_ticks()
@@ -393,7 +426,7 @@ class Game:
             self.camera.fill("black")
 
             #pg.draw.rect(self.screen, "white", (0, 0, 1600, 800))
-            self.screen.blit(hover_image, (600, 0))
+            self.screen.blit(hover_image, (700, 0))
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (800, 0))
             pg.draw.rect(self.screen, "black", (0, 0, 800, 800))
 
@@ -410,53 +443,51 @@ class Game:
             mouse_click = pg.mouse.get_pressed(3)[0]
             #지도 버튼
             if map_btn.hovering:
-                hover_image = self.assets["ui"]["motbam"]
+                hover_image = self.assets["ui"]["world_bg"]
                 if mouse_click:
                     print("맵 버튼 누름")
                     self.end_scene()
                     self.state_main_world()
             #엔드레스 게임으로
             if endless_btn.hovering:
-                hover_image = self.assets["ui"]["motbam2"]
+                hover_image = self.assets["ui"]["endless_bg"]
                 if mouse_click:
                     self.end_scene()
                     self.current_level_data = load_data("Assets/Levels/BigBreakout.json")
                     self.state_main_game(is_endless= True)
             #리코드 볼수 있음
             if records_btn.hovering:
-                hover_image = self.assets["ui"]["me"]
+                hover_image = self.assets["ui"]["records_bg"]
                 if mouse_click:
                     print("리코드 버튼 누름")
                     self.end_scene()
                     self.state_records()
             #크레딧
             if credits_btn.hovering:
-                hover_image = self.assets["ui"]["motbam"]
+                hover_image = self.assets["ui"]["credits_bg"]
                 if mouse_click:
                     self.end_scene()
                     self.state_credits()
                     print("크레딧 버튼 누름")
             #나가기
             if quit_btn.hovering:
-                hover_image = self.assets["ui"]["me"]
+                hover_image = self.assets["ui"]["quit_bg"]
                 if mouse_click:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
             #도감
             if dogam_btn.hovering:
-                hover_image = self.assets["ui"]["motbam"]
+                hover_image = self.assets["ui"]["dogam_bg"]
                 if mouse_click:
                     self.end_scene()
                     self.state_dogam()
             #설정 드가자
             if setting_btn.hovering:
-                hover_image = self.assets["ui"]["motbam2"]
+                hover_image = self.assets["ui"]["setting_bg"]
                 if mouse_click:
                     self.end_scene()
                     self.state_settings()
-
-
             #로그인
             if login_btn.hovering:
                 hover_image = self.assets["ui"]["me"]
@@ -513,8 +544,6 @@ class Game:
         last_fire_time = pg.time.get_ticks()
         last_block_time = pg.time.get_ticks()
         block_cooltime = 800
-        # [[좌, 우], [하, 상]]
-        self.player_movement = [[False, False], [False, False]]
 
         #구렁이
         worm = Entity(self, "worm", (-100, 95), (300, 610), (610, 610))
@@ -528,6 +557,11 @@ class Game:
         #백그라운드 스크롤
         background1 = self.assets["bg"][f"{self.current_level_data['bg_name']}/0"]
         background2 = self.assets["bg"][f"{self.current_level_data['bg_name']}/1"]
+        if is_endless:
+            choice = random.choice(["office", "steam_room", "foyer", "secure_room", "horror_office", "dark_office"])
+            background1 = self.assets["bg"][f"{choice}/0"]
+            background2 = self.assets["bg"][f"{choice}/1"]
+
         bg_width = background1.get_width()
         bg_scroll_speed = 20
 
@@ -546,14 +580,20 @@ class Game:
         self.uis.append(stat_ui)
 
         #일시 정지 UI
-        pause_bg = self.assets["bg"]["office/1"]
+        pause_bg = background1
         pause_rect_surface = pg.Surface(pause_bg.get_size(), pg.SRCALPHA)
         pause_rect_surface.fill((0, 0, 0, 200))
+        esc_time = 35
+        esc_pressing = False
+        current_esc_time = 0
+        esc_txt = TextUi("ESC를 꾹눌러 월드로 돌아가기", (100, 490), self.fonts["galmuri"], 20, "white")
 
         duration = self.current_level_data["level_length"]
         start_pos = (1000, 22)
         end_pos = (1520, 22)
         start_time = time.time()
+
+        self.set_bgm(f"run{random.randint(1, 2)}")
             
         while(True):
             #update:
@@ -613,7 +653,7 @@ class Game:
                         self.state_game_result(True)
                 
                 #플레이어 업데이트 & 렌더
-                self.player.update(self.physic_rects, self.player_movement)
+                self.player.update(self.physic_rects)
                 self.player.render(self.screen)
                 #플레이어 업데이트 & 렌더 끝
 
@@ -667,6 +707,14 @@ class Game:
             #일시 정지에 영향을 받음 끝
             
             if PAUSED:
+                #ESC를 꾹눌러야 월드로 나감
+                if esc_pressing:
+                    current_esc_time += 1
+                if current_esc_time >= esc_time: #EARLY RETURN
+                    self.end_scene()
+                    self.state_main_world()
+                    return
+                
                 self.screen.blit(pause_bg, (0, 0))
                 self.screen.blit(pause_rect_surface, (0, 0))
 
@@ -676,10 +724,9 @@ class Game:
                 paused_txt = TextUi("일시정지", (100, 300), self.fonts["galmuri"], 100, "white")
                 paused_txt.update()
                 paused_txt.render(self.screen)
-                esc_txt = TextUi("스페이스바로 게임으로 돌아가기", (100, 420), self.fonts["galmuri"], 30, "white")
-                esc_txt.update()
-                esc_txt.render(self.screen)
-                esc_txt = TextUi("ESC로 월드로 돌아가기", (100, 490), self.fonts["galmuri"], 20, "white")
+                space_txt = TextUi("스페이스바로 게임으로 돌아가기", (100, 420), self.fonts["galmuri"], 30, "white")
+                space_txt.update()
+                space_txt.render(self.screen)
                 esc_txt.update()
                 esc_txt.render(self.screen)
                 
@@ -700,13 +747,24 @@ class Game:
                     if event.key == pg.K_SPACE:
                         if PAUSED:
                             PAUSED = False
+                    
+                    
                     if event.key == pg.K_ESCAPE:
-                        if PAUSED:
-                            self.end_scene()
-                            self.state_main_world()
+                        if PAUSED: #ESC누르기 시작
+                            current_esc_time += 1
+                            esc_pressing = True
+                            esc_txt.text = "계속 누르고 계세요.."
                         else :
                             PAUSED = True
 
+                if event.type == pg.KEYUP:
+                    if event.key == pg.K_ESCAPE:
+                        if PAUSED: #ESC를 누르다 뗌
+                            esc_pressing = False
+                            current_esc_time = 0
+                            esc_txt.text = "ESC를 꾹눌러 월드로 돌아가기"
+                        
+                
                 #마우스가 창밖에 나가면 PAUSE
                 if event.type == pg.ACTIVEEVENT:
                     if event.gain == 0:
@@ -717,8 +775,203 @@ class Game:
             #카메라 업데이트
             pg.display.flip()
     
+    #메인 게임
+    def state_boss(self):
+        #start:
+        PAUSED = False #상수는 아니지만 그래도 중요하니까 ^^ 아시져?
+
+        #플레이어 : game, name, pos, hit_box_size, anim_size, max health
+        self.player = Player(self, "player", 
+                            pos=(200, 640), size=(70, 170), anim_size=(170, 170),
+                            max_health=100, 
+                            gun_img=self.assets["props"]["player/arm_gun"], shield_img=self.assets["props"]["player/arm_shield"],
+                            max_rotation=100,
+                            max_block_time=15, attack_damage=20, bullet_speed=45, 
+                            offset=(55, 75))
+        self.player.anim_offset = [-25, 20]
+        #총 세팅
+        gun_cooltime = 300 #.3초
+        gun_fire_shake = 4.5
+        last_fire_time = pg.time.get_ticks()
+        last_block_time = pg.time.get_ticks()
+        block_cooltime = 800
+
+        #백그라운드 스크롤
+        background1 = self.assets["bg"][f"{self.current_level_data['bg_name']}/0"]
+        background2 = self.assets["bg"][f"{self.current_level_data['bg_name']}/1"]
+
+        bg_width = background1.get_width()
+        bg_scroll_speed = 20
+
+        bg_x1 = 0
+        bg_x2 = bg_width
+
+        #천장 & 바닥 & 배경
+        floor = pg.rect.Rect(200, 700, SCREEN_SCALE[0], 100)
+        ceil = pg.rect.Rect(200, 0, SCREEN_SCALE[0], 100)
+        self.physic_rects = [floor, ceil]
+
+        #ui
+        stat_ui = TextUi("", (50, 30), self.fonts["galmuri"], 30, "white")
+        self.uis.append(stat_ui)
+
+        #일시 정지 UI
+        pause_bg = background1
+        pause_rect_surface = pg.Surface(pause_bg.get_size(), pg.SRCALPHA)
+        pause_rect_surface.fill((0, 0, 0, 200))
+        esc_time = 35
+        esc_pressing = False
+        current_esc_time = 0
+        esc_txt = TextUi("ESC를 꾹눌러 월드로 돌아가기", (100, 490), self.fonts["galmuri"], 20, "white")
+
+
+        self.set_bgm(f"run{random.randint(1, 2)}")
+
+        #보스
+        boss = Boss(self, "boss", (1200, 150), (500, 500), (500, 500), 5000, self.assets["props"]["boss/arm"], 20, 45, (280, 190))
+        self.entities.append(boss)
+            
+        while(True):
+            #update:
+            #화면 초기화
+            self.screen.fill("black")
+            self.camera.fill("black")
+            
+            #일시 정지에 영향을 받음
+            if not PAUSED:
+                self.current_time = pg.time.get_ticks()
+
+                #배경 움직이기
+                bg_x1 -= bg_scroll_speed
+                bg_x2 -= bg_scroll_speed
+
+                if bg_x1 <= -bg_width:
+                    bg_x1 = bg_width
+                if bg_x2 <= -bg_width:
+                    bg_x2 = bg_width
+    
+                self.screen.blit(background1, (bg_x1, 0))
+                self.screen.blit(background2, (bg_x2, 0))
+
+                #UI렌더
+                stat_ui.text = f"남은 탄: {self.player.ammo} | {self.score} | 거대 괴물로부터 남은 거리 : {self.player.health}cm"
+                self.screen.blit(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), (0, 700))
+                self.screen.blit(pg.transform.flip(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), False, True), (0, 0))
+                self.screen.blit(pg.transform.flip(pg.transform.rotate(self.assets["ui"]["bottom_fade"], 90), True, False), (0, 0))
+
+                
+                #플레이어 업데이트 & 렌더
+                self.player.update(self.physic_rects)
+                self.player.render(self.screen)
+                #플레이어 업데이트 & 렌더 끝
+
+                #매니징
+                self.manage_projectiles()
+                self.manage_camera_shake()
+                self.manage_entity()
+                #매니징 끝
+
+                #매니징
+                self.manage_particle()
+                self.manage_spark()
+                self.manage_ui()
+                #매니징 끝 
+                
+                #화면 렌더
+                self.camera.blit(self.screen, self.shake)
+                #화면 렌더 끝
+
+                #플레이어 행동
+                mouse_click = pg.mouse.get_pressed(3) #(마우스 좌클릭, 마우스 휠클릭, 마우스 우클릭)
+                mouse_pos = pg.mouse.get_pos()
+                #플레이어 공격
+                if mouse_click[MOUSE_ATTACK] and self.current_time - last_fire_time >= gun_cooltime:
+                    if self.player.gun_fire(mouse_pos):
+                        self.sfxs["gun_fire"].play()
+                        self.camera_shake_gain += gun_fire_shake
+                        last_fire_time = self.current_time
+                #플레이어 블록
+                if mouse_click[MOUSE_BLOCK] and self.current_time - last_block_time >= block_cooltime:
+                    self.sfxs["swoosh"].play()
+                    self.player.use_shield()
+                    last_block_time = self.current_time
+                #플레이어 행동 끝
+            #일시 정지에 영향을 받음 끝
+            
+            if PAUSED:
+                #ESC를 꾹눌러야 월드로 나감
+                if esc_pressing:
+                    current_esc_time += 1
+                if current_esc_time >= esc_time: #EARLY RETURN
+                    self.end_scene()
+                    self.state_main_world()
+                    return
+                
+                self.screen.blit(pause_bg, (0, 0))
+                self.screen.blit(pause_rect_surface, (0, 0))
+
+                pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
+                self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
+
+                paused_txt = TextUi("일시정지", (100, 300), self.fonts["galmuri"], 100, "white")
+                paused_txt.update()
+                paused_txt.render(self.screen)
+                space_txt = TextUi("스페이스바로 게임으로 돌아가기", (100, 420), self.fonts["galmuri"], 30, "white")
+                space_txt.update()
+                space_txt.render(self.screen)
+                esc_txt.update()
+                esc_txt.render(self.screen)
+                
+
+                self.camera.blit(self.screen, (0, 0))
+
+            #이벤트 리슨
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    self.end_scene()
+                    pg.quit()
+                    sys.exit()
+
+                if event.type == pg.KEYDOWN:
+                    if event.key == KEY_JUMP:
+                        if self.player.jump(20):
+                            self.sfxs["jump"].play()
+                    if event.key == pg.K_SPACE:
+                        if PAUSED:
+                            PAUSED = False
+                    
+                    if event.key == pg.K_ESCAPE:
+                        if PAUSED: #ESC누르기 시작
+                            current_esc_time += 1
+                            esc_pressing = True
+                            esc_txt.text = "계속 누르고 계세요.."
+                        else :
+                            PAUSED = True
+                
+                if event.type == pg.KEYUP:
+                    if event.key == pg.K_ESCAPE:
+                        if PAUSED: #ESC를 누르다 뗌
+                            esc_pressing = False
+                            current_esc_time = 0
+                            esc_txt.text = "ESC를 꾹눌러 월드로 돌아가기"
+                        
+                #마우스가 창밖에 나가면 PAUSE
+                if event.type == pg.ACTIVEEVENT:
+                    if event.gain == 0:
+                        PAUSED = True
+            #이벤트 리슨 끝
+
+            self.clock.tick(TARGET_FPS)
+            #카메라 업데이트
+            pg.display.flip()
+
     #지도
     def state_main_world(self):
+
+        #처음 플레이한다면 컷씬 시작 Early Return
+        if self.status["is_first_play"]:
+            self.end_scene()
+            self.state_cut_scene(self.assets["cutscenes"]["start"])
 
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (70, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
@@ -745,10 +998,11 @@ class Game:
         high_score = TextUi("", (10, 150), self.fonts["aggro"], 30, "white")
         self.uis.append(high_score)
 
-        #처음 플레이한다면 컷씬 시작
-        if self.status["is_first_play"]:
-            self.end_scene()
-            self.state_cut_scene(self.assets["cutscenes"]["start"])
+        line_pos = []
+        for pos in button_pos:
+            line_pos.append((pos[0] + 25, pos[1] + 25))
+
+        self.set_bgm("world")
 
         while True:
             self.screen.fill("black")
@@ -759,7 +1013,7 @@ class Game:
             pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
             
-            pg.draw.lines(self.screen, "red", False, button_pos, 5)
+            pg.draw.lines(self.screen, "red", False, line_pos, 5)
 
             mouse_click = pg.mouse.get_pressed(3)[0]
             if quit_btn.hovering and mouse_click:
@@ -778,7 +1032,7 @@ class Game:
             if boss_btn.hovering and mouse_click and self.status["level"] > 6:
                 selected_level = "Boss"
                 text.text = f"{selected_level} 레벨"
-                high_score.text = f"하이스코어 : {self.status["high_scores"]["boss"]}"
+                high_score.text = f"하이스코어 : {self.status["high_scores"]["Boss"]}"
                 level_name.text = f"\"{load_data(f"Assets/Levels/{selected_level}.json")["level_name"]}\""
                 if not escape_btn in self.uis:
                         self.uis.append(escape_btn)
@@ -787,7 +1041,12 @@ class Game:
             if escape_btn.hovering and mouse_click:
                 self.end_scene()
                 self.current_level_data = load_data(f"Assets/Levels/{selected_level}.json")
-                self.state_main_game()
+                if selected_level == "Boss":
+                    #보su!!
+                    self.current_level_data = load_data(f"Assets/Levels/Boss.json")
+                    self.state_boss()
+                else:
+                    self.state_main_game()
 
             self.manage_spark()
             self.manage_particle()
@@ -829,6 +1088,8 @@ class Game:
         
         self.status = load_data("Status.json")
         self.uis.append(TextUi(f"최고 점수 : {self.status["high_scores"][f"{self.current_level_data["level_index"]}"]}점", (300, 260), self.fonts["aggro"], 32, "white"))
+
+        self.set_bgm("result")
 
         while True:
             self.screen.fill("black")
@@ -881,7 +1142,9 @@ class Game:
 
         bg = self.assets["bg"]["office/1"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
-        rect_surface.fill((0, 0, 0, 200)) 
+        rect_surface.fill((0, 0, 0, 200))
+
+        self.set_bgm("dogam")
 
         while True:
             self.screen.fill("black")
@@ -1148,29 +1411,71 @@ class Game:
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
 
+    #도감
     def state_dogam(self):
          
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (50, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
 
-        bg = self.assets["bg"]["office/0"]
-        rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
-        rect_surface.fill((0, 0, 0, 200))
+        enemy_list = ["ratbit", "helli", "strucker", "stalker", "brook", "bluglogger"]        
+        current_index = 0
+        current_enemy = enemy_list[current_index]
+        current_image = self.assets["dogam"][current_enemy]
+
+        enemy_name_text = TextUi("ratbit", (750, 50), self.fonts["aggro"], 60, "black")
+        self.uis.append(enemy_name_text)
+
+        current_data = load_data(f"Assets/EntityDogam/{current_enemy.capitalize()}.json")
+
+        explain_texts = []
+        bigo_texts = []
+
+        self.uis.append(TextUi("(<- or A , -> or D)로 넘기기", (750, 700), self.fonts["galmuri"], 35, "black"))
+
+        self.set_bgm("dogam")
 
         while True:
             self.screen.fill("black")
             self.camera.fill("black")
 
-            self.screen.blit(bg, (0, 0))
-            self.screen.blit(rect_surface, (0, 0))
+            pg.draw.rect(self.screen, "white", (0, 0, SCREEN_SCALE[0], SCREEN_SCALE[1]))
 
             pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
+
+            self.screen.blit(self.assets["ui"]["dogam"], (10, 5))
 
             mouse_click = pg.mouse.get_pressed(3)[0]
             if quit_btn.hovering and mouse_click:
                 self.end_scene()
                 self.state_title_screen()
+
+            current_enemy = enemy_list[current_index] 
+            current_image = self.assets["dogam"][current_enemy]
+            self.screen.blit(pg.transform.scale_by(current_image, 1.5), (400, 50))
+            enemy_name_text.text = current_enemy
+
+            #설명
+            current_data = load_data(f"Assets/EntityDogam/{current_enemy.capitalize()}.json")
+            lines = current_data["explain"].split("o")
+            bigos = current_data["bigo"].split("o")
+            margin = 40
+            for explain in explain_texts:
+                if explain in self.uis:
+                    self.uis.remove(explain)
+            for bigo in bigo_texts:
+                if bigo in self.uis:
+                    self.uis.remove(bigo)
+                    
+            for line in lines:
+                text = TextUi(line, (750, 200 + margin * lines.index(line)), self.fonts["aggro"], 40, "black")
+                explain_texts.append(text)
+                self.uis.append(text)
+            for bigo in bigos:
+                text = TextUi(f"비고 : {bigo}" if bigos.index(bigo) == 0 else bigo, (750, 400 + margin * bigos.index(bigo)), self.fonts["aggro"], 30, "black")
+                explain_texts.append(text)
+                self.uis.append(text)
+            #설명끝
 
             self.manage_spark()
             self.manage_particle()
@@ -1184,10 +1489,44 @@ class Game:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_RIGHT or event.key == pg.K_d:
+                        current_index += 1
+                    if event.key == pg.K_LEFT or event.key == pg.K_a:
+                        current_index -= 1
+
+                    #인덱스
+                    if current_index == len(enemy_list):
+                        current_index = 0
+                    elif current_index == -1:
+                        current_index = len(enemy_list) - 1
+
+                    #설명 업데이트
+                    current_data = load_data(f"Assets/EntityDogam/{current_enemy.capitalize()}.json")
+                    lines = current_data["explain"].split("o")
+                    bigos = current_data["bigo"].split("o")
+                    margin = 40
+                    for explain in explain_texts:
+                        if explain in self.uis:
+                            self.uis.remove(explain)
+                    for bigo in bigo_texts:
+                        if bigo in self.uis:
+                            self.uis.remove(bigo)
+                            
+                    for line in lines:
+                        text = TextUi(line, (750, 200 + margin * lines.index(line)), self.fonts["aggro"], 40, "black")
+                        explain_texts.append(text)
+                        self.uis.append(text)
+                    for bigo in bigos:
+                        text = TextUi(f"비고 : {bigo}" if bigos.index(bigo) == 0 else bigo, (750, 400 + margin * bigos.index(bigo)), self.fonts["aggro"], 30, "black")
+                        explain_texts.append(text)
+                        self.uis.append(text)
+                    #설명 업데이트 끝
     
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
-        
+    
+    #음량 설정
     def state_settings(self):
          
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (50, 650), self.sfxs["ui_hover"], 1, 20)
@@ -1196,6 +1535,18 @@ class Game:
         bg = self.assets["bg"]["office/0"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
         rect_surface.fill((0, 0, 0, 200))
+        
+        self.uis.append(TextUi("설정", (300, 50), self.fonts["aggro"], 70, "white"))
+
+        sfx_vol = TextUi("효과음 음량 : {}".format(int(self.status["sfx_volume"] * 100)), (400, 200), self.fonts["galmuri"], 50, "white")
+        self.uis.append(sfx_vol)
+        bgm_vol = TextUi("배경음악 음량 : {}".format(int(self.status["bgm_volume"] * 100)), (400, 400), self.fonts["galmuri"], 50, "white")
+        self.uis.append(bgm_vol)
+
+        sfx_slider = Slider((700, 600), (500, 50), self.status["sfx_volume"], 0, 1)
+        bgm_slider = Slider((700, 1000), (500, 50), self.status["bgm_volume"], 0, 1)
+        self.uis.append(sfx_slider)
+        self.uis.append(bgm_slider)
 
         while True:
             self.screen.fill("black")
@@ -1217,6 +1568,13 @@ class Game:
             self.manage_ui()
             self.manage_camera_shake()
 
+            set_data("Status.json", "sfx_volume", sfx_slider.get_val())
+            set_data("Status.json", "bgm_volume", bgm_slider.get_val())
+            self.status = load_data("Status.json")
+
+            sfx_vol.text = "효과음 음량 : {}".format(int(self.status["sfx_volume"] * 100))
+            bgm_vol.text = "배경음악 음량 : {}".format(int(self.status["bgm_volume"] * 100))
+
             self.camera.blit(self.screen, self.shake)
 
             for event in pg.event.get():
@@ -1224,9 +1582,22 @@ class Game:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
-    
+
+            self.set_volumes()
+            
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
+
+    def set_volumes(self):
+        for sfx in self.sfxs.values():
+            sfx.set_volume(self.status["sfx_volume"])
+        for 브금 in self.bgm.values():
+            브금.set_volume(self.status["bgm_volume"])
+
+    def set_bgm(self, name):
+        for bgm in self.bgm.values():
+            bgm.stop()
+        self.bgm[name].play(loops = -1)
 
     #컷씬
     def state_cut_scene(self, images):

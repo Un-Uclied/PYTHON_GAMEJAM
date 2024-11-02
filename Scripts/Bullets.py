@@ -33,4 +33,9 @@ class PlayerBullet(Bullet):
     def destroy(self):
         for i in range(10):
             self.game.sparks.append(Spark(self.pos, math.radians(360) * random.random(), 3.5, "yellow"))
+
+class BossBullet(Bullet):
+    def destroy(self):
+        for i in range(10):
+            self.game.sparks.append(Spark(self.pos, math.radians(360) * random.random(), 3.5, "green"))
         

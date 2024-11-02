@@ -1,0 +1,22 @@
+{   
+    "entities" : {"ratbit" : false, "strucker" : false, "helli" : false, "brook" : false, "bluglogger" : false, "stalker" : false, "medicine" : false, "ammo" : false},
+
+    "spawn_rates" : {"ratbit_spawn_rate" : 220, "strucker_spawn_rate" : 200, "helli_spawn_rate" : 300, "brook_spawn_rate" : 750, "bluglogger_spawn_rate" : 820, "stalker_spawn_rate" : 250, "medicine_spawn_rate" : 180, "ammo_spawn_rate" : 180},
+
+    "scores" : {"ratbit_add_score" : 2000, "helli_add_score" : 3500, "brook_add_score" : 5000, "bluglogger_add_score" : 4500},
+
+    "damages" : {"ratbit_damage" : 20, "strucker_damage" : 20, "helli_damage" : 20, "brook_damage" : 30, "bluglogger_damage" : 10, "stalker_damage" : 30},
+
+    "healths" : {"helli_health" : 80, "bluglogger_health" : 100},
+
+    "amount" : {"heal_amount" : 100, "ammo_amount" : 25},
+
+    "speed" : {"ratbit_speed" : 45, "strucker_speed" : 35, "stalker_speed" : 35, "helli_bullet_speed" : 45, "blug_logger_wait_time" : 140},
+
+    "attack_chance" : {"helli_attack_chance" : 65},
+
+    "bg_name" : "secure_room",
+    "level_name" : "연구실 외부",
+    "level_length" : 500,
+    "level_index" : "Boss"
+}
