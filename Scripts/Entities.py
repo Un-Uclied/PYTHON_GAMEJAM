@@ -643,7 +643,7 @@ class Boss(Enemy):
         self.health -= damage
 
 class BossSoul(KillableEnemy):
-    def __init__(self, game, name, pos, size, anim_size, damage):
+    def __init__(self, game, name, pos, size, anim_size, damage, doom_speed):
         super().__init__(game, name, pos, size, anim_size, 4, damage)
 
         self.elapsed_time = 0
@@ -652,7 +652,7 @@ class BossSoul(KillableEnemy):
         self.wiggle_offset = 0
 
         self.is_triggered = False
-        self.attack_timer = 120
+        self.attack_timer = doom_speed
         self.current_attack_timer = 0
         self.mask_color = "white"
 
@@ -679,7 +679,7 @@ class BossSoul(KillableEnemy):
             surface.blit(pg.transform.flip(self.mask_img, self.flipx, False), (self.pos[0] - offset[0] + self.anim_offset[0], self.pos[1] - offset[1] + self.anim_offset[1] - self.wiggle_offset))
 
     def check_time(self, current_time):
-        if int(current_time) % 5 == 0:
+        if int(current_time) % 20 == 0:
             self.is_triggered = True
 
     def take_damage(self, damage_amount):
