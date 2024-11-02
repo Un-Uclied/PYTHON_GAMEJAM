@@ -164,6 +164,10 @@ class Game:
                 "start" : load_images("Cutscenes/Start")
             },
 
+            "dogam" : {
+                "ratbit" : load_image("Characters/Ratbit/Idle/0.png")
+            },
+
             "level_world" : load_image("background.png")
         }
 
