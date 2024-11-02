@@ -9,7 +9,7 @@
 
     "amount" : {"heal_amount" : 100, "ammo_amount" : 35},
 
-    "speed" : {"boss_bullet_speed" : 25, "cannon_speed" : 35, "world_doom_speed" : 300, "ufo_move_speed" : 10 ,"ufo_attack_speed" : 260},
+    "speed" : {"boss_bullet_speed" : 25, "cannon_speed" : 35, "world_doom_speed" : 480, "ufo_move_speed" : 10 ,"ufo_attack_speed" : 260},
 
     "attack_chance" : {"boss_attack_chance" : 100},
 

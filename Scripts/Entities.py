@@ -201,7 +201,7 @@ class Player(MoveableEntity):
 
         if -self.arm_max_roatation <= self.current_mouse_angle <= self.arm_max_roatation:
             self.game.projectiles.append(
-                PlayerBullet(self.game, self.get_center_pos(), pg.math.Vector2(mouse_pos[0] - self.get_center_pos().x, mouse_pos[1] - self.get_center_pos().y), self.bullet_speed, self.game.assets["projectiles"]["bullet"], 60, "player's bullet", self.attack_damage)
+                PlayerBullet(self.game, self.get_center_pos(), pg.math.Vector2(mouse_pos[0] - self.get_center_pos().x, mouse_pos[1] - self.get_center_pos().y), self.bullet_speed, self.game.assets["projectiles"]["bullet"], 60, "player's bullet",self, self.attack_damage)
             )
             return True
         else:
@@ -374,7 +374,7 @@ class Helli(FollowingEnemy):
 
     def attack(self):
         #탄막을 쏘기에 super().attack()안함
-        self.game.projectiles.append(Bullet(self.game, self.pos, pg.math.Vector2(-1, 0), self.bullet_speed, self.game.assets["projectiles"]["helli_fire_bullet"], 60, "helli's bullet", self.damage))
+        self.game.projectiles.append(Bullet(self.game, self.pos, pg.math.Vector2(-1, 0), self.bullet_speed, self.game.assets["projectiles"]["helli_fire_bullet"], 60, "helli's bullet", self, self.damage))
 
 class Brook(FollowingEnemy):
     def __init__(self, game, name, pos, size, anim_size, start_following_speed, following_speed, max_health, damage, speed_change_speed):
@@ -635,7 +635,7 @@ class Boss(Enemy):
     
     def gun_fire(self, target_pos : tuple):
         self.game.projectiles.append(
-                BossBullet(self.game, self.get_center_pos(), pg.math.Vector2(target_pos[0] - self.get_center_pos().x, target_pos[1] - self.get_center_pos().y), self.bullet_speed, self.game.assets["projectiles"]["energy_bullet"], 60, "Boss's Bullet", self.attack_damage)
+                BossBullet(self.game, self.get_center_pos(), pg.math.Vector2(target_pos[0] - self.get_center_pos().x, target_pos[1] - self.get_center_pos().y), self.bullet_speed, self.game.assets["projectiles"]["energy_bullet"], 60, "Boss's Bullet", self, self.attack_damage)
         )
     
     def take_damage(self, damage : int):
@@ -648,7 +648,7 @@ class BossSoul(KillableEnemy):
 
         self.elapsed_time = 0
         self.wiggle_speed = 1
-        self.wiggle_amount = 150
+        self.wiggle_amount = 100
         self.wiggle_offset = 0
 
         self.is_triggered = False
@@ -667,8 +667,6 @@ class BossSoul(KillableEnemy):
             else:
                 self.attack()
 
-        print(self.is_triggered)
-
         super().update()
 
     def render(self, surface, offset=(0, 0)):
@@ -684,9 +682,24 @@ class BossSoul(KillableEnemy):
 
     def take_damage(self, damage_amount):
         if self.is_triggered:
-            super().take_damage(1)
+            self.health -= 1
+        
+            if self.health <= 0:
+                self.destroy()
+                if self in self.game.entities : self.game.entities.remove(self)
+                self.game.sfxs["enemy_dying"].play()
+            else:
+                self.game.sfxs["enemy_hit"].play()
+                for i in range(10):
+                    self.game.sparks.append(Spark(tuple(self.get_center_pos()), math.radians(360) * random.random(), 7, "white"))
+                for i in range(10):
+                    self.game.sparks.append(Spark(tuple(self.get_center_pos()), math.radians(360) * random.random(), 7, "green"))
+    
             self.is_triggered = False
             self.current_attack_timer = 0
+
+    def destroy(self):
+        pass
 
     def can_interact(self):
         pass
@@ -696,7 +709,7 @@ class Ufo(FollowingEnemy):
         super().__init__(game, name, pos, size, anim_size, following_speed, max_health, damage)
         self.target_speed = target_speed
         self.current_target_speed = 0
-        self.term = 120
+        self.term = 60
         self.current_term_speed = 0
         self.lazer_time = 30
         self.current_lazer_time = 0
