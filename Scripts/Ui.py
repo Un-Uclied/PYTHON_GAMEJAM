@@ -156,3 +156,38 @@ class InputField:
         txt_surface = pg.font.Font(self.font, self.font_size).render(self.hidden_text if self.is_private else self.text, True, self.text_color)
         surface.blit(txt_surface, (self.rect.x + 5, self.rect.y + 5))
         pg.draw.rect(surface, self.text_color, self.rect, 2)
+
+class Slider:
+    def __init__(self, pos : tuple, size : tuple, init_val, min_val, max_val):
+        self.pos = pg.math.Vector2(pos)
+        self.size = pg.math.Vector2(size)
+
+        self.center_left = self.pos.x - (self.size.x // 2)
+        self.center_right = self.pos.x + (self.size.x // 2)
+        self.top = self.pos.y - (self.pos.y // 2)
+
+        self.min = min_val
+        self.max = max_val
+        self.init_val = (self.center_right - self.center_left) * init_val
+
+        self.btn_size = pg.math.Vector2(30, self.size.y + 10)
+
+        self.bg = pg.Rect(self.center_left, self.top, self.size.x, self.size.y)
+        self.btn = pg.Rect(self.center_left + self.init_val, self.top - 5, self.btn_size.x, self.btn_size.y)
+
+    def update(self):
+        mouse_pos = pg.mouse.get_pos()
+        mouse_pressed = pg.mouse.get_pressed()[0]
+        if self.bg.collidepoint(mouse_pos) and mouse_pressed:
+            self.btn.centerx = mouse_pos[0]
+    
+    def get_val(self):
+        val_range = self.center_right - self.center_left - 10
+        btn_val = self.btn.centerx - self.center_left
+
+        return min(max((btn_val / val_range) * (self.max - self.min) + self.min, self.min), self.max)
+        
+
+    def render(self, surface):
+        pg.draw.rect(surface, "grey", self.bg)
+        pg.draw.rect(surface, "white", self.btn)

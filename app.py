@@ -10,7 +10,7 @@ from Scripts.Shadows import Shadow
 from Scripts.Entities import Player, Entity, KillableEnemy, Obstacle, Ratbit, Helli, Brook, BlugLogger, Medicine, Ammo
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
-from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField
+from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField, Slider
 from Scripts.Bullets import Bullet, PlayerBullet
 
 import firebase_admin
@@ -729,6 +729,11 @@ class Game:
     #지도
     def state_main_world(self):
 
+        #처음 플레이한다면 컷씬 시작 Early Return
+        if self.status["is_first_play"]:
+            self.end_scene()
+            self.state_cut_scene(self.assets["cutscenes"]["start"])
+
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (70, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
 
@@ -754,10 +759,9 @@ class Game:
         high_score = TextUi("", (10, 150), self.fonts["aggro"], 30, "white")
         self.uis.append(high_score)
 
-        #처음 플레이한다면 컷씬 시작
-        if self.status["is_first_play"]:
-            self.end_scene()
-            self.state_cut_scene(self.assets["cutscenes"]["start"])
+        line_pos = []
+        for pos in button_pos:
+            line_pos.append((pos[0] + 25, pos[1] + 25))
 
         while True:
             self.screen.fill("black")
@@ -768,7 +772,7 @@ class Game:
             pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
             
-            pg.draw.lines(self.screen, "red", False, button_pos, 5)
+            pg.draw.lines(self.screen, "red", False, line_pos, 5)
 
             mouse_click = pg.mouse.get_pressed(3)[0]
             if quit_btn.hovering and mouse_click:
@@ -1212,11 +1216,18 @@ class Game:
         bg = self.assets["bg"]["office/0"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
         rect_surface.fill((0, 0, 0, 200))
+        
+        self.uis.append(TextUi("설정", (300, 50), self.fonts["aggro"], 70, "white"))
 
-        sfx_vol = TextUi("효과음 음량 : {:.1f}(화살표 위 아래로 설정)".format(self.status["sfx_volume"]), (300, 100), self.fonts["galmuri"], 50, "white")
+        sfx_vol = TextUi("효과음 음량 : {}".format(int(self.status["sfx_volume"] * 100)), (400, 200), self.fonts["galmuri"], 50, "white")
         self.uis.append(sfx_vol)
-        bgm_vol = TextUi("배경음악 음량 : {:.1f}(화살표 좌 우로 설정)".format(self.status["bgm_volume"]), (300, 200), self.fonts["galmuri"], 50, "white")
+        bgm_vol = TextUi("배경음악 음량 : {}".format(int(self.status["bgm_volume"] * 100)), (400, 400), self.fonts["galmuri"], 50, "white")
         self.uis.append(bgm_vol)
+
+        sfx_slider = Slider((700, 600), (500, 50), self.status["sfx_volume"], 0, 1)
+        bgm_slider = Slider((700, 1000), (500, 50), self.status["bgm_volume"], 0, 1)
+        self.uis.append(sfx_slider)
+        self.uis.append(bgm_slider)
 
         while True:
             self.screen.fill("black")
@@ -1238,6 +1249,12 @@ class Game:
             self.manage_ui()
             self.manage_camera_shake()
 
+            set_data("Status.json", "sfx_volume", sfx_slider.get_val())
+            set_data("Status.json", "bgm_volume", bgm_slider.get_val())
+            self.status = load_data("Status.json")
+
+            sfx_vol.text = "효과음 음량 : {}".format(int(self.status["sfx_volume"] * 100))
+            bgm_vol.text = "배경음악 음량 : {}".format(int(self.status["bgm_volume"] * 100))
 
             self.camera.blit(self.screen, self.shake)
 
@@ -1246,23 +1263,8 @@ class Game:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_UP:
-                        set_data("Status.json", "sfx_volume", min(load_data("Status.json")["sfx_volume"] + .1, 1))
-                        self.status = load_data("Status.json")
-                    if event.key == pg.K_DOWN:
-                        set_data("Status.json", "sfx_volume", max(load_data("Status.json")["sfx_volume"] - .1, 0))
-                        self.status = load_data("Status.json")
-                    if event.key == pg.K_RIGHT:
-                        set_data("Status.json", "bgm_volume", min(load_data("Status.json")["bgm_volume"] + .1, 1))
-                        self.status = load_data("Status.json")
-                    if event.key == pg.K_LEFT:
-                        set_data("Status.json", "bgm_volume", max(load_data("Status.json")["bgm_volume"] - .1, 0))
-                        self.status = load_data("Status.json")
 
             self.set_volumes()
-            sfx_vol.text = "효과음 음량 : {:.1f}(화살표 위 아래로 설정)".format(self.status["sfx_volume"])
-            bgm_vol.text = "배경음악 음량 : {:.1f}(화살표 좌 우로 설정)".format(self.status["bgm_volume"])
             
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
