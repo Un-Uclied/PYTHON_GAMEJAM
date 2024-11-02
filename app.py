@@ -96,6 +96,8 @@ class Game:
 
                 "pawn" : load_image("UI/Pawn.png"),
 
+                "me" : load_image("UI/Me.png")
+
             },
 
             "projectiles" : {
@@ -426,18 +428,25 @@ class Game:
         if token:
             try:
                 # ID 토큰을 검증하여 사용자 정보 가져오기
-                decoded_token = auth.verify_id_token(token, clock_skew_in_seconds=10)
+                decoded_token = auth.verify_id_token(token, clock_skew_seconds=30)
                 uid = decoded_token['uid']
                 user = auth.get_user(uid)
                 
                 # 사용자 정보 출력
                 print("User ID:", user.uid)
                 print("Email:", user.email)
+
+                doc_ref = db.collection("users").document(user.uid)
+                doc = doc_ref.get()
+                if doc.exists:
+                    print("Nickname:", doc.to_dict()["name"])
+                else:
+                    print("에러! : 계정 정보 없음")
                 
             except Exception as e:
                 print("Error verifying ID token:", e)
 
-        login_btn = TextButton("로그인하셨습니다." if token and user else "<로그인해주세요 현재 : 익명", self.fonts["galmuri"], 30, (30, 560), self.sfxs["ui_hover"], "yellow", "blue")
+        login_btn = TextButton(doc.to_dict()["name"] if token and user else "<로그인해주세요 현재 : 익명", self.fonts["galmuri"], 30, (30, 560), self.sfxs["ui_hover"], "yellow", "blue")
         self.uis.append(login_btn)
 
         hover_image = pg.Surface((100, 100))
@@ -481,9 +490,12 @@ class Game:
             if endless_btn.hovering:
                 hover_image = self.assets["ui"]["endless_bg"]
                 if mouse_click:
-                    self.end_scene()
-                    self.current_level_data = load_data("Assets/Levels/BigBreakout.json")
-                    self.state_main_game(is_endless= True)
+                    if token and user:
+                        self.end_scene()
+                        self.current_level_data = load_data("Assets/Levels/BigBreakout.json")
+                        self.state_main_game(is_endless=True)
+                    else:
+                        print("무한 모드는 로그인 후 이용 가능합니다.")
             #리코드 볼수 있음
             if records_btn.hovering:
                 hover_image = self.assets["ui"]["records_bg"]
@@ -735,6 +747,34 @@ class Game:
                     last_block_time = self.current_time
                 #플레이어 행동 끝
             #일시 정지에 영향을 받음 끝
+
+            #무한모드에서 사망했을 때
+            if self.player.health <= 0 and is_endless:
+                tokenFile = open("token.txt", "r")
+                token = tokenFile.read()
+
+                try:
+                    # ID 토큰을 검증하여 사용자 정보 가져오기
+                    decoded_token = auth.verify_id_token(token, clock_skew_seconds=30)
+                    uid = decoded_token['uid']
+                    user = auth.get_user(uid)
+
+                    doc_ref = db.collection("ranking").document(user.uid)
+                    doc = doc_ref.get()
+                    if doc.exists:
+                        if self.score > doc.to_dict()["score"]:
+                            data = {
+                                "score" : self.score
+                            }
+                            doc_ref.set(data)
+                    else:
+                        data = {
+                            "score" : self.score
+                        }
+                        doc_ref.set(data)
+                    
+                except Exception as e:
+                    print("Error verifying ID token:", e)
             
             if PAUSED:
                 #ESC를 꾹눌러야 월드로 나감
@@ -1265,6 +1305,8 @@ class Game:
         create_btn = TextButton("전 계정이 없어요!", self.fonts["galmuri"], 35, (500, 600), self.sfxs["ui_hover"], "yellow", "blue")
         self.uis.append(create_btn)
 
+        error = TextUi("", (500, 350), self.fonts["galmuri"], 35, "red")
+
         bg = self.assets["bg"]["office/1"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
         rect_surface.fill((0, 0, 0, 200)) 
@@ -1299,12 +1341,16 @@ class Game:
                     id_token = response.json().get('idToken')
                     print(f"ID Token: {id_token}")
 
-                    tokenFile = open("test.txt", "w")
+                    tokenFile = open("token.txt", "w")
                     w = tokenFile.write(id_token)
                     tokenFile.close()
 
+                    self.end_scene()
+                    self.state_title_screen()
+
                 else:
                     print("Failed to sign in:", response.json())
+                    error.text = f"오류! : {response.json()["error"]["message"]}"
 
             if create_btn.hovering and mouse_click:
                 self.end_scene()
@@ -1335,26 +1381,29 @@ class Game:
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (70, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
 
-        account_id = InputField((750, 200), (500, 50), self.fonts["galmuri"], 30, "black", "white")
-        self.uis.append(account_id)
-        email = InputField((750, 300), (500, 50), self.fonts["galmuri"], 30, "black", "white")
+        email = InputField((850, 200), (500, 50), self.fonts["galmuri"], 30, "black", "white")
         self.uis.append(email)
-        password = InputField((750, 400), (500, 50), self.fonts["galmuri"], 30, "black", "white", True)
+        password = InputField((850, 300), (500, 50), self.fonts["galmuri"], 30, "black", "white", True)
         self.uis.append(password)
+        passwordCheck = InputField((850, 400), (500, 50), self.fonts["galmuri"], 30, "black", "white", True)
+        self.uis.append(passwordCheck)
+        nickname = InputField((850, 500), (500, 50), self.fonts["galmuri"], 30, "black", "white")
+        self.uis.append(nickname)
 
         self.uis.append(TextUi("계정 생성", (500, 50), self.fonts["galmuri"], 60, "white"))
-        self.uis.append(TextUi("아이디 : ", (500, 200), self.fonts["galmuri"], 40, "white"))
-        self.uis.append(TextUi("이메일 : ", (500, 300), self.fonts["galmuri"], 40, "white"))
-        self.uis.append(TextUi("비밀번호 : ", (500, 400), self.fonts["galmuri"], 40, "white"))
+        self.uis.append(TextUi("이메일 : ", (500, 200), self.fonts["galmuri"], 40, "white"))
+        self.uis.append(TextUi("비밀번호 : ", (500, 300), self.fonts["galmuri"], 40, "white"))
+        self.uis.append(TextUi("비밀번호 확인 : ", (500, 400), self.fonts["galmuri"], 40, "white"))
+        self.uis.append(TextUi("닉네임 : ", (500, 500), self.fonts["galmuri"], 40, "white"))
 
-        send_btn = TextButton("계정 만들기", self.fonts["galmuri"], 35, (500, 500), self.sfxs["ui_hover"], "yellow", "blue")
+        send_btn = TextButton("계정 만들기", self.fonts["galmuri"], 35, (500, 650), self.sfxs["ui_hover"], "yellow", "blue")
         self.uis.append(send_btn)
 
         bg = self.assets["bg"]["office/1"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
         rect_surface.fill((0, 0, 0, 200)) 
 
-        error = TextUi("", (500, 550), self.fonts["galmuri"], 35, "white")
+        error = TextUi("", (500, 550), self.fonts["galmuri"], 35, "red")
         self.uis.append(error)
 
         while True:
@@ -1372,49 +1421,57 @@ class Game:
                 self.end_scene()
                 self.state_login_menu()
             if send_btn.hovering and mouse_click:
-                #계정 만들기 로직
-                url = "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyDGpmnNcJ2ZOShNz371uqmV3647ct7i4KE"
+                if password.text == passwordCheck.text:
+                    #API 요청 넣기
+                    url = "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyDGpmnNcJ2ZOShNz371uqmV3647ct7i4KE"
 
-                payload = {
-                    "email": email.text,
-                    "password": password.text,
-                    "returnSecureToken": True
-                }
+                    payload = {
+                        "email": email.text,
+                        "password": password.text,
+                        "returnSecureToken": True
+                    }
 
-                response = requests.post(url, json = payload)
+                    response = requests.post(url, json = payload)
 
-                if response.status_code == 200:
-                    # 회원가입 성공 시 사용자 ID 토큰 반환
-                    id_token = response.json().get('idToken')
-                    print(f"User signed up successfully, ID Token: {id_token}")
+                    if response.status_code == 200:
+                        # 회원가입 성공 시 사용자 ID 토큰 반환
+                        id_token = response.json().get('idToken')
+                        print(f"User signed up successfully, ID Token: {id_token}")
 
-                    tokenFile = open("test.txt", "w")
-                    w = tokenFile.write(id_token)
-                    tokenFile.close()
+                        tokenFile = open("token.txt", "w")
+                        w = tokenFile.write(id_token)
+                        tokenFile.close()
 
-                    try:
-                        # ID 토큰을 검증하여 사용자 정보 가져오기
+                        try:
+                            #ID 토큰을 이용하여 사용자 정보 가져오기
 
-                        tokenFile = open("test.txt", "r")
-                        token = tokenFile.read()
+                            tokenFile = open("token.txt", "r")
+                            token = tokenFile.read()
 
-                        decoded_token = auth.verify_id_token(token, clock_skew_in_seconds=10)
-                        uid = decoded_token['uid']
-                        user = auth.get_user(uid)
-                        
-                        # 사용자 정보 출력
-                        print("User ID:", user.uid)
-                        print("Email:", user.email)
-                        
-                    except Exception as e:
-                        print("Error verifying ID token:", e)
+                            decoded_token = auth.verify_id_token(token, clock_skew_seconds=30)
+                            uid = decoded_token['uid']
+                            user = auth.get_user(uid)
 
-                    self.end_scene()
-                    self.state_title_screen()
+                            #유저의 정보를 db에 저장
+                            data = {
+                                "name" : nickname.text
+                            }
+
+                            doc_ref = db.collection("users").document(user.uid)
+                            doc_ref.set(data)
+
+                            self.end_scene()
+                            self.state_title_screen()
+                            
+                        except Exception as e:
+                            print("Error verifying ID token:", e)
+
+                    else:
+                        print("Failed to sign up:", response.json())
+                        error.text = f"오류! : {response.json()["error"]["message"]}"
                 else:
-                    print("Failed to sign up:", response.json())
-                    error.text = f"오류! : {response.json()["error"]["message"]}"
-                
+                    error.text = "오류! : 비밀번호와 비밀번호 확인란이 일치 하지 않습니다!"
+
             self.manage_spark()
             self.manage_particle()
             self.manage_ui()
@@ -1431,7 +1488,8 @@ class Game:
                 #tlqkf 왜 안됨?
                 email.get_event(event)
                 password.get_event(event)
-                account_id.get_event(event)
+                passwordCheck.get_event(event)
+                nickname.get_event(event)
     
             self.clock.tick(TARGET_FPS)
             pg.display.flip()

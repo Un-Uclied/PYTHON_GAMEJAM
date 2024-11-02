@@ -2,7 +2,7 @@
     "is_first_play": false,
     "high_scores": {
         "BigBreakOut": 105500,
-        "1": 35000,
+        "1": 36500,
         "2": 96500,
         "3": 281500,
         "4": 390000,
@@ -11,7 +11,6 @@
         "Boss": 0
     },
     "level": 7,
-    "idToken": "",
     "sfx_volume": 1,
-    "bgm_volume": 0.3469387755102041
+    "bgm_volume": 1
 }
