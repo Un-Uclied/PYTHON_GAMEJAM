@@ -419,7 +419,7 @@ class Game:
         self.uis.append(quit_btn)
         self.uis.append(setting_btn)
 
-        tokenFile = open("test.txt", "r")
+        tokenFile = open("token.txt", "r")
         token = tokenFile.read()
 
         user = 0
