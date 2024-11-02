@@ -49,6 +49,7 @@ class Game:
 
         self.camera = pg.display.set_mode(SCREEN_SCALE)
         self.screen = pg.surface.Surface(SCREEN_SCALE, pg.SRCALPHA)
+        pg.display.set_icon(load_image("UI/ExitNode.png"))
 
         self.clock = pg.time.Clock()
         self.current_time = pg.time.get_ticks()
