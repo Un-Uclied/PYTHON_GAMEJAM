@@ -79,9 +79,13 @@ class Game:
                 "dogam" : load_image("UI/Dogam.png"),
                 "setting" : load_image("UI/Settings.png"),
 
-                "motbam" : load_image("UI/Motbam.png"),
-                "motbam2" : load_image("UI/Motbam2.png"),
-                "me" : load_image("UI/Me.png"),
+                "world_bg" : load_image("UI/WorldBg.png"),
+                "endless_bg" : load_image("UI/EndlessBg.png"),
+                "credits_bg" : load_image("UI/CreditBg.png"),
+                "records_bg" : load_image("UI/RankingBg.png"),
+                "quit_bg" : load_image("UI/QuitBg.png"),
+                "dogam_bg" : load_image("UI/DogamBg.png"),
+                "setting_bg" : load_image("UI/SettingBg.png"),
 
                 "credits_서준범_icon" : load_image("서준범.png"),
                 "credits_이준영_icon" : load_image("못밤.png"),
@@ -410,7 +414,7 @@ class Game:
             self.camera.fill("black")
 
             #pg.draw.rect(self.screen, "white", (0, 0, 1600, 800))
-            self.screen.blit(hover_image, (600, 0))
+            self.screen.blit(hover_image, (700, 0))
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (800, 0))
             pg.draw.rect(self.screen, "black", (0, 0, 800, 800))
 
@@ -427,56 +431,53 @@ class Game:
             mouse_click = pg.mouse.get_pressed(3)[0]
             #지도 버튼
             if map_btn.hovering:
-                hover_image = self.assets["ui"]["motbam"]
+                hover_image = self.assets["ui"]["world_bg"]
                 if mouse_click:
                     print("맵 버튼 누름")
                     self.end_scene()
                     self.state_main_world()
             #엔드레스 게임으로
             if endless_btn.hovering:
-                hover_image = self.assets["ui"]["motbam2"]
+                hover_image = self.assets["ui"]["endless_bg"]
                 if mouse_click:
                     self.end_scene()
                     self.current_level_data = load_data("Assets/Levels/BigBreakout.json")
                     self.state_main_game(is_endless= True)
             #리코드 볼수 있음
             if records_btn.hovering:
-                hover_image = self.assets["ui"]["me"]
+                hover_image = self.assets["ui"]["records_bg"]
                 if mouse_click:
                     print("리코드 버튼 누름")
                     self.end_scene()
                     self.state_records()
             #크레딧
             if credits_btn.hovering:
-                hover_image = self.assets["ui"]["motbam"]
+                hover_image = self.assets["ui"]["credits_bg"]
                 if mouse_click:
                     self.end_scene()
                     self.state_credits()
                     print("크레딧 버튼 누름")
             #나가기
             if quit_btn.hovering:
-                hover_image = self.assets["ui"]["me"]
+                hover_image = self.assets["ui"]["quit_bg"]
                 if mouse_click:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
             #도감
             if dogam_btn.hovering:
-                hover_image = self.assets["ui"]["motbam"]
+                hover_image = self.assets["ui"]["dogam_bg"]
                 if mouse_click:
                     self.end_scene()
                     self.state_dogam()
             #설정 드가자
             if setting_btn.hovering:
-                hover_image = self.assets["ui"]["motbam2"]
+                hover_image = self.assets["ui"]["setting_bg"]
                 if mouse_click:
                     self.end_scene()
                     self.state_settings()
-
-
             #로그인
             if login_btn.hovering:
-                hover_image = self.assets["ui"]["me"]
                 if mouse_click and data["idToken"] == "":
                     self.end_scene()
                     self.state_login_menu()
@@ -1226,6 +1227,8 @@ class Game:
         explain_texts = []
         bigo_texts = []
 
+        self.uis.append(TextUi("(<- or A , -> or D)로 넘기기", (750, 700), self.fonts["galmuri"], 35, "black"))
+
         while True:
             self.screen.fill("black")
             self.camera.fill("black")
@@ -1234,6 +1237,8 @@ class Game:
 
             pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
+
+            self.screen.blit(self.assets["ui"]["dogam"], (10, 5))
 
             mouse_click = pg.mouse.get_pressed(3)[0]
             if quit_btn.hovering and mouse_click:
