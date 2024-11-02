@@ -165,7 +165,12 @@ class Game:
             },
 
             "dogam" : {
-                "ratbit" : load_image("Characters/Ratbit/Idle/0.png")
+                "ratbit" : load_image("Characters/Ratbit/Idle/0.png"),
+                "helli" : load_image("Characters/Helli/Idle/0.png"),
+                "strucker" : load_image("Characters/Strucker/0.png"),
+                "stalker" : load_image("Characters/Stalker/Idle/0.png"),
+                "brook" : load_image("Characters/Brook/Idle/0.png"),
+                "bluglogger" : load_image("Characters/Bluglogger/Idle/0.png")
             },
 
             "level_world" : load_image("background.png")
@@ -1182,6 +1187,19 @@ class Game:
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (50, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
 
+        enemy_list = ["ratbit", "helli", "strucker", "stalker", "brook", "bluglogger"]        
+        current_index = 0
+        current_enemy = enemy_list[current_index]
+        current_image = self.assets["dogam"][current_enemy]
+
+        enemy_name_text = TextUi("ratbit", (750, 50), self.fonts["aggro"], 60, "black")
+        self.uis.append(enemy_name_text)
+
+        current_data = load_data(f"Assets/EntityDogam/{current_enemy.capitalize()}.json")
+
+        explain_texts = []
+        bigo_texts = []
+
         while True:
             self.screen.fill("black")
             self.camera.fill("black")
@@ -1196,6 +1214,33 @@ class Game:
                 self.end_scene()
                 self.state_title_screen()
 
+            current_enemy = enemy_list[current_index] 
+            current_image = self.assets["dogam"][current_enemy]
+            self.screen.blit(pg.transform.scale_by(current_image, 1.5), (400, 50))
+            enemy_name_text.text = current_enemy
+
+            #설명
+            current_data = load_data(f"Assets/EntityDogam/{current_enemy.capitalize()}.json")
+            lines = current_data["explain"].split("o")
+            bigos = current_data["bigo"].split("o")
+            margin = 40
+            for explain in explain_texts:
+                if explain in self.uis:
+                    self.uis.remove(explain)
+            for bigo in bigo_texts:
+                if bigo in self.uis:
+                    self.uis.remove(bigo)
+                    
+            for line in lines:
+                text = TextUi(line, (750, 200 + margin * lines.index(line)), self.fonts["aggro"], 40, "black")
+                explain_texts.append(text)
+                self.uis.append(text)
+            for bigo in bigos:
+                text = TextUi(f"비고 : {bigo}" if bigos.index(bigo) == 0 else bigo, (750, 400 + margin * bigos.index(bigo)), self.fonts["aggro"], 30, "black")
+                explain_texts.append(text)
+                self.uis.append(text)
+            #설명끝
+
             self.manage_spark()
             self.manage_particle()
             self.manage_ui()
@@ -1208,6 +1253,39 @@ class Game:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_RIGHT or event.key == pg.K_d:
+                        current_index += 1
+                    if event.key == pg.K_LEFT or event.key == pg.K_a:
+                        current_index -= 1
+
+                    #인덱스
+                    if current_index == len(enemy_list):
+                        current_index = 0
+                    elif current_index == -1:
+                        current_index = len(enemy_list) - 1
+
+                    #설명 업데이트
+                    current_data = load_data(f"Assets/EntityDogam/{current_enemy.capitalize()}.json")
+                    lines = current_data["explain"].split("o")
+                    bigos = current_data["bigo"].split("o")
+                    margin = 40
+                    for explain in explain_texts:
+                        if explain in self.uis:
+                            self.uis.remove(explain)
+                    for bigo in bigo_texts:
+                        if bigo in self.uis:
+                            self.uis.remove(bigo)
+                            
+                    for line in lines:
+                        text = TextUi(line, (750, 200 + margin * lines.index(line)), self.fonts["aggro"], 40, "black")
+                        explain_texts.append(text)
+                        self.uis.append(text)
+                    for bigo in bigos:
+                        text = TextUi(f"비고 : {bigo}" if bigos.index(bigo) == 0 else bigo, (750, 400 + margin * bigos.index(bigo)), self.fonts["aggro"], 30, "black")
+                        explain_texts.append(text)
+                        self.uis.append(text)
+                    #설명 업데이트 끝
     
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
