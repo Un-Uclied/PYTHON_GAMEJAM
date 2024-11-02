@@ -198,7 +198,12 @@ class Game:
         }
 
         self.bgm = {
-            
+            "main_title" : pg.mixer.Sound("Assets/Bgms/Lab.mp3"),
+            "run1" : pg.mixer.Sound("Assets/Bgms/Run1.mp3"),
+            "run2" : pg.mixer.Sound("Assets/Bgms/Run2.wav"),
+            "world" : pg.mixer.Sound("Assets/Bgms/World.wav"),
+            "result" : pg.mixer.Sound("Assets/Bgms/GameResult.ogg"),
+            "dogam" : pg.mixer.Sound("Assets/Bgms/Dogam.wav")
         }
 
         #음량 설정
@@ -405,6 +410,8 @@ class Game:
 
         elapsed_time = 0
 
+        self.set_bgm("main_title")
+
         while(True):
             #update:
             self.current_time = pg.time.get_ticks()
@@ -581,6 +588,8 @@ class Game:
         start_pos = (1000, 22)
         end_pos = (1520, 22)
         start_time = time.time()
+
+        self.set_bgm(f"run{random.randint(1, 2)}")
             
         while(True):
             #update:
@@ -800,6 +809,8 @@ class Game:
         for pos in button_pos:
             line_pos.append((pos[0] + 25, pos[1] + 25))
 
+        self.set_bgm("world")
+
         while True:
             self.screen.fill("black")
             self.camera.fill("black")
@@ -880,6 +891,8 @@ class Game:
         self.status = load_data("Status.json")
         self.uis.append(TextUi(f"최고 점수 : {self.status["high_scores"][f"{self.current_level_data["level_index"]}"]}점", (300, 260), self.fonts["aggro"], 32, "white"))
 
+        self.set_bgm("result")
+
         while True:
             self.screen.fill("black")
             self.camera.fill("black")
@@ -931,7 +944,9 @@ class Game:
 
         bg = self.assets["bg"]["office/1"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
-        rect_surface.fill((0, 0, 0, 200)) 
+        rect_surface.fill((0, 0, 0, 200))
+
+        self.set_bgm("dogam")
 
         while True:
             self.screen.fill("black")
@@ -1229,6 +1244,8 @@ class Game:
 
         self.uis.append(TextUi("(<- or A , -> or D)로 넘기기", (750, 700), self.fonts["galmuri"], 35, "black"))
 
+        self.set_bgm("dogam")
+
         while True:
             self.screen.fill("black")
             self.camera.fill("black")
@@ -1388,6 +1405,11 @@ class Game:
             sfx.set_volume(self.status["sfx_volume"])
         for 브금 in self.bgm.values():
             브금.set_volume(self.status["bgm_volume"])
+
+    def set_bgm(self, name):
+        for bgm in self.bgm.values():
+            bgm.stop()
+        self.bgm[name].play(loops = -1)
 
     #컷씬
     def state_cut_scene(self, images):

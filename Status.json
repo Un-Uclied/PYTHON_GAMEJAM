@@ -1,7 +1,7 @@
 {
     "is_first_play": false,
     "high_scores": {
-        "BigBreakOut": 11000,
+        "BigBreakOut": 105500,
         "1": 35000,
         "2": 96500,
         "3": 281500,
@@ -13,5 +13,5 @@
     "level": 7,
     "idToken": "",
     "sfx_volume": 1,
-    "bgm_volume": 1
+    "bgm_volume": 0.3469387755102041
 }
