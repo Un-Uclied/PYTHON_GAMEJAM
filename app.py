@@ -7,11 +7,11 @@ import json
 
 from Scripts.utils import load_image, load_images, load_data, set_data
 from Scripts.Shadows import Shadow
-from Scripts.Entities import Player, Entity, KillableEnemy, Obstacle, Ratbit, Helli, Brook, BlugLogger, Medicine, Ammo, Boss
+from Scripts.Entities import Player, Entity, KillableEnemy, Obstacle, Ratbit, Helli, Brook, BlugLogger, Medicine, Ammo, Boss, Ufo, BossSoul
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
 from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField, Slider
-from Scripts.Bullets import Bullet, PlayerBullet
+from Scripts.Bullets import Bullet, PlayerBullet, BossBullet
 
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
@@ -100,7 +100,8 @@ class Game:
 
             "projectiles" : {
                 "bullet" : load_image("Projectiles/Bullet.png"),
-                "helli_fire_bullet" : load_image("Projectiles/FireBullet.png")
+                "helli_fire_bullet" : load_image("Projectiles/FireBullet.png"),
+                "energy_bullet" : load_image("Projectiles/EnergyBullet.png"),
             },
             
             "entities" : {
@@ -129,6 +130,10 @@ class Game:
                 "boss/idle" : Animation(load_images("Characters/Boss/Idle"), 8, True),
                 "boss/change" : Animation(load_images("Characters/Boss/Change"), 8, True),
                 "boss/attack" : Animation(load_images("Characters/Boss/Attack"), 8, True),
+
+                "ufo/idle" : Animation(load_images("Characters/Ufo"), 8, True),
+                "world_doom/idle" : Animation(load_images("Characters/Fire"), 8, True),
+                "cannon/idle" : Animation(load_images("Projectiles/Cannon"), 8, True),
             },
 
             "props" : {
@@ -200,6 +205,9 @@ class Game:
             "gameover" : pg.mixer.Sound('Assets/Sfxs/GameOver.mp3'),
             "gamewon" : pg.mixer.Sound('Assets/Sfxs/GameWin.wav'),
             "explosion" : pg.mixer.Sound("Assets/Sfxs/Explosion.wav"),
+            "cannon_fire" : pg.mixer.Sound("Assets/Sfxs/CannonFire.wav"),
+            "ufo_attack" : pg.mixer.Sound("Assets/Sfxs/UfoAttack.wav"),
+            "ufo_explosion" : pg.mixer.Sound("Assets/Sfxs/UfoExplosion.wav"),
         }
 
         self.bgm = {
@@ -277,8 +285,13 @@ class Game:
             #적 감지
             for enemy in self.entities:
                 if projectile.tag == "player's bullet" and enemy.get_rect().collidepoint(projectile.pos) and projectile in self.projectiles and isinstance(enemy, KillableEnemy):
-                    enemy.take_damage(projectile.damage)
-                    self.projectiles.remove(projectile)
+                    if isinstance(enemy, BossSoul):
+                        if isinstance(projectile, BossBullet):
+                            enemy.take_damage(projectile.damage)
+                            self.projectiles.remove(projectile)
+                    else:
+                        enemy.take_damage(projectile.damage)
+                        self.projectiles.remove(projectile)
                         
                     
             #플레이어 감지
@@ -357,6 +370,8 @@ class Game:
                                                 wait_time=90, attack_rate=50))
 
         #스포닝 에너미 끝
+
+    def spawn_items(self):
         if self.current_level_data["entities"]["medicine"] and random.randint(1, self.current_level_data["spawn_rates"]["medicine_spawn_rate"]) == 1:
             self.entities.append(
                 Medicine(self, "medicine", FLOOR_SPAWN_POS, (130 , 130), (130, 130), 20, self.current_level_data["amount"]["heal_amount"])
@@ -366,6 +381,20 @@ class Game:
             self.entities.append(
                 Ammo(self, "ammo", FLOOR_SPAWN_POS, (130 , 130), (130, 130), 20, self.current_level_data["amount"]["ammo_amount"])
             )
+
+    def spawn_boss_entity(self):
+        if not any(isinstance(entity, Obstacle) for entity in self.entities):
+            if self.current_level_data["entities"]["cannon"] and random.randint(1, self.current_level_data["spawn_rates"]["cannon_spawn_rate"]) == 1:
+                self.sfxs["cannon_fire"].play()
+                self.entities.append(Obstacle(self, "cannon", 
+                                            pos=(FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1] + 10),
+                                            size=(150, 150), anim_size=(150, 150), 
+                                            speed=self.current_level_data["speed"]["cannon_speed"], damage=self.current_level_data["damages"]["cannon_damage"]))
+        
+        if self.current_level_data["entities"]["ufo"] and random.randint(1, self.current_level_data["spawn_rates"]["ufo_spawn_rate"]) == 1:
+            self.entities.append(Ufo(self, "ufo", (1600, 0), (150, 150), (150, 150),
+                                     self.current_level_data["speed"]["ufo_move_speed"], 1,
+                                     self.current_level_data["damages"]["ufo_damage"], self.current_level_data["speed"]["ufo_attack_speed"]))
 
     #타이틀 스크린
     def state_title_screen(self):
@@ -659,6 +688,7 @@ class Game:
                 #적 스폰
                 if not ENDING:
                     self.spawn_entity()
+                    self.spawn_items()
 
                 #매니징
                 self.manage_projectiles()
@@ -775,7 +805,7 @@ class Game:
             #카메라 업데이트
             pg.display.flip()
     
-    #메인 게임
+    #보스 게임
     def state_boss(self):
         #start:
         PAUSED = False #상수는 아니지만 그래도 중요하니까 ^^ 아시져?
@@ -789,6 +819,8 @@ class Game:
                             max_block_time=15, attack_damage=20, bullet_speed=45, 
                             offset=(55, 75))
         self.player.anim_offset = [-25, 20]
+        self.player_movement = [False, False]
+        self.player_speed = 8
         #총 세팅
         gun_cooltime = 300 #.3초
         gun_fire_shake = 4.5
@@ -807,8 +839,8 @@ class Game:
         bg_x2 = bg_width
 
         #천장 & 바닥 & 배경
-        floor = pg.rect.Rect(200, 700, SCREEN_SCALE[0], 100)
-        ceil = pg.rect.Rect(200, 0, SCREEN_SCALE[0], 100)
+        floor = pg.rect.Rect(0, 700, SCREEN_SCALE[0], 100)
+        ceil = pg.rect.Rect(0, 0, SCREEN_SCALE[0], 100)
         self.physic_rects = [floor, ceil]
 
         #ui
@@ -824,13 +856,19 @@ class Game:
         current_esc_time = 0
         esc_txt = TextUi("ESC를 꾹눌러 월드로 돌아가기", (100, 490), self.fonts["galmuri"], 20, "white")
 
+        duration = self.current_level_data["level_length"]
+        start_pos = (1000, 22)
+        end_pos = (1520, 22)
+        start_time = time.time()
 
         self.set_bgm(f"run{random.randint(1, 2)}")
 
         #보스
-        boss = Boss(self, "boss", (1200, 150), (500, 500), (500, 500), 5000, self.assets["props"]["boss/arm"], 20, 45, (280, 190))
+        boss = Boss(self, "boss", (1200, 150), (500, 500), (500, 500), 5000, self.assets["props"]["boss/arm"], 20, self.current_level_data["speed"]["boss_bullet_speed"], self.current_level_data["attack_chance"]["boss_attack_chance"], (280, 190))
         self.entities.append(boss)
-            
+        boss_soul = BossSoul(self, "world_doom", (1100, 300), (150, 150), (150, 150), 100)
+        self.entities.append(boss_soul)
+
         while(True):
             #update:
             #화면 초기화
@@ -839,8 +877,8 @@ class Game:
             
             #일시 정지에 영향을 받음
             if not PAUSED:
+                elapsed_time = time.time() - start_time
                 self.current_time = pg.time.get_ticks()
-
                 #배경 움직이기
                 bg_x1 -= bg_scroll_speed
                 bg_x2 -= bg_scroll_speed
@@ -859,9 +897,28 @@ class Game:
                 self.screen.blit(pg.transform.flip(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), False, True), (0, 0))
                 self.screen.blit(pg.transform.flip(pg.transform.rotate(self.assets["ui"]["bottom_fade"], 90), True, False), (0, 0))
 
-                
+                #쿠키런 마냥 움직이는 바 어쩌구 유남생?
+                current_pos = [0, 0]
+                t = min(elapsed_time / duration, 1)
+
+                x = start_pos[0] + (end_pos[0] - start_pos[0]) * t
+                y = start_pos[1] + (end_pos[1] - start_pos[1]) * t
+                current_pos = [x, y]
+                pg.draw.line(self.screen, "white", (start_pos[0], start_pos[1] + 30), (end_pos[0], end_pos[1] + 30), 20)
+                self.screen.blit(pg.transform.scale(self.assets["ui"]["pawn"], (60, 60)), (current_pos[0] - 30, current_pos[1]))
+
+                #레벨 승리
+                if elapsed_time >= duration:
+                    self.end_scene()
+                    self.state_game_result(True)
+
+                boss_soul.check_time(elapsed_time)
+                self.spawn_boss_entity()
+                self.spawn_items()
+
                 #플레이어 업데이트 & 렌더
-                self.player.update(self.physic_rects)
+                self.player.update(self.physic_rects, self.player_movement, self.player_speed)
+                self.player.pos[0] = min(max(self.player.pos[0], 0), 700)
                 self.player.render(self.screen)
                 #플레이어 업데이트 & 렌더 끝
 
@@ -939,6 +996,11 @@ class Game:
                     if event.key == pg.K_SPACE:
                         if PAUSED:
                             PAUSED = False
+
+                    if event.key == pg.K_a and not PAUSED:
+                        self.player_movement[1] = True
+                    if event.key == pg.K_d and not PAUSED:
+                        self.player_movement[0] = True
                     
                     if event.key == pg.K_ESCAPE:
                         if PAUSED: #ESC누르기 시작
@@ -954,6 +1016,10 @@ class Game:
                             esc_pressing = False
                             current_esc_time = 0
                             esc_txt.text = "ESC를 꾹눌러 월드로 돌아가기"
+                    if event.key == pg.K_a:
+                        self.player_movement[1] = False
+                    if event.key == pg.K_d:
+                        self.player_movement[0] = False
                         
                 #마우스가 창밖에 나가면 PAUSE
                 if event.type == pg.ACTIVEEVENT:

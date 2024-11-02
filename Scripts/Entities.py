@@ -47,9 +47,9 @@ class Entity:
         current_frame_img = pg.transform.scale(self.animation.img(), self.anim_size)
         surface.blit(pg.transform.flip(current_frame_img, self.flipx, 0), (self.pos.x - offset[0] + self.anim_offset[0], self.pos.y - offset[1] + self.anim_offset[1]))
         
-        self.mask = pg.mask.from_surface(current_frame_img)
-        self.mask_img = self.mask.to_surface(setcolor=self.mask_color, unsetcolor=(0,0,0,0))
-        surface.blit(pg.transform.flip(self.mask_img, self.flipx, 0), (self.pos.x - offset[0] + self.anim_offset[0], self.pos.y - offset[1] + self.anim_offset[1]))
+        # self.mask = pg.mask.from_surface(current_frame_img)
+        # self.mask_img = self.mask.to_surface(setcolor=self.mask_color, unsetcolor=(0,0,0,0))
+        # surface.blit(pg.transform.flip(self.mask_img, self.flipx, 0), (self.pos.x - offset[0] + self.anim_offset[0], self.pos.y - offset[1] + self.anim_offset[1]))
 
 class MoveableEntity(Entity):
     #생성자
@@ -63,7 +63,6 @@ class MoveableEntity(Entity):
     #update:
     def update(self, physic_rects : list, movement = [[0, 0], [0, 0]], move_speed = 1):
         # movement [[좌, 우], [하, 상]]
-        
         # movement를 벡터로 변환
         movement_vector = pg.math.Vector2((movement[0][0] - movement[0][1]), (movement[1][0] - movement[1][1]))
         
@@ -150,8 +149,8 @@ class Player(MoveableEntity):
 
         self.set_action("run")
 
-    def update(self, tilemap, movement=[[0, 0], [0, 0]], move_speed=0):
-        super().update(tilemap, movement, move_speed)
+    def update(self, tilemap, movement=[0, 0], move_speed=0):
+        super().update(tilemap, [[movement[0], movement[1]], [0, 0]], move_speed)
 
         #중력 추가
         self.gravity(15, 10)
@@ -511,7 +510,6 @@ class BlugLogger(FollowingEnemy):
         if self.is_attack:
             surface.blit(self.beam, (self.pos.x - self.beam.get_size()[0] + 20, self.pos.y))
 
-
 class Medicine(Entity):
     def __init__(self, game, name, pos, size, anim_size, speed, heal_amount):
         super().__init__(game, name, pos, size, anim_size)
@@ -573,12 +571,12 @@ class Ammo(Entity):
                 self.game.sparks.append(Spark(self.get_center_pos(), math.radians(360 * random.random()), 7, "green"))
 
 class Boss(Enemy):
-    def __init__(self, game, name, pos, size, anim_size ,max_health, gun_img : pg.Surface, attack_damage, bullet_speed, offset = (0, 0)):
+    def __init__(self, game, name, pos, size, anim_size ,max_health, gun_img : pg.Surface, attack_damage, bullet_speed, attack_chance, offset = (0, 0)):
         super().__init__(game, name, pos, size, anim_size, attack_damage)
         self.state = "idle"
         #Status / number
-        self.max_health = max_health
-        self.health = max_health
+        self.max_health = 6
+        self.health = 6
         
         #총
         self.gun = gun_img
@@ -595,7 +593,7 @@ class Boss(Enemy):
         self.wiggle_amount = 50
         self.wiggle_offset = 0
 
-        self.attack_chance = 180
+        self.attack_chance = attack_chance
 
         self.set_action("idle")
 
@@ -637,9 +635,126 @@ class Boss(Enemy):
     
     def gun_fire(self, target_pos : tuple):
         self.game.projectiles.append(
-                BossBullet(self.game, self.get_center_pos(), pg.math.Vector2(target_pos[0] - self.get_center_pos().x, target_pos[1] - self.get_center_pos().y), self.bullet_speed, self.game.assets["projectiles"]["bullet"], 60, "Boss's Bullet", self.attack_damage)
+                BossBullet(self.game, self.get_center_pos(), pg.math.Vector2(target_pos[0] - self.get_center_pos().x, target_pos[1] - self.get_center_pos().y), self.bullet_speed, self.game.assets["projectiles"]["energy_bullet"], 60, "Boss's Bullet", self.attack_damage)
         )
     
     def take_damage(self, damage : int):
         #대미지 입히기
         self.health -= damage
+
+class BossSoul(KillableEnemy):
+    def __init__(self, game, name, pos, size, anim_size, damage):
+        super().__init__(game, name, pos, size, anim_size, 4, damage)
+
+        self.elapsed_time = 0
+        self.wiggle_speed = 1
+        self.wiggle_amount = 150
+        self.wiggle_offset = 0
+
+        self.is_triggered = False
+        self.attack_timer = 120
+        self.current_attack_timer = 0
+        self.mask_color = "white"
+
+    def update(self):
+        self.elapsed_time += .01 * self.wiggle_speed
+        tween_value = pt.easeInOutSine((self.elapsed_time % 2) / 2)
+        self.wiggle_offset = math.sin(tween_value * math.pi * 2) * self.wiggle_amount
+
+        if self.is_triggered:
+            if self.current_attack_timer < self.attack_timer:
+                self.current_attack_timer += 1
+            else:
+                self.attack()
+
+        print(self.is_triggered)
+
+        super().update()
+
+    def render(self, surface, offset=(0, 0)):
+        super().render(surface, (0, self.wiggle_offset))
+        if self.is_triggered:
+            self.mask = pg.mask.from_surface(self.animation.img())
+            self.mask_img = self.mask.to_surface(setcolor=self.mask_color, unsetcolor=(0,0,0,0))
+            surface.blit(pg.transform.flip(self.mask_img, self.flipx, False), (self.pos[0] - offset[0] + self.anim_offset[0], self.pos[1] - offset[1] + self.anim_offset[1] - self.wiggle_offset))
+
+    def check_time(self, current_time):
+        if int(current_time) % 5 == 0:
+            self.is_triggered = True
+
+    def take_damage(self, damage_amount):
+        if self.is_triggered:
+            super().take_damage(1)
+            self.is_triggered = False
+            self.current_attack_timer = 0
+
+    def can_interact(self):
+        pass
+
+class Ufo(FollowingEnemy):
+    def __init__(self, game, name, pos, size, anim_size, following_speed, max_health, damage, target_speed):
+        super().__init__(game, name, pos, size, anim_size, following_speed, max_health, damage)
+        self.target_speed = target_speed
+        self.current_target_speed = 0
+        self.term = 120
+        self.current_term_speed = 0
+        self.lazer_time = 30
+        self.current_lazer_time = 0
+
+        self.attacked = False
+        self.attacking = False
+
+        self.lazer = pg.Rect(self.pos.x + 55, self.pos.y + 50, 40, 2000)
+
+    def update(self):
+        super().update()
+        self.lazer = pg.Rect(self.pos.x + 55, self.pos.y + 50, 40, 2000)
+
+        if self.current_target_speed < self.target_speed:
+            self.current_target_speed += 1
+            self.set_target(pg.math.Vector2(self.game.player.get_center_pos().x, 100))
+        if self.current_target_speed >= self.target_speed:
+            if self.current_term_speed < self.term:
+                self.current_term_speed += 1
+            else:
+                self.attack()
+        if self.attacked:
+            if self.current_lazer_time < self.lazer_time:
+                self.current_lazer_time += 1
+            else:
+                self.attacking = False
+                self.attacking = False
+                self.destroy()
+                self.game.entities.remove(self)
+        
+        if self.attacking and self.lazer.colliderect(self.game.player.get_rect()):
+            self.game.on_player_damaged(self.damage)
+            self.attacking = False
+            self.destroy()
+            self.game.entities.remove(self)
+
+    def take_damage(self, damage_amount):
+        return
+
+    def can_interact(self):
+        pass
+
+    def destroy(self):
+        self.game.sfxs["ufo_explosion"].play()
+        for i in range(10):
+            self.game.sparks.append(Spark(tuple(self.get_center_pos()), math.radians(360) * random.random(), 7, "black"))
+        for i in range(10):
+            self.game.sparks.append(Spark(tuple(self.get_center_pos()), math.radians(360) * random.random(), 7, "green"))
+        
+    def render(self, surface, offset=(0, 0)):
+        if self.attacking:
+            pg.draw.rect(surface, "green", self.lazer)
+        super().render(surface, offset)
+        
+    
+    def attack(self):
+        if self.attacking == False:
+            self.game.sfxs["ufo_attack"].play()
+            self.game.camera_shake_gain += 10
+        self.attacked = True
+        self.attacking = True
