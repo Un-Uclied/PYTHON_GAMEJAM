@@ -545,6 +545,11 @@ class Game:
         #백그라운드 스크롤
         background1 = self.assets["bg"][f"{self.current_level_data['bg_name']}/0"]
         background2 = self.assets["bg"][f"{self.current_level_data['bg_name']}/1"]
+        if is_endless:
+            choice = random.choice(["office", "steam_room", "foyer", "secure_room", "horror_office", "dark_office"])
+            background1 = self.assets["bg"][f"{choice}/0"]
+            background2 = self.assets["bg"][f"{choice}/1"]
+
         bg_width = background1.get_width()
         bg_scroll_speed = 20
 
@@ -563,9 +568,13 @@ class Game:
         self.uis.append(stat_ui)
 
         #일시 정지 UI
-        pause_bg = self.assets["bg"]["office/1"]
+        pause_bg = background1
         pause_rect_surface = pg.Surface(pause_bg.get_size(), pg.SRCALPHA)
         pause_rect_surface.fill((0, 0, 0, 200))
+        esc_time = 35
+        esc_pressing = False
+        current_esc_time = 0
+        esc_txt = TextUi("ESC를 꾹눌러 월드로 돌아가기", (100, 490), self.fonts["galmuri"], 20, "white")
 
         duration = self.current_level_data["level_length"]
         start_pos = (1000, 22)
@@ -684,6 +693,14 @@ class Game:
             #일시 정지에 영향을 받음 끝
             
             if PAUSED:
+                #ESC를 꾹눌러야 월드로 나감
+                if esc_pressing:
+                    current_esc_time += 1
+                if current_esc_time >= esc_time: #EARLY RETURN
+                    self.end_scene()
+                    self.state_main_world()
+                    return
+                
                 self.screen.blit(pause_bg, (0, 0))
                 self.screen.blit(pause_rect_surface, (0, 0))
 
@@ -693,10 +710,9 @@ class Game:
                 paused_txt = TextUi("일시정지", (100, 300), self.fonts["galmuri"], 100, "white")
                 paused_txt.update()
                 paused_txt.render(self.screen)
-                esc_txt = TextUi("스페이스바로 게임으로 돌아가기", (100, 420), self.fonts["galmuri"], 30, "white")
-                esc_txt.update()
-                esc_txt.render(self.screen)
-                esc_txt = TextUi("ESC로 월드로 돌아가기", (100, 490), self.fonts["galmuri"], 20, "white")
+                space_txt = TextUi("스페이스바로 게임으로 돌아가기", (100, 420), self.fonts["galmuri"], 30, "white")
+                space_txt.update()
+                space_txt.render(self.screen)
                 esc_txt.update()
                 esc_txt.render(self.screen)
                 
@@ -717,14 +733,24 @@ class Game:
                     if event.key == pg.K_SPACE:
                         if PAUSED:
                             PAUSED = False
+                    
+                    
                     if event.key == pg.K_ESCAPE:
-                        if PAUSED:
-                            self.end_scene()
-                            self.state_main_world()
+                        if PAUSED: #ESC누르기 시작
+                            current_esc_time += 1
+                            esc_pressing = True
+                            esc_txt.text = "계속 누르고 계세요.."
                         else :
                             PAUSED = True
-                        
+                
 
+                if event.type == pg.KEYUP:
+                    if event.key == pg.K_ESCAPE:
+                        if PAUSED: #ESC를 누르다 뗌
+                            esc_pressing = False
+                            current_esc_time = 0
+                            esc_txt.text = "ESC를 꾹눌러 월드로 돌아가기"
+                        
                 
                 #마우스가 창밖에 나가면 PAUSE
                 if event.type == pg.ACTIVEEVENT:
