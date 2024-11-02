@@ -7,7 +7,7 @@ import json
 
 from Scripts.utils import load_image, load_images, load_data, set_data
 from Scripts.Shadows import Shadow
-from Scripts.Entities import Player, Entity, KillableEnemy, Obstacle, Ratbit, Helli, Brook, BlugLogger, Medicine, Ammo
+from Scripts.Entities import Player, Entity, KillableEnemy, Obstacle, Ratbit, Helli, Brook, BlugLogger, Medicine, Ammo, Boss
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
 from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField, Slider
@@ -125,11 +125,16 @@ class Game:
                 "beam" : load_image("Characters/Bluglogger/Beam.png"),
 
                 "stalker/idle" : Animation(load_images("Characters/Stalker/Idle"), 5, True),
+
+                "boss/idle" : Animation(load_images("Characters/Boss/Idle"), 8, True),
+                "boss/change" : Animation(load_images("Characters/Boss/Change"), 8, True),
+                "boss/attack" : Animation(load_images("Characters/Boss/Attack"), 8, True),
             },
 
             "props" : {
                 "player/arm_gun" : load_image("Characters/Player/Arm.png"),
-                "player/arm_shield" : load_image("Characters/Player/ArmShield.png")
+                "player/arm_shield" : load_image("Characters/Player/ArmShield.png"),
+                "boss/arm" : load_image("Characters/Boss/Arm.png")
             },
 
             "bg" : {
@@ -538,8 +543,6 @@ class Game:
         last_fire_time = pg.time.get_ticks()
         last_block_time = pg.time.get_ticks()
         block_cooltime = 800
-        # [[좌, 우], [하, 상]]
-        self.player_movement = [[False, False], [False, False]]
 
         #구렁이
         worm = Entity(self, "worm", (-100, 95), (300, 610), (610, 610))
@@ -649,7 +652,7 @@ class Game:
                         self.state_game_result(True)
                 
                 #플레이어 업데이트 & 렌더
-                self.player.update(self.physic_rects, self.player_movement)
+                self.player.update(self.physic_rects)
                 self.player.render(self.screen)
                 #플레이어 업데이트 & 렌더 끝
 
@@ -772,6 +775,196 @@ class Game:
             #카메라 업데이트
             pg.display.flip()
     
+    #메인 게임
+    def state_boss(self):
+        #start:
+        PAUSED = False #상수는 아니지만 그래도 중요하니까 ^^ 아시져?
+
+        #플레이어 : game, name, pos, hit_box_size, anim_size, max health
+        self.player = Player(self, "player", 
+                            pos=(200, 640), size=(70, 170), anim_size=(170, 170),
+                            max_health=100, 
+                            gun_img=self.assets["props"]["player/arm_gun"], shield_img=self.assets["props"]["player/arm_shield"],
+                            max_rotation=100,
+                            max_block_time=15, attack_damage=20, bullet_speed=45, 
+                            offset=(55, 75))
+        self.player.anim_offset = [-25, 20]
+        #총 세팅
+        gun_cooltime = 300 #.3초
+        gun_fire_shake = 4.5
+        last_fire_time = pg.time.get_ticks()
+        last_block_time = pg.time.get_ticks()
+        block_cooltime = 800
+
+        #백그라운드 스크롤
+        background1 = self.assets["bg"][f"{self.current_level_data['bg_name']}/0"]
+        background2 = self.assets["bg"][f"{self.current_level_data['bg_name']}/1"]
+
+        bg_width = background1.get_width()
+        bg_scroll_speed = 20
+
+        bg_x1 = 0
+        bg_x2 = bg_width
+
+        #천장 & 바닥 & 배경
+        floor = pg.rect.Rect(200, 700, SCREEN_SCALE[0], 100)
+        ceil = pg.rect.Rect(200, 0, SCREEN_SCALE[0], 100)
+        self.physic_rects = [floor, ceil]
+
+        #ui
+        stat_ui = TextUi("", (50, 30), self.fonts["galmuri"], 30, "white")
+        self.uis.append(stat_ui)
+
+        #일시 정지 UI
+        pause_bg = background1
+        pause_rect_surface = pg.Surface(pause_bg.get_size(), pg.SRCALPHA)
+        pause_rect_surface.fill((0, 0, 0, 200))
+        esc_time = 35
+        esc_pressing = False
+        current_esc_time = 0
+        esc_txt = TextUi("ESC를 꾹눌러 월드로 돌아가기", (100, 490), self.fonts["galmuri"], 20, "white")
+
+
+        self.set_bgm(f"run{random.randint(1, 2)}")
+
+        #보스
+        boss = Boss(self, "boss", (1200, 150), (500, 500), (500, 500), 5000, self.assets["props"]["boss/arm"], 20, 45, (280, 190))
+        self.entities.append(boss)
+            
+        while(True):
+            #update:
+            #화면 초기화
+            self.screen.fill("black")
+            self.camera.fill("black")
+            
+            #일시 정지에 영향을 받음
+            if not PAUSED:
+                self.current_time = pg.time.get_ticks()
+
+                #배경 움직이기
+                bg_x1 -= bg_scroll_speed
+                bg_x2 -= bg_scroll_speed
+
+                if bg_x1 <= -bg_width:
+                    bg_x1 = bg_width
+                if bg_x2 <= -bg_width:
+                    bg_x2 = bg_width
+    
+                self.screen.blit(background1, (bg_x1, 0))
+                self.screen.blit(background2, (bg_x2, 0))
+
+                #UI렌더
+                stat_ui.text = f"남은 탄: {self.player.ammo} | {self.score} | 거대 괴물로부터 남은 거리 : {self.player.health}cm"
+                self.screen.blit(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), (0, 700))
+                self.screen.blit(pg.transform.flip(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), False, True), (0, 0))
+                self.screen.blit(pg.transform.flip(pg.transform.rotate(self.assets["ui"]["bottom_fade"], 90), True, False), (0, 0))
+
+                
+                #플레이어 업데이트 & 렌더
+                self.player.update(self.physic_rects)
+                self.player.render(self.screen)
+                #플레이어 업데이트 & 렌더 끝
+
+                #매니징
+                self.manage_projectiles()
+                self.manage_camera_shake()
+                self.manage_entity()
+                #매니징 끝
+
+                #매니징
+                self.manage_particle()
+                self.manage_spark()
+                self.manage_ui()
+                #매니징 끝 
+                
+                #화면 렌더
+                self.camera.blit(self.screen, self.shake)
+                #화면 렌더 끝
+
+                #플레이어 행동
+                mouse_click = pg.mouse.get_pressed(3) #(마우스 좌클릭, 마우스 휠클릭, 마우스 우클릭)
+                mouse_pos = pg.mouse.get_pos()
+                #플레이어 공격
+                if mouse_click[MOUSE_ATTACK] and self.current_time - last_fire_time >= gun_cooltime:
+                    if self.player.gun_fire(mouse_pos):
+                        self.sfxs["gun_fire"].play()
+                        self.camera_shake_gain += gun_fire_shake
+                        last_fire_time = self.current_time
+                #플레이어 블록
+                if mouse_click[MOUSE_BLOCK] and self.current_time - last_block_time >= block_cooltime:
+                    self.sfxs["swoosh"].play()
+                    self.player.use_shield()
+                    last_block_time = self.current_time
+                #플레이어 행동 끝
+            #일시 정지에 영향을 받음 끝
+            
+            if PAUSED:
+                #ESC를 꾹눌러야 월드로 나감
+                if esc_pressing:
+                    current_esc_time += 1
+                if current_esc_time >= esc_time: #EARLY RETURN
+                    self.end_scene()
+                    self.state_main_world()
+                    return
+                
+                self.screen.blit(pause_bg, (0, 0))
+                self.screen.blit(pause_rect_surface, (0, 0))
+
+                pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
+                self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
+
+                paused_txt = TextUi("일시정지", (100, 300), self.fonts["galmuri"], 100, "white")
+                paused_txt.update()
+                paused_txt.render(self.screen)
+                space_txt = TextUi("스페이스바로 게임으로 돌아가기", (100, 420), self.fonts["galmuri"], 30, "white")
+                space_txt.update()
+                space_txt.render(self.screen)
+                esc_txt.update()
+                esc_txt.render(self.screen)
+                
+
+                self.camera.blit(self.screen, (0, 0))
+
+            #이벤트 리슨
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    self.end_scene()
+                    pg.quit()
+                    sys.exit()
+
+                if event.type == pg.KEYDOWN:
+                    if event.key == KEY_JUMP:
+                        if self.player.jump(20):
+                            self.sfxs["jump"].play()
+                    if event.key == pg.K_SPACE:
+                        if PAUSED:
+                            PAUSED = False
+                    
+                    if event.key == pg.K_ESCAPE:
+                        if PAUSED: #ESC누르기 시작
+                            current_esc_time += 1
+                            esc_pressing = True
+                            esc_txt.text = "계속 누르고 계세요.."
+                        else :
+                            PAUSED = True
+                
+                if event.type == pg.KEYUP:
+                    if event.key == pg.K_ESCAPE:
+                        if PAUSED: #ESC를 누르다 뗌
+                            esc_pressing = False
+                            current_esc_time = 0
+                            esc_txt.text = "ESC를 꾹눌러 월드로 돌아가기"
+                        
+                #마우스가 창밖에 나가면 PAUSE
+                if event.type == pg.ACTIVEEVENT:
+                    if event.gain == 0:
+                        PAUSED = True
+            #이벤트 리슨 끝
+
+            self.clock.tick(TARGET_FPS)
+            #카메라 업데이트
+            pg.display.flip()
+
     #지도
     def state_main_world(self):
 
@@ -848,7 +1041,12 @@ class Game:
             if escape_btn.hovering and mouse_click:
                 self.end_scene()
                 self.current_level_data = load_data(f"Assets/Levels/{selected_level}.json")
-                self.state_main_game()
+                if selected_level == "Boss":
+                    #보su!!
+                    self.current_level_data = load_data(f"Assets/Levels/Boss.json")
+                    self.state_boss()
+                else:
+                    self.state_main_game()
 
             self.manage_spark()
             self.manage_particle()

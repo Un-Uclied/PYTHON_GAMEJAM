@@ -1,7 +1,7 @@
-import pygame as pg
+import pygame as pg, pytweening as pt
 import math, random
 from Scripts.Particles import Spark, Particle
-from Scripts.Bullets import PlayerBullet, Bullet
+from Scripts.Bullets import PlayerBullet, Bullet, BossBullet
 
 class Entity:
     def __init__(self, game, name : str, pos : tuple, size : tuple, anim_size : tuple):
@@ -571,3 +571,75 @@ class Ammo(Entity):
             self.set_action("use")
             for i in range(30):
                 self.game.sparks.append(Spark(self.get_center_pos(), math.radians(360 * random.random()), 7, "green"))
+
+class Boss(Enemy):
+    def __init__(self, game, name, pos, size, anim_size ,max_health, gun_img : pg.Surface, attack_damage, bullet_speed, offset = (0, 0)):
+        super().__init__(game, name, pos, size, anim_size, attack_damage)
+        self.state = "idle"
+        #Status / number
+        self.max_health = max_health
+        self.health = max_health
+        
+        #총
+        self.gun = gun_img
+
+        self.current_arm = self.gun
+        self.arm_offset = offset
+        self.arm_rotation = 0
+
+        self.attack_damage = attack_damage
+        self.bullet_speed = bullet_speed
+
+        self.elapsed_time = 0
+        self.wiggle_speed = 1
+        self.wiggle_amount = 50
+        self.wiggle_offset = 0
+
+        self.attack_chance = 180
+
+        self.set_action("idle")
+
+    def can_interact(self):
+        pass
+
+    def set_action(self, action):
+        super().set_action(action)
+        self.state = action
+
+    def update(self):
+        super().update()
+        self.elapsed_time += .01 * self.wiggle_speed
+
+        if random.randint(1, self.attack_chance) == 1:
+            self.set_action("attack")
+            for i in range(1):
+                self.gun_fire(self.game.player.get_center_pos())
+
+        #총 각도 계산
+        x_dist = self.game.player.pos.x - self.pos.x
+        y_dist = -(self.game.player.pos.y - self.pos.y)
+        self.arm_rotation = math.degrees(math.atan2(y_dist, x_dist))
+
+        tween_value = pt.easeInOutSine((self.elapsed_time % 2) / 2)
+        self.wiggle_offset = math.sin(tween_value * math.pi * 2) * self.wiggle_amount
+
+        self.animation.update()
+
+    def render(self, surface : pg.surface.Surface, offset=(0, 0)):
+        super().render(surface, (0, self.wiggle_offset))
+
+        if self.state == "attack":
+            #총 렌더
+            render_arm = pg.transform.rotate(self.current_arm, self.arm_rotation)
+            rect_arm = render_arm.get_rect(center = (self.pos.x + self.arm_offset[0] + offset[0], self.pos.y + self.arm_offset[1] + offset[1] - self.wiggle_offset))
+
+            surface.blit(render_arm, rect_arm)
+    
+    def gun_fire(self, target_pos : tuple):
+        self.game.projectiles.append(
+                BossBullet(self.game, self.get_center_pos(), pg.math.Vector2(target_pos[0] - self.get_center_pos().x, target_pos[1] - self.get_center_pos().y), self.bullet_speed, self.game.assets["projectiles"]["bullet"], 60, "Boss's Bullet", self.attack_damage)
+        )
+    
+    def take_damage(self, damage : int):
+        #대미지 입히기
+        self.health -= damage
