@@ -134,8 +134,8 @@ class Game:
                 "boss/attack" : Animation(load_images("Characters/Boss/Attack"), 8, True),
 
                 "ufo/idle" : Animation(load_images("Characters/Ufo"), 8, True),
-                "world_doom/idle" : Animation(load_images("Characters/Fire"), 8, True),
-                "cannon/idle" : Animation(load_images("Projectiles/Cannon"), 8, True),
+                "world_doom/idle" : Animation(load_images("Characters/Fire"), 4, True),
+                "cannon/idle" : Animation(load_images("Projectiles/Cannon"), 4, True),
             },
 
             "props" : {
@@ -157,6 +157,8 @@ class Game:
                 "horror_office/1" : load_image("Backgrounds/horror_office_1.png"),
                 "dark_office/0" : load_image("Backgrounds/dark_office_0.png"),
                 "dark_office/1" : load_image("Backgrounds/dark_office_1.png"),
+                "desert/0" : load_image("Backgrounds/desert_0.png"),
+                "desert/1" : load_image("Backgrounds/desert_1.png"),
 
                 "light" : load_image("Backgrounds/Light.png"),
             },
@@ -177,7 +179,8 @@ class Game:
             },
 
             "cutscenes" : {
-                "start" : load_images("Cutscenes/Start")
+                "start" : load_images("Cutscenes/Start"),
+                "boss_intro" : load_images("Cutscenes/BossStart"),
             },
 
             "dogam" : {
@@ -880,6 +883,8 @@ class Game:
 
         bg_x1 = 0
         bg_x2 = bg_width
+        rect_surface = pg.Surface(background1.get_size(), pg.SRCALPHA)
+        rect_surface.fill((0, 0, 0, 200))
 
         #천장 & 바닥 & 배경
         floor = pg.rect.Rect(0, 700, SCREEN_SCALE[0], 100)
@@ -893,7 +898,7 @@ class Game:
         #일시 정지 UI
         pause_bg = background1
         pause_rect_surface = pg.Surface(pause_bg.get_size(), pg.SRCALPHA)
-        pause_rect_surface.fill((0, 0, 0, 200))
+        pause_rect_surface.fill((100, 100, 100, 10))
         esc_time = 35
         esc_pressing = False
         current_esc_time = 0
@@ -907,7 +912,7 @@ class Game:
         self.set_bgm(f"run{random.randint(1, 2)}")
 
         #보스
-        boss = Boss(self, "boss", (1200, 150), (500, 500), (500, 500), 5000, self.assets["props"]["boss/arm"], 20, self.current_level_data["speed"]["boss_bullet_speed"], self.current_level_data["attack_chance"]["boss_attack_chance"], (280, 190))
+        boss = Boss(self, "boss", (1200, 150), (500, 500), (500, 500), 5000, self.assets["props"]["boss/arm"], self.current_level_data["damages"]["boss_bullet_damage"], self.current_level_data["speed"]["boss_bullet_speed"], self.current_level_data["attack_chance"]["boss_attack_chance"], (280, 190))
         self.entities.append(boss)
         boss_soul = BossSoul(self, "world_doom", (1100, 300), (150, 150), (150, 150), 100, self.current_level_data["speed"]["world_doom_speed"])
         self.entities.append(boss_soul)
@@ -934,12 +939,13 @@ class Game:
     
                 self.screen.blit(background1, (bg_x1, 0))
                 self.screen.blit(background2, (bg_x2, 0))
+                self.screen.blit(rect_surface, (0, 0))
 
                 #UI렌더
                 stat_ui.text = f"남은 탄: {self.player.ammo} | {self.score} | 거대 괴물로부터 남은 거리 : {self.player.health}cm"
-                self.screen.blit(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), (0, 700))
-                self.screen.blit(pg.transform.flip(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), False, True), (0, 0))
-                self.screen.blit(pg.transform.flip(pg.transform.rotate(self.assets["ui"]["bottom_fade"], 90), True, False), (0, 0))
+                #self.screen.blit(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), (0, 700))
+                #self.screen.blit(pg.transform.flip(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), False, True), (0, 0))
+                #self.screen.blit(pg.transform.flip(pg.transform.rotate(self.assets["ui"]["bottom_fade"], 90), True, False), (0, 0))
 
                 #쿠키런 마냥 움직이는 바 어쩌구 유남생?
                 current_pos = [0, 0]
@@ -1081,7 +1087,7 @@ class Game:
         #처음 플레이한다면 컷씬 시작 Early Return
         if self.status["is_first_play"]:
             self.end_scene()
-            self.state_cut_scene(self.assets["cutscenes"]["start"])
+            self.state_cut_scene(self.assets["cutscenes"]["start"], self.first_play_cutscene)
 
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (70, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
@@ -1155,7 +1161,8 @@ class Game:
                 if selected_level == "Boss":
                     #보su!!
                     self.current_level_data = load_data(f"Assets/Levels/Boss.json")
-                    self.state_boss()
+                    #self.state_boss()
+                    self.state_cut_scene(self.assets["cutscenes"]["boss_intro"], self.state_boss)
                 else:
                     self.state_main_game()
 
@@ -1732,7 +1739,7 @@ class Game:
         self.bgm[name].play(loops = -1)
 
     #컷씬
-    def state_cut_scene(self, images):
+    def state_cut_scene(self, images, func):
         current_index = 0
         cutscene_len = len(images) - 1
         cutscene_time = 10
@@ -1768,9 +1775,9 @@ class Game:
                             current_index += 1
                             cutscene_current_time = 0
                             if current_index > cutscene_len:
-                                set_data("Status.json", "is_first_play", False)
-                                self.end_scene()
-                                self.state_main_world()
+                                #컷씬 다봤을때 할거
+                                func()
+                                
     
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
@@ -1820,6 +1827,10 @@ class Game:
         self.sfxs["parry"].play()
         self.camera_shake_gain += 10
 
+    def first_play_cutscene(self):
+        set_data("Status.json", "is_first_play", False)
+        self.end_scene()
+        self.state_main_world()
      
 # #게임 실행
 game = Game()

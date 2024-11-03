@@ -5,9 +5,9 @@
 
     "scores" : {"ufo_add_score" : 7000},
 
-    "damages" : {"cannon_damage" : 20, "ufo_damage" : 20},
+    "damages" : {"cannon_damage" : 20, "ufo_damage" : 20, "boss_bullet_damage" : 20},
     
-    "healths" : {"ufo_health" : 100},
+    "healths" : {"ufo_health" : 80},
 
     "amount" : {"heal_amount" : 100, "ammo_amount" : 35},
 
@@ -15,7 +15,7 @@
 
     "attack_chance" : {"boss_attack_chance" : 100},
 
-    "bg_name" : "secure_room",
+    "bg_name" : "desert",
     "level_name" : "연구실 외부",
     "level_length" : 200,
     "level_index" : "Boss"

@@ -649,6 +649,9 @@ class BossSoul(KillableEnemy):
         self.wiggle_speed = 1
         self.wiggle_amount = 100
         self.wiggle_offset = 0
+        self.got_hit = False
+        self.got_hit_timer = 60
+        self.current_hit_timer = 0
 
         self.is_triggered = False
         self.attack_timer = doom_speed
@@ -666,6 +669,11 @@ class BossSoul(KillableEnemy):
             else:
                 self.game.sfxs["world_doom"].play()
                 self.attack()
+        if self.got_hit:
+            self.current_hit_timer += 1
+        if self.current_hit_timer > self.got_hit_timer:
+            self.got_hit = False
+            self.current_hit_timer = 0
 
         super().update()
 
@@ -677,12 +685,15 @@ class BossSoul(KillableEnemy):
             surface.blit(pg.transform.flip(self.mask_img, self.flipx, False), (self.pos[0] - offset[0] + self.anim_offset[0], self.pos[1] - offset[1] + self.anim_offset[1] - self.wiggle_offset))
 
     def check_time(self, current_time):
-        if not int(current_time) == 0 and int(current_time) % 40 == 0:
+        if not int(current_time) == 0 and int(current_time) % 10 == 0 and not self.got_hit:
             self.is_triggered = True
 
     def take_damage(self, damage_amount):
         if self.is_triggered:
             self.health -= 1
+            self.is_triggered = False
+            self.current_attack_timer = 0
+            self.got_hit = True
         
             if self.health <= 0:
                 self.destroy()
@@ -695,9 +706,7 @@ class BossSoul(KillableEnemy):
                     self.game.sparks.append(Spark(tuple(self.get_center_pos()), math.radians(360) * random.random(), 7, "white"))
                 for i in range(10):
                     self.game.sparks.append(Spark(tuple(self.get_center_pos()), math.radians(360) * random.random(), 7, "green"))
-    
-            self.is_triggered = False
-            self.current_attack_timer = 0
+            
 
     def destroy(self):
         pass
@@ -714,6 +723,8 @@ class Ufo(FollowingEnemy):
         self.current_term_speed = 0
         self.lazer_time = 30
         self.current_lazer_time = 0
+        self.attack_timer = 10
+        self.current_attack_timer = 30
 
         self.attacked = False
         self.attacking = False
@@ -726,7 +737,7 @@ class Ufo(FollowingEnemy):
 
         if self.current_target_speed < self.target_speed:
             self.current_target_speed += 1
-            self.set_target(pg.math.Vector2(self.game.player.get_center_pos().x, 100))
+            self.set_target(pg.math.Vector2(self.game.player.get_center_pos().x - self.size[0] / 2 - 10, 100))
         if self.current_target_speed >= self.target_speed:
             if self.current_term_speed < self.term:
                 self.current_term_speed += 1
@@ -748,6 +759,10 @@ class Ufo(FollowingEnemy):
             self.current_target_speed = 0
             self.current_term_speed = 0
             self.current_lazer_time = 0
+            self.current_attack_timer = self.attack_timer
+        
+        if self.current_attack_timer > 0:
+            self.current_attack_timer -= 1
 
     def take_damage(self, damage_amount):
         self.health -= damage_amount
@@ -774,7 +789,7 @@ class Ufo(FollowingEnemy):
             self.game.sparks.append(Spark(tuple(self.get_center_pos()), math.radians(360) * random.random(), 7, "green"))
         
     def render(self, surface, offset=(0, 0)):
-        if self.attacking:
+        if self.attacking or self.current_attack_timer > 0:
             pg.draw.rect(surface, "green", self.lazer)
         super().render(surface, offset)
         
