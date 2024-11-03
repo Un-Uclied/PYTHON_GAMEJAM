@@ -5,7 +5,7 @@ from Scripts.utils import open_site
 class TextUi:
     def __init__(self, text : str, pos : tuple, font : str, text_size : int, color : pg.Color):
         self.text = text
-        self.pos = pos
+        self.pos = list(pos)
         self.text_size = text_size
         self.font = font
         self.color = color

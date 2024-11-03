@@ -1531,6 +1531,10 @@ class Game:
 
         self.uis.append(TextUi("랭킹               닉네임                            점수", (500, 30), self.fonts["aggro"], 40, "white"))
 
+        y_offset = 0
+        scroll_speed = 60
+        plr_texts = [] #[[rank : TextUi, nickname : TextUi, score : TextUi], [rank, nickname, score],]
+        margin = 50
         #[["닉네임", 점수], ["닉네임", 점수]]
 
         rankingDatas = db.collection("ranking").stream()
@@ -1541,8 +1545,14 @@ class Game:
             players.app
 
         players = [["nickname1", 100000], ["nickname2", 10000]]
-        players = players.sort(key=lambda x: x[1], reverse=True)
-
+        players.sort(key=lambda x: x[1], reverse=True)
+        for plr in players:
+            rank = TextUi(str(list.index(players, plr) + 1), (500, 150 + margin * list.index(players, plr)), self.fonts["aggro"], 40, "white")
+            nickname = TextUi(plr[0], (700, 150 + margin * list.index(players, plr)), self.fonts["aggro"], 40, "white")
+            score = TextUi(str(plr[1]), (1170, 150 + margin * list.index(players, plr)), self.fonts["aggro"], 40, "white")
+            plr_texts.append([rank, nickname, score])
+        
+        
         self.set_bgm("rankings")
 
         while True:
@@ -1551,6 +1561,13 @@ class Game:
 
             self.screen.blit(bg, (0, 0))
             self.screen.blit(rect_surface, (0, 0))
+
+            #요 텍스트는 따로 관리 ㅇㅇ
+            for ui_list in plr_texts: # ui_list = [rank : TextUi, nickname : TextUi, score : TextUi]
+                for i in range(3):
+                    ui_list[i].update()
+                    ui_list[i].render(self.screen)
+                    ui_list[i].pos[1] = 150 + margin * plr_texts.index(ui_list) + y_offset
 
             pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
             pg.draw.rect(self.screen, "black", (0, 0, SCREEN_SCALE[0], 100))
@@ -1571,6 +1588,11 @@ class Game:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
+                if event.type == pg.MOUSEWHEEL:
+                    if event.y < 0:
+                        y_offset -= scroll_speed
+                    else:
+                        y_offset = min(y_offset + scroll_speed, 0)
                 if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                     if quit_btn.hovering:
                         self.end_scene()
