@@ -677,7 +677,7 @@ class BossSoul(KillableEnemy):
             surface.blit(pg.transform.flip(self.mask_img, self.flipx, False), (self.pos[0] - offset[0] + self.anim_offset[0], self.pos[1] - offset[1] + self.anim_offset[1] - self.wiggle_offset))
 
     def check_time(self, current_time):
-        if int(current_time) % 20 == 0:
+        if int(current_time) % 40 == 0:
             self.is_triggered = True
 
     def take_damage(self, damage_amount):

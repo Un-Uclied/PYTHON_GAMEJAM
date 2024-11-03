@@ -433,13 +433,14 @@ class Game:
                 user = auth.get_user(uid)
                 
                 # 사용자 정보 출력
-                print("User ID:", user.uid)
-                print("Email:", user.email)
+                #print("User ID:", user.uid)
+                #print("Email:", user.email)
 
                 doc_ref = db.collection("users").document(user.uid)
                 doc = doc_ref.get()
                 if doc.exists:
-                    print("Nickname:", doc.to_dict()["name"])
+                    #print("Nickname:", doc.to_dict()["name"])
+                    pass
                 else:
                     print("에러! : 계정 정보 없음")
                 
@@ -483,7 +484,6 @@ class Game:
             if map_btn.hovering:
                 hover_image = self.assets["ui"]["world_bg"]
                 if mouse_click:
-                    print("맵 버튼 누름")
                     self.end_scene()
                     self.state_main_world()
             #엔드레스 게임으로
@@ -500,7 +500,6 @@ class Game:
             if records_btn.hovering:
                 hover_image = self.assets["ui"]["records_bg"]
                 if mouse_click:
-                    print("리코드 버튼 누름")
                     self.end_scene()
                     self.state_records()
             #크레딧
@@ -509,7 +508,6 @@ class Game:
                 if mouse_click:
                     self.end_scene()
                     self.state_credits()
-                    print("크레딧 버튼 누름")
             #나가기
             if quit_btn.hovering:
                 hover_image = self.assets["ui"]["quit_bg"]
@@ -1340,7 +1338,7 @@ class Game:
                 if response.status_code == 200:
                     # 로그인 성공 시 ID 토큰 반환
                     id_token = response.json().get('idToken')
-                    print(f"ID Token: {id_token}")
+                    #print(f"ID Token: {id_token}")
 
                     tokenFile = open("token.txt", "w")
                     w = tokenFile.write(id_token)
@@ -1437,7 +1435,7 @@ class Game:
                     if response.status_code == 200:
                         # 회원가입 성공 시 사용자 ID 토큰 반환
                         id_token = response.json().get('idToken')
-                        print(f"User signed up successfully, ID Token: {id_token}")
+                        #print(f"User signed up successfully, ID Token: {id_token}")
 
                         tokenFile = open("token.txt", "w")
                         w = tokenFile.write(id_token)
@@ -1780,7 +1778,7 @@ class Game:
 
     def on_player_kill(self, killed_entity : Entity):
         self.camera_shake_gain += 5
-        print(f"killed : {killed_entity.name}")
+        #print(f"killed : {killed_entity.name}")
         self.score += self.current_level_data["scores"][f"{killed_entity.name}_add_score"]
 
     def on_player_damaged(self, damage_amount):
