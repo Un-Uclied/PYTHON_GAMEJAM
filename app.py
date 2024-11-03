@@ -936,7 +936,7 @@ class Game:
         self.entities.append(boss_soul)
         self.boss_died = False
 
-        self.uis.append(VanishingTextUi(self, f"{pg.key.name(self.status["좌로 움직이기키"])}, {pg.key.name(self.status["우로 움직이기키"])}로 움직이기", (650, 730), self.fonts["aggro"], 40, "white", 60, 5))
+        self.uis.append(VanishingTextUi(self, f"{pg.key.name(self.status["key_bindings"]["좌로 움직이기키"])}, {pg.key.name(self.status["key_bindings"]["우로 움직이기키"])}로 움직이기", (650, 730), self.fonts["aggro"], 40, "white", 60, 5))
 
         while(True):
             #update:
