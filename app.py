@@ -1290,6 +1290,8 @@ class Game:
             pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
 
+            self.screen.blit(self.assets["ui"]["credits"], (10, 5))
+
             self.screen.blit(self.assets["ui"]["credits_서준범_icon"], (800, 300))
             self.screen.blit(self.assets["ui"]["credits_이준영_icon"], (1100, 300))
             self.screen.blit(pg.transform.scale(self.assets["ui"]["credits_motbam_icon"], (100, 100)), (470, 30))
@@ -1535,6 +1537,8 @@ class Game:
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
         rect_surface.fill((0, 0, 0, 200))
 
+        self.uis.append(TextUi("랭킹               닉네임                            점수", (500, 30), self.fonts["aggro"], 40, "white"))
+
         self.set_bgm("rankings")
 
         while True:
@@ -1545,7 +1549,11 @@ class Game:
             self.screen.blit(rect_surface, (0, 0))
 
             pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
+            pg.draw.rect(self.screen, "black", (0, 0, SCREEN_SCALE[0], 100))
+            self.screen.blit(pg.transform.scale(pg.transform.rotate(self.assets["ui"]["bottom_fade"], 180), (SCREEN_SCALE[0], 100)), (0, 100))
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
+
+            self.screen.blit(self.assets["ui"]["records"], (10, 5))
 
             mouse_click = pg.mouse.get_pressed(3)[0]
             if quit_btn.hovering and mouse_click:
@@ -1683,6 +1691,8 @@ class Game:
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
     
+    #음향 시작
+
     #음량 설정
     def state_settings(self):
          
@@ -1692,18 +1702,29 @@ class Game:
         bg = self.assets["bg"]["office/0"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
         rect_surface.fill((0, 0, 0, 200))
-        
-        self.uis.append(TextUi("설정", (300, 50), self.fonts["aggro"], 70, "white"))
 
+        index = 0
+        need_to_change = False
+        title = TextUi("음향 설정", (300, 50), self.fonts["aggro"], 70, "white")
+        self.uis.append(title)
+
+        #음향 설정
         sfx_vol = TextUi("효과음 음량 : {}".format(int(self.status["sfx_volume"] * 100)), (400, 200), self.fonts["aggro"], 50, "white")
-        self.uis.append(sfx_vol)
         bgm_vol = TextUi("배경음악 음량 : {}".format(int(self.status["bgm_volume"] * 100)), (400, 400), self.fonts["aggro"], 50, "white")
-        self.uis.append(bgm_vol)
-
         sfx_slider = Slider((700, 600), (500, 50), self.status["sfx_volume"], 0, 1)
         bgm_slider = Slider((700, 1000), (500, 50), self.status["bgm_volume"], 0, 1)
+
+        self.uis.append(sfx_vol)
+        self.uis.append(bgm_vol)
         self.uis.append(sfx_slider)
         self.uis.append(bgm_slider)
+        #키바인딩 설정
+        attack_key = InputField((500, 500), (100, 100), self.fonts["aggro"], 100, "white", "grey")
+
+        self.uis.append(VanishingTextUi(self, "(<- or A , -> or D)로 넘기기", (650, 730), self.fonts["aggro"], 40, "white", 120, 5))
+        
+        key_listening = False
+        keys = self.status["key_bindings"].values()
 
         while True:
             self.screen.fill("black")
@@ -1714,6 +1735,30 @@ class Game:
 
             pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
+
+            self.screen.blit(self.assets["ui"]["setting"], (10, 5))
+
+            if index == 0 and need_to_change:
+                need_to_change = False
+                title.text = "음향 설정"
+                #키바인딩 설정 숨기기
+                self.uis.remove(attack_key)
+                #음향효과 설정 보이기
+                self.uis.append(sfx_vol)
+                self.uis.append(bgm_vol)
+                self.uis.append(sfx_slider)
+                self.uis.append(bgm_slider)
+            if index == 1 and need_to_change:
+                need_to_change = False
+                title.text = "키바인딩 설정"
+                #음향효과 설정 숨기기
+                self.uis.remove(sfx_vol)
+                self.uis.remove(bgm_vol)
+                self.uis.remove(sfx_slider)
+                self.uis.remove(bgm_slider)
+                #키바인딩 설정 보이기
+                self.uis.append(attack_key)
+                
 
             mouse_click = pg.mouse.get_pressed(3)[0]
             if quit_btn.hovering and mouse_click:
@@ -1739,6 +1784,17 @@ class Game:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
+                if event.type == pg.KEYDOWN:
+                    if (event.key == pg.K_a or event.key == pg.K_RIGHT) and not key_listening:
+                        if index == 0: index = 1
+                        else: index -= 1
+                        need_to_change = True
+                    if (event.key == pg.K_d or event.key == pg.K_LEFT) and not key_listening:
+                        if index == 1: index = 0
+                        else: index += 1
+                        need_to_change = True
+                    if key_listening:
+                        pass
 
             self.set_volumes()
             
@@ -1756,6 +1812,7 @@ class Game:
             bgm.stop()
         self.bgm[name].play(loops = -1)
 
+    #음향 끝
     #컷씬
     def state_cut_scene(self, images, func):
         current_index = 0
@@ -1848,6 +1905,7 @@ class Game:
         self.sfxs["parry"].play()
         self.camera_shake_gain += 10
 
+    #걍 컷씬 함수 여따가 만듬;
     def first_play_cutscene(self):
         set_data("Status.json", "is_first_play", False)
         self.end_scene()

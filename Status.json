@@ -10,7 +10,14 @@
         "6": 50000,
         "Boss": 112000
     },
+    "key_bindings": {
+        "move_left": 0,
+        "move_right": 0,
+        "jump": 0,
+        "attack": 0,
+        "block": 0
+    },
     "level": 7,
     "sfx_volume": 1,
-    "bgm_volume": 0.5020408163265306
+    "bgm_volume": 0.8469387755102041
 }
