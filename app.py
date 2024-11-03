@@ -578,7 +578,7 @@ class Game:
                         self.end_scene()
                         self.state_settings()
                     #로그인
-                    if login_btn.hovering and token == "":
+                    if login_btn.hovering and user == 0:
                         self.end_scene()
                         self.state_login_menu()
                             
@@ -771,34 +771,6 @@ class Game:
                     last_block_time = self.current_time
                 #플레이어 행동 끝
             #일시 정지에 영향을 받음 끝
-
-            #무한모드에서 사망했을 때
-            if self.player.health <= 0 and is_endless:
-                tokenFile = open("token.txt", "r")
-                token = tokenFile.read()
-
-                try:
-                    # ID 토큰을 검증하여 사용자 정보 가져오기
-                    decoded_token = auth.verify_id_token(token, clock_skew_seconds=30)
-                    uid = decoded_token['uid']
-                    user = auth.get_user(uid)
-
-                    doc_ref = db.collection("ranking").document(user.uid)
-                    doc = doc_ref.get()
-                    if doc.exists:
-                        if self.score > doc.to_dict()["score"]:
-                            data = {
-                                "score" : self.score
-                            }
-                            doc_ref.set(data)
-                    else:
-                        data = {
-                            "score" : self.score
-                        }
-                        doc_ref.set(data)
-                    
-                except Exception as e:
-                    print("Error verifying ID token:", e)
             
             if PAUSED:
                 #ESC를 꾹눌러야 월드로 나감
@@ -1464,55 +1436,66 @@ class Game:
                 self.state_login_menu()
             if send_btn.hovering and mouse_click:
                 if password.text == passwordCheck.text:
-                    #API 요청 넣기
-                    url = "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyDGpmnNcJ2ZOShNz371uqmV3647ct7i4KE"
+                    docs = db.collection("users").stream()
 
-                    payload = {
-                        "email": email.text,
-                        "password": password.text,
-                        "returnSecureToken": True
-                    }
+                    nickname_exists = False  # 닉네임 존재 여부를 추적하는 변수
 
-                    response = requests.post(url, json = payload)
+                    for doc in docs:
+                        if nickname.text == doc.to_dict()["name"]:
+                            error.text = "오류! : 이미 사용 중인 닉네임입니다!"
+                            nickname_exists = True
+                            break  # 중복 닉네임을 찾으면 더 이상 확인하지 않고 종료
 
-                    if response.status_code == 200:
-                        # 회원가입 성공 시 사용자 ID 토큰 반환
-                        id_token = response.json().get('idToken')
-                        #print(f"User signed up successfully, ID Token: {id_token}")
+                    # 닉네임이 중복되지 않는 경우에만 회원가입 요청 실행
+                    if not nickname_exists:
+                        # API 요청 넣기
+                        url = "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyDGpmnNcJ2ZOShNz371uqmV3647ct7i4KE"
 
-                        tokenFile = open("token.txt", "w")
-                        w = tokenFile.write(id_token)
-                        tokenFile.close()
+                        payload = {
+                            "email": email.text,
+                            "password": password.text,
+                            "returnSecureToken": True
+                        }
 
-                        try:
-                            #ID 토큰을 이용하여 사용자 정보 가져오기
+                        response = requests.post(url, json=payload)
 
-                            tokenFile = open("token.txt", "r")
-                            token = tokenFile.read()
+                        if response.status_code == 200:
+                            # 회원가입 성공 시 사용자 ID 토큰 반환
+                            id_token = response.json().get('idToken')
 
-                            decoded_token = auth.verify_id_token(token, clock_skew_seconds=30)
-                            uid = decoded_token['uid']
-                            user = auth.get_user(uid)
+                            with open("token.txt", "w") as tokenFile:
+                                tokenFile.write(id_token)
 
-                            #유저의 정보를 db에 저장
-                            data = {
-                                "name" : nickname.text
-                            }
+                            try:
+                                # ID 토큰을 이용하여 사용자 정보 가져오기
+                                with open("token.txt", "r") as tokenFile:
+                                    token = tokenFile.read()
 
-                            doc_ref = db.collection("users").document(user.uid)
-                            doc_ref.set(data)
+                                decoded_token = auth.verify_id_token(token, clock_skew_seconds=30)
+                                uid = decoded_token['uid']
+                                user = auth.get_user(uid)
 
-                            self.end_scene()
-                            self.state_title_screen()
-                            
-                        except Exception as e:
-                            print("Error verifying ID token:", e)
+                                # 유저의 정보를 db에 저장
+                                data = {
+                                    "name": nickname.text
+                                }
 
-                    else:
-                        print("Failed to sign up:", response.json())
-                        error.text = f"오류! : {response.json()["error"]["message"]}"
+                                doc_ref = db.collection("users").document(user.uid)
+                                doc_ref.set(data)
+
+                                self.end_scene()
+                                self.state_title_screen()
+
+                            except Exception as e:
+                                print("Error verifying ID token:", e)
+
+                        else:
+                            print("Failed to sign up:", response.json())
+                            error.text = f"오류! : {response.json()['error']['message']}"
+                    # 비밀번호 확인이 일치하지 않는 경우
                 else:
-                    error.text = "오류! : 비밀번호와 비밀번호 확인란이 일치 하지 않습니다!"
+                    error.text = "오류! : 비밀번호와 비밀번호 확인란이 일치하지 않습니다!"
+
 
             self.manage_spark()
             self.manage_particle()
@@ -1549,6 +1532,14 @@ class Game:
         self.uis.append(TextUi("랭킹               닉네임                            점수", (500, 30), self.fonts["aggro"], 40, "white"))
 
         #[["닉네임", 점수], ["닉네임", 점수]]
+
+        rankingDatas = db.collection("ranking").stream()
+
+        players = []
+
+        for doc in rankingDatas:
+            players.app
+
         players = [["nickname1", 100000], ["nickname2", 10000]]
         players = players.sort(key=lambda x: x[1], reverse=True)
 
@@ -1920,6 +1911,37 @@ class Game:
         self.camera_shake_gain += 10
 
         if self.player.health <= 0:
+            if self.current_level_data["level_index"] == "BigBreakOut":
+                tokenFile = open("token.txt", "r")
+                token = tokenFile.read()
+
+                try:
+                    # ID 토큰을 검증하여 사용자 정보 가져오기
+                    decoded_token = auth.verify_id_token(token, clock_skew_seconds=30)
+                    uid = decoded_token['uid']
+                    user = auth.get_user(uid)
+
+                    userDoc_ref = db.collection("users").document(user.uid)
+                    userData = userDoc_ref.get()
+
+                    doc_ref = db.collection("ranking").document(userData.to_dict()["name"])
+                    doc = doc_ref.get()
+
+                    if doc.exists:
+                        if self.score > doc.to_dict()["score"]:
+                            data = {
+                                "score" : self.score
+                            }
+                            doc_ref.set(data)
+                    else:
+                        data = {
+                            "score" : self.score
+                        }
+                        doc_ref.set(data)
+                    
+                except Exception as e:
+                    print("Error verifying ID token:", e)
+
             self.end_scene()
             self.state_game_result(False)
         else:
