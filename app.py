@@ -424,8 +424,8 @@ class Game:
         records_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["records"], (200, 150)), (500, 20 + margin * 2), self.sfxs["ui_hover"], 1, 20)
         credits_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["credits"], (200, 150)), (500, 20 + margin * 3), self.sfxs["ui_hover"], 1, 20)
         dogam_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["dogam"], (200, 150)), (500, 20 + margin * 4), self.sfxs["ui_hover"], 1, 20)
-        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (500, 20 + margin * 5), self.sfxs["ui_hover"], 1, 20)
-        setting_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["setting"], (200, 150)), (500, 20 + margin * 6), self.sfxs["ui_hover"], 1, 20)
+        setting_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["setting"], (200, 150)), (500, 20 + margin * 5), self.sfxs["ui_hover"], 1, 20)
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (500, 20 + margin * 6), self.sfxs["ui_hover"], 1, 20)
 
         self.uis.append(map_btn)
         self.uis.append(endless_btn)
@@ -464,6 +464,8 @@ class Game:
         login_btn = TextButton(doc.to_dict()["name"] if token and user else "<로그인해주세요 현재 : 익명", self.fonts["aggro"], 30, (30, 560), self.sfxs["ui_hover"], "yellow", "blue")
         self.uis.append(login_btn)
 
+        self.uis.append(VanishingTextUi(self, f"마우스 휠로 메뉴 스크롤", (800, 730), self.fonts["aggro"], 40, "white", 60, 5))
+
         hover_image = pg.Surface((100, 100))
 
         elapsed_time = 0
@@ -489,64 +491,33 @@ class Game:
             records_btn.pos[1] = 20 + margin * 2 + y_offset
             credits_btn.pos[1] = 20 + margin * 3 + y_offset
             dogam_btn.pos[1] = 20 + margin * 4 + y_offset
-            quit_btn.pos[1] = 20 + margin * 5 + y_offset
-            setting_btn.pos[1] = 20 + margin * 6 + y_offset
-
-        
-            mouse_click = pg.mouse.get_pressed(3)[0]
+            setting_btn.pos[1] = 20 + margin * 5 + y_offset
+            quit_btn.pos[1] = 20 + margin * 6 + y_offset
+    
             #지도 버튼
             if map_btn.hovering:
                 hover_image = self.assets["ui"]["world_bg"]
-                if mouse_click:
-                    self.end_scene()
-                    self.state_main_world()
             #엔드레스 게임으로
             if endless_btn.hovering:
                 hover_image = self.assets["ui"]["endless_bg"]
-                if mouse_click:
-                    if token and user:
-                        self.end_scene()
-                        self.current_level_data = load_data("Assets/Levels/BigBreakout.json")
-                        self.state_main_game(is_endless=True)
-                    else:
-                        print("무한 모드는 로그인 후 이용 가능합니다.")
             #리코드 볼수 있음
             if records_btn.hovering:
                 hover_image = self.assets["ui"]["records_bg"]
-                if mouse_click:
-                    self.end_scene()
-                    self.state_records()
             #크레딧
             if credits_btn.hovering:
                 hover_image = self.assets["ui"]["credits_bg"]
-                if mouse_click:
-                    self.end_scene()
-                    self.state_credits()
             #나가기
             if quit_btn.hovering:
                 hover_image = self.assets["ui"]["quit_bg"]
-                if mouse_click:
-                    self.end_scene()
-                    pg.quit()
-                    sys.exit()
             #도감
             if dogam_btn.hovering:
                 hover_image = self.assets["ui"]["dogam_bg"]
-                if mouse_click:
-                    self.end_scene()
-                    self.state_dogam()
             #설정 드가자
             if setting_btn.hovering:
                 hover_image = self.assets["ui"]["setting_bg"]
-                if mouse_click:
-                    self.end_scene()
-                    self.state_settings()
             #로그인
             if login_btn.hovering:
                 hover_image = self.assets["ui"]["login_bg"]
-                if mouse_click and token == "":
-                    self.end_scene()
-                    self.state_login_menu()
 
             self.manage_spark()
             self.manage_particle()
@@ -569,7 +540,48 @@ class Game:
                         y_offset = max(y_offset - scroll_speed, -320)
                     else:
                         y_offset = min(y_offset + scroll_speed, 0)
-
+                
+                if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                    #지도 버튼
+                    if map_btn.hovering:
+                        self.end_scene()
+                        self.state_main_world()
+                    #엔드레스 게임으로
+                    if endless_btn.hovering:
+                        if token and user:
+                            self.end_scene()
+                            self.current_level_data = load_data("Assets/Levels/BigBreakout.json")
+                            self.state_main_game(is_endless=True)
+                        else:
+                            self.uis.append(VanishingTextUi(self, f"무한 모드는 로그인 후 이용 가능합니다.", (800, 730), self.fonts["aggro"], 40, "red", 60, 5))
+                            print("무한 모드는 로그인 후 이용 가능합니다.")
+                            
+                    #리코드 볼수 있음
+                    if records_btn.hovering:
+                        self.end_scene()
+                        self.state_records()
+                    #크레딧
+                    if credits_btn.hovering:
+                        self.end_scene()
+                        self.state_credits()
+                    #나가기
+                    if quit_btn.hovering:
+                        self.end_scene()
+                        pg.quit()
+                        sys.exit()
+                    #도감
+                    if dogam_btn.hovering:
+                        self.end_scene()
+                        self.state_dogam()
+                    #설정 드가자
+                    if setting_btn.hovering:
+                        self.end_scene()
+                        self.state_settings()
+                    #로그인
+                    if login_btn.hovering and token == "":
+                        self.end_scene()
+                        self.state_login_menu()
+                            
 
             dt = self.clock.tick(TARGET_FPS) / 1000
             elapsed_time += dt
@@ -951,9 +963,6 @@ class Game:
 
                 #UI렌더
                 stat_ui.text = f"남은 탄: {self.player.ammo} | {self.score} | HP : {self.player.health}"
-                #self.screen.blit(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), (0, 700))
-                #self.screen.blit(pg.transform.flip(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), False, True), (0, 0))
-                #self.screen.blit(pg.transform.flip(pg.transform.rotate(self.assets["ui"]["bottom_fade"], 90), True, False), (0, 0))
 
                 #쿠키런 마냥 움직이는 바 어쩌구 유남생?
                 current_pos = [0, 0]
@@ -1141,9 +1150,6 @@ class Game:
             pg.draw.lines(self.screen, "red", False, line_pos, 5)
 
             mouse_click = pg.mouse.get_pressed(3)[0]
-            if quit_btn.hovering and mouse_click:
-                self.end_scene()
-                self.state_title_screen()
 
             #레벨 선택
             for btn in buttons:
@@ -1187,6 +1193,10 @@ class Game:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
+                if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                    if quit_btn.hovering:
+                        self.end_scene()
+                        self.state_title_screen()
     
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
@@ -1235,14 +1245,6 @@ class Game:
             pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
 
-            mouse_click = pg.mouse.get_pressed(3)[0]
-            if quit_btn.hovering and mouse_click:
-                self.end_scene()
-                self.state_title_screen()
-            if map_btn.hovering and mouse_click:
-                self.end_scene()
-                self.state_main_world()
-
             self.manage_spark()
             self.manage_particle()
             self.manage_ui()
@@ -1255,6 +1257,13 @@ class Game:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
+                if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                    if quit_btn.hovering:
+                        self.end_scene()
+                        self.state_title_screen()
+                    if map_btn.hovering:
+                        self.end_scene()
+                        self.state_main_world()
     
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
@@ -1296,11 +1305,6 @@ class Game:
             self.screen.blit(self.assets["ui"]["credits_이준영_icon"], (1100, 300))
             self.screen.blit(pg.transform.scale(self.assets["ui"]["credits_motbam_icon"], (100, 100)), (470, 30))
 
-            mouse_click = pg.mouse.get_pressed(3)[0]
-            if quit_btn.hovering and mouse_click:
-                self.end_scene()
-                self.state_title_screen()
-
             self.manage_spark()
             self.manage_particle()
             self.manage_ui()
@@ -1313,6 +1317,10 @@ class Game:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
+                if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                    if quit_btn.hovering:
+                        self.end_scene()
+                        self.state_title_screen()
     
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
@@ -1355,9 +1363,6 @@ class Game:
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
 
             mouse_click = pg.mouse.get_pressed(3)[0]
-            if quit_btn.hovering and mouse_click:
-                self.end_scene()
-                self.state_title_screen()
             if send_btn.hovering and mouse_click:
                 url = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyDGpmnNcJ2ZOShNz371uqmV3647ct7i4KE"
 
@@ -1401,6 +1406,10 @@ class Game:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
+                if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                    if quit_btn.hovering:
+                        self.end_scene()
+                        self.state_title_screen()
                 
                 #tlqkf 왜 안됨?
                 email.get_event(event)
@@ -1555,11 +1564,6 @@ class Game:
 
             self.screen.blit(self.assets["ui"]["records"], (10, 5))
 
-            mouse_click = pg.mouse.get_pressed(3)[0]
-            if quit_btn.hovering and mouse_click:
-                self.end_scene()
-                self.state_title_screen()
-
             self.manage_spark()
             self.manage_particle()
             self.manage_ui()
@@ -1572,6 +1576,10 @@ class Game:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
+                if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                    if quit_btn.hovering:
+                        self.end_scene()
+                        self.state_title_screen()
     
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
@@ -1609,11 +1617,6 @@ class Game:
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
 
             self.screen.blit(self.assets["ui"]["dogam"], (10, 5))
-
-            mouse_click = pg.mouse.get_pressed(3)[0]
-            if quit_btn.hovering and mouse_click:
-                self.end_scene()
-                self.state_title_screen()
 
             current_enemy = enemy_list[current_index] 
             current_image = self.assets["dogam"][current_enemy]
@@ -1654,6 +1657,10 @@ class Game:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
+                if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                    if quit_btn.hovering:
+                        self.end_scene()
+                        self.state_title_screen()
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_RIGHT or event.key == pg.K_d:
                         current_index += 1
@@ -1767,12 +1774,6 @@ class Game:
                 #키바인딩 설정 보이기
                 for input_field in key_listener:
                     self.uis.append(input_field)
-                
-
-            mouse_click = pg.mouse.get_pressed(3)[0]
-            if quit_btn.hovering and mouse_click:
-                self.end_scene()
-                self.state_title_screen()
 
             self.manage_spark()
             self.manage_particle()
@@ -1806,6 +1807,10 @@ class Game:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
+                if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                    if quit_btn.hovering:
+                        self.end_scene()
+                        self.state_title_screen()
                 if event.type == pg.KEYDOWN:
                     if (event.key == pg.K_a or event.key == pg.K_RIGHT) and not key_listening:
                         if index == 0: index = 1
