@@ -144,7 +144,7 @@ class TextButton(ClickableUi):
         self.render_surface = pg.font.Font(self.font, self.text_size).render(self.text, True, self.current_color)
 
 class InputField:
-    def __init__(self, pos, scale, font, font_size, text_color, bg_color, is_private = False):
+    def __init__(self, pos, scale, font, font_size, text_color, bg_color, is_private = False, max_len = -1):
         self.rect = pg.Rect(pos[0], pos[1], scale[0], scale[1])
         self.text_color = text_color
         self.color = bg_color
@@ -154,6 +154,7 @@ class InputField:
         self.font_size = font_size
         self.active = False
         self.is_private = is_private
+        self.max_len = max_len
 
     def get_event(self, event):
         if event.type == pg.MOUSEBUTTONDOWN:
@@ -166,14 +167,50 @@ class InputField:
             elif event.key == pg.K_RETURN:
                 self.active = False
             else:
-                self.text += event.unicode
-                if (event.unicode.isalnum() or event.unicode in "-=_+[]{};:'\",.<>/?|\\!@#$%^&*()") and not event.key in (pg.K_LSHIFT, pg.K_RSHIFT, pg.K_LCTRL, pg.K_RCTRL, pg.K_LALT, pg.K_RALT):
-                    self.hidden_text += "*"
+                if self.max_len == -1:
+                    self.text += event.unicode
+                    if (event.unicode.isalnum() or event.unicode in "-=_+[]{};:'\",.<>/?|\\!@#$%^&*()") and not event.key in (pg.K_LSHIFT, pg.K_RSHIFT, pg.K_LCTRL, pg.K_RCTRL, pg.K_LALT, pg.K_RALT):
+                        self.hidden_text += "*"
+                else:
+                    if len(self.text) < self.max_len:
+                        self.text += event.unicode
+                        if (event.unicode.isalnum() or event.unicode in "-=_+[]{};:'\",.<>/?|\\!@#$%^&*()") and not event.key in (pg.K_LSHIFT, pg.K_RSHIFT, pg.K_LCTRL, pg.K_RCTRL, pg.K_LALT, pg.K_RALT):
+                            self.hidden_text += "*"
 
     def render(self, surface):
         pg.draw.rect(surface, self.color, self.rect)
         txt_surface = pg.font.Font(self.font, self.font_size).render(self.hidden_text if self.is_private else self.text, True, self.text_color)
-        surface.blit(txt_surface, (self.rect.x + 5, self.rect.y + 5))
+        surface.blit(txt_surface, (self.rect.x + 5, self.rect.y + 2))
+        pg.draw.rect(surface, self.text_color, self.rect, 2)
+
+class KeyInputField:
+    def __init__(self, name, pos, scale, font, font_size, text_color, bg_color, name_pos, max_len = 1):
+        self.rect = pg.Rect(pos[0], pos[1], scale[0], scale[1])
+        self.name = name
+        self.text_color = text_color
+        self.color = bg_color
+        self.font = font
+        self.text = ""
+        self.key = 0
+        self.font_size = font_size
+        self.active = False
+        self.max_len = max_len
+        self.name_pos = name_pos
+
+    def get_event(self, event : pg.event.Event):
+        if event.type == pg.MOUSEBUTTONDOWN:
+            self.active = self.rect.collidepoint(event.pos)
+
+        if event.type == pg.KEYDOWN and self.active:
+            self.key = event.key
+            self.text = pg.key.name(event.key)
+            self.active = False
+
+    def render(self, surface):
+        pg.draw.rect(surface, self.color, self.rect)
+        txt_surface = pg.font.Font(self.font, self.font_size).render("듣는중.." if self.active else self.text, True, self.text_color)
+        surface.blit(txt_surface, (self.rect.x + 5, self.rect.y + 2))
+        surface.blit(pg.font.Font(self.font, self.font_size).render(self.name, True, self.text_color), self.name_pos)
         pg.draw.rect(surface, self.text_color, self.rect, 2)
 
 class Slider:

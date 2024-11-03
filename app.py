@@ -10,7 +10,7 @@ from Scripts.Shadows import Shadow
 from Scripts.Entities import Player, Entity, KillableEnemy, Obstacle, Ratbit, Helli, Brook, BlugLogger, Medicine, Ammo, Boss, Ufo, BossSoul
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
-from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField, Slider, VanishingTextUi
+from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField, Slider, VanishingTextUi, KeyInputField
 from Scripts.Bullets import Bullet, PlayerBullet, BossBullet
 
 import firebase_admin
@@ -823,7 +823,7 @@ class Game:
                     sys.exit()
 
                 if event.type == pg.KEYDOWN:
-                    if event.key == KEY_JUMP:
+                    if event.key == self.status["key_bindings"]["점프키"]:
                         if self.player.jump(20):
                             self.sfxs["jump"].play()
                     if event.key == pg.K_SPACE:
@@ -924,7 +924,7 @@ class Game:
         self.entities.append(boss_soul)
         self.boss_died = False
 
-        self.uis.append(VanishingTextUi(self, "A, D로 움직이기", (650, 730), self.fonts["aggro"], 40, "white", 60, 5))
+        self.uis.append(VanishingTextUi(self, f"{pg.key.name(self.status["좌로 움직이기키"])}, {pg.key.name(self.status["우로 움직이기키"])}로 움직이기", (650, 730), self.fonts["aggro"], 40, "white", 60, 5))
 
         while(True):
             #update:
@@ -1049,16 +1049,16 @@ class Game:
                     sys.exit()
 
                 if event.type == pg.KEYDOWN:
-                    if event.key == KEY_JUMP:
+                    if event.key == self.status["key_bindings"]["점프키"]:
                         if self.player.jump(20):
                             self.sfxs["jump"].play()
                     if event.key == pg.K_SPACE:
                         if PAUSED:
                             PAUSED = False
 
-                    if event.key == pg.K_a and not PAUSED:
+                    if event.key == self.status["key_bindings"]["좌로 움직이기키"] and not PAUSED:
                         self.player_movement[1] = True
-                    if event.key == pg.K_d and not PAUSED:
+                    if event.key == self.status["key_bindings"]["우로 움직이기키"] and not PAUSED:
                         self.player_movement[0] = True
                     
                     if event.key == pg.K_ESCAPE:
@@ -1075,9 +1075,9 @@ class Game:
                             esc_pressing = False
                             current_esc_time = 0
                             esc_txt.text = "ESC를 꾹눌러 월드로 돌아가기"
-                    if event.key == pg.K_a:
+                    if event.key == self.status["key_bindings"]["좌로 움직이기키"]:
                         self.player_movement[1] = False
-                    if event.key == pg.K_d:
+                    if event.key == self.status["key_bindings"]["우로 움직이기키"]:
                         self.player_movement[0] = False
                         
                 #마우스가 창밖에 나가면 PAUSE
@@ -1595,7 +1595,7 @@ class Game:
         explain_texts = []
         bigo_texts = []
 
-        self.uis.append(VanishingTextUi(self, "(<- or A , -> or D)로 넘기기", (650, 730), self.fonts["aggro"], 40, "black", 60, 5))
+        self.uis.append(VanishingTextUi(self, "(<- or A , -> or D)로 넘기기", (650, 730), self.fonts["aggro"], 40, "black", 240, 5))
 
         self.set_bgm("dogam")
 
@@ -1719,9 +1719,16 @@ class Game:
         self.uis.append(sfx_slider)
         self.uis.append(bgm_slider)
         #키바인딩 설정
-        attack_key = InputField((500, 500), (100, 100), self.fonts["aggro"], 100, "white", "grey")
+        move_left_key = KeyInputField("좌로 움직이기키",(1000, 250), (200, 60), self.fonts["aggro"], 50, "white", "black", (550, 250))
+        move_right_key = KeyInputField("우로 움직이기키",(1000, 350), (200, 60), self.fonts["aggro"], 50, "white", "black", (550, 350))
+        jump_key = KeyInputField("점프키",(1000, 450), (200, 60), self.fonts["aggro"], 50, "white", "black", (550, 450))
+        key_listener = [move_left_key, move_right_key, jump_key]
+        for listener in key_listener:
+            listener.key = self.status["key_bindings"][listener.name]
+            listener.text = pg.key.name(self.status["key_bindings"][listener.name])
 
-        self.uis.append(VanishingTextUi(self, "(<- or A , -> or D)로 넘기기", (650, 730), self.fonts["aggro"], 40, "white", 120, 5))
+
+        self.uis.append(VanishingTextUi(self, "(<- or A , -> or D)로 넘기기", (650, 730), self.fonts["aggro"], 40, "white", 240, 5))
         
         key_listening = False
         keys = self.status["key_bindings"].values()
@@ -1742,7 +1749,8 @@ class Game:
                 need_to_change = False
                 title.text = "음향 설정"
                 #키바인딩 설정 숨기기
-                self.uis.remove(attack_key)
+                for input_field in key_listener:
+                    self.uis.remove(input_field)
                 #음향효과 설정 보이기
                 self.uis.append(sfx_vol)
                 self.uis.append(bgm_vol)
@@ -1757,7 +1765,8 @@ class Game:
                 self.uis.remove(sfx_slider)
                 self.uis.remove(bgm_slider)
                 #키바인딩 설정 보이기
-                self.uis.append(attack_key)
+                for input_field in key_listener:
+                    self.uis.append(input_field)
                 
 
             mouse_click = pg.mouse.get_pressed(3)[0]
@@ -1770,12 +1779,25 @@ class Game:
             self.manage_ui()
             self.manage_camera_shake()
 
-            set_data("Status.json", "sfx_volume", sfx_slider.get_val())
-            set_data("Status.json", "bgm_volume", bgm_slider.get_val())
+            if index == 0:
+                sfx_vol.text = "효과음 음량 : {}".format(int(self.status["sfx_volume"] * 100))
+                bgm_vol.text = "배경음악 음량 : {}".format(int(self.status["bgm_volume"] * 100))
+
+                set_data("Status.json", "sfx_volume", sfx_slider.get_val())
+                set_data("Status.json", "bgm_volume", bgm_slider.get_val())
+            if index == 1:
+                for input_field in key_listener:
+                    set_data("Status.json", f"key_bindings/{input_field.name}", input_field.key)
+            
             self.status = load_data("Status.json")
 
-            sfx_vol.text = "효과음 음량 : {}".format(int(self.status["sfx_volume"] * 100))
-            bgm_vol.text = "배경음악 음량 : {}".format(int(self.status["bgm_volume"] * 100))
+            actived = 0
+            for key_field in key_listener:
+                if key_field.active:
+                    actived += 1
+            if actived > 0:
+                key_listening = True
+            else : key_listening = False
 
             self.camera.blit(self.screen, self.shake)
 
@@ -1795,6 +1817,10 @@ class Game:
                         need_to_change = True
                     if key_listening:
                         pass
+
+                if index == 1:
+                    for input_field in key_listener:
+                        input_field.get_event(event)
 
             self.set_volumes()
             

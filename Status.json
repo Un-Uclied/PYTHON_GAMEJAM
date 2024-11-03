@@ -11,13 +11,11 @@
         "Boss": 112000
     },
     "key_bindings": {
-        "move_left": 0,
-        "move_right": 0,
-        "jump": 0,
-        "attack": 0,
-        "block": 0
+        "좌로 움직이기키": 97,
+        "우로 움직이기키": 100,
+        "점프키": 32
     },
     "level": 7,
     "sfx_volume": 1,
-    "bgm_volume": 0.8469387755102041
+    "bgm_volume": 1
 }
