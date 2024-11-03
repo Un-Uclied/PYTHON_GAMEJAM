@@ -192,14 +192,13 @@ class Player(MoveableEntity):
         surface.blit(render_arm, rect_arm)
     
     def gun_fire(self, mouse_pos : tuple):
-        if self.blocking: return False
-        if self.ammo == 0: 
-            self.game.on_cannot_fire()
-            return False
-
-        self.ammo -= 1
-
         if -self.arm_max_roatation <= self.current_mouse_angle <= self.arm_max_roatation:
+            if self.blocking: return False
+            if self.ammo == 0: 
+                self.game.on_cannot_fire()
+                return False
+
+            self.ammo -= 1
             self.game.projectiles.append(
                 PlayerBullet(self.game, self.get_center_pos(), pg.math.Vector2(mouse_pos[0] - self.get_center_pos().x, mouse_pos[1] - self.get_center_pos().y), self.bullet_speed, self.game.assets["projectiles"]["bullet"], 60, "player's bullet",self, self.attack_damage)
             )
@@ -685,7 +684,7 @@ class BossSoul(KillableEnemy):
             surface.blit(pg.transform.flip(self.mask_img, self.flipx, False), (self.pos[0] - offset[0] + self.anim_offset[0], self.pos[1] - offset[1] + self.anim_offset[1] - self.wiggle_offset))
 
     def check_time(self, current_time):
-        if not int(current_time) == 0 and int(current_time) % 10 == 0 and not self.got_hit:
+        if not int(current_time) == 0 and int(current_time) % 40 == 0 and not self.got_hit:
             self.is_triggered = True
 
     def take_damage(self, damage_amount):

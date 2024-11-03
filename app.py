@@ -207,8 +207,8 @@ class Game:
             "heal" : pg.mixer.Sound('Assets/Sfxs/Heal.wav'),
             "reload" : pg.mixer.Sound('Assets/Sfxs/Reload.wav'),
             "player_hurt" : pg.mixer.Sound('Assets/Sfxs/PlayerHurt.wav'),
-            "gameover" : pg.mixer.Sound('Assets/Sfxs/GameOver.mp3'),
-            "gamewon" : pg.mixer.Sound('Assets/Sfxs/GameWin.wav'),
+            "gamewon" : pg.mixer.Sound('Assets/Sfxs/GameOver.mp3'),
+            "gameover" : pg.mixer.Sound('Assets/Sfxs/GameWin.wav'),
             "explosion" : pg.mixer.Sound("Assets/Sfxs/Explosion.wav"),
             "cannon_fire" : pg.mixer.Sound("Assets/Sfxs/CannonFire.wav"),
             "ufo_attack" : pg.mixer.Sound("Assets/Sfxs/UfoAttack.wav"),
@@ -217,12 +217,16 @@ class Game:
         }
 
         self.bgm = {
-            "main_title" : pg.mixer.Sound("Assets/Bgms/Lab.mp3"),
+            "main_title" : pg.mixer.Sound("Assets/Bgms/GameTitle.wav"),
             "run1" : pg.mixer.Sound("Assets/Bgms/Run1.mp3"),
             "run2" : pg.mixer.Sound("Assets/Bgms/Run2.wav"),
             "world" : pg.mixer.Sound("Assets/Bgms/World.wav"),
             "result" : pg.mixer.Sound("Assets/Bgms/GameResult.ogg"),
-            "dogam" : pg.mixer.Sound("Assets/Bgms/Dogam.wav")
+            "dogam" : pg.mixer.Sound("Assets/Bgms/Dogam.wav"),
+            "dialouge" : pg.mixer.Sound("Assets/Bgms/Dialogue.mp3"),
+            "rankings" : pg.mixer.Sound("Assets/Bgms/Rankings.mp3"),
+            "login" : pg.mixer.Sound("Assets/Bgms/Lab.mp3"),
+            "boss" : pg.mixer.Sound("Assets/Bgms/Boss.wav"),
         }
 
         #음량 설정
@@ -884,7 +888,7 @@ class Game:
         bg_x1 = 0
         bg_x2 = bg_width
         rect_surface = pg.Surface(background1.get_size(), pg.SRCALPHA)
-        rect_surface.fill((0, 0, 0, 200))
+        rect_surface.fill((0, 0, 0, 70))
 
         #천장 & 바닥 & 배경
         floor = pg.rect.Rect(0, 700, SCREEN_SCALE[0], 100)
@@ -898,7 +902,7 @@ class Game:
         #일시 정지 UI
         pause_bg = background1
         pause_rect_surface = pg.Surface(pause_bg.get_size(), pg.SRCALPHA)
-        pause_rect_surface.fill((100, 100, 100, 10))
+        pause_rect_surface.fill((0, 0, 0, 200))
         esc_time = 35
         esc_pressing = False
         current_esc_time = 0
@@ -909,7 +913,7 @@ class Game:
         end_pos = (1520, 22)
         start_time = time.time()
 
-        self.set_bgm(f"run{random.randint(1, 2)}")
+        self.set_bgm("boss")
 
         #보스
         boss = Boss(self, "boss", (1200, 150), (500, 500), (500, 500), 5000, self.assets["props"]["boss/arm"], self.current_level_data["damages"]["boss_bullet_damage"], self.current_level_data["speed"]["boss_bullet_speed"], self.current_level_data["attack_chance"]["boss_attack_chance"], (280, 190))
@@ -942,7 +946,7 @@ class Game:
                 self.screen.blit(rect_surface, (0, 0))
 
                 #UI렌더
-                stat_ui.text = f"남은 탄: {self.player.ammo} | {self.score} | 거대 괴물로부터 남은 거리 : {self.player.health}cm"
+                stat_ui.text = f"남은 탄: {self.player.ammo} | {self.score} | HP : {self.player.health}"
                 #self.screen.blit(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), (0, 700))
                 #self.screen.blit(pg.transform.flip(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), False, True), (0, 0))
                 #self.screen.blit(pg.transform.flip(pg.transform.rotate(self.assets["ui"]["bottom_fade"], 90), True, False), (0, 0))
@@ -1324,7 +1328,9 @@ class Game:
 
         bg = self.assets["bg"]["office/1"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
-        rect_surface.fill((0, 0, 0, 200)) 
+        rect_surface.fill((0, 0, 0, 200))
+
+        self.set_bgm("login")
 
         while True:
             self.screen.fill("black")
@@ -1518,6 +1524,8 @@ class Game:
         bg = self.assets["bg"]["office/0"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
         rect_surface.fill((0, 0, 0, 200))
+
+        self.set_bgm("rankings")
 
         while True:
             self.screen.fill("black")
@@ -1742,9 +1750,12 @@ class Game:
     def state_cut_scene(self, images, func):
         current_index = 0
         cutscene_len = len(images) - 1
-        cutscene_time = 10
+        cutscene_time = 40
         cutscene_current_time = 0
         can_next = False
+
+        self.set_bgm("dialouge")
+
         while True:
             self.screen.fill("black")
             self.camera.fill("black")
