@@ -1,13 +1,13 @@
 {
     "is_first_play": false,
     "high_scores": {
-        "BigBreakOut": 34000,
+        "BigBreakOut": 37000,
         "1": 55500,
-        "2": 0,
+        "2": 35000,
         "3": 0,
         "4": 0,
         "5": 0,
-        "6": 50000,
+        "6": 58000,
         "Boss": 112000
     },
     "key_bindings": {

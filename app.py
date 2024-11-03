@@ -1184,7 +1184,7 @@ class Game:
         bg = self.assets["bg"][f"{self.current_level_data["bg_name"]}/0"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
         rect_surface.fill((0, 0, 0, 200))
-
+        
         self.uis.append(TextUi("탈출 성공!" if won else "탈출실패..", (300, 50), self.fonts["aggro"], 100, "white"))
         self.uis.append(TextUi(f"{self.score}점", (300, 200), self.fonts["aggro"], 55, "white"))
 
@@ -1201,11 +1201,46 @@ class Game:
 
         if self.score > self.status["high_scores"][f"{self.current_level_data["level_index"]}"]:
             set_data("Status.json", f"high_scores/{self.current_level_data['level_index']}", self.score)
+
+        #db에 기록 저장
+        if self.current_level_data["level_index"] == "BigBreakOut":
+            tokenFile = open("token.txt", "r")
+            token = tokenFile.read()
+
+            try:
+                # ID 토큰을 검증하여 사용자 정보 가져오기
+                decoded_token = auth.verify_id_token(token, clock_skew_seconds=30)
+                uid = decoded_token['uid']
+                user = auth.get_user(uid)
+                userDoc_ref = db.collection("users").document(user.uid)
+                userData = userDoc_ref.get()
+
+                #기존 자신의 랭킹 정보 불러오기
+                doc_ref = db.collection("ranking").document(userData.to_dict()["name"])
+                doc = doc_ref.get()
+
+                if doc.exists:
+                    #기존 기록보다 좋을 때만 변경
+                    if self.score > doc.to_dict()["score"]:
+                        data = {
+                            "score" : self.score
+                        }
+                        doc_ref.set(data)
+                else:
+                    data = {
+                        "score" : self.score
+                    }
+                    doc_ref.set(data)
+                    
+            except Exception as e:
+                print("Error verifying ID token:", e)
         
         self.status = load_data("Status.json")
         self.uis.append(TextUi(f"최고 점수 : {self.status["high_scores"][f"{self.current_level_data["level_index"]}"]}점", (300, 260), self.fonts["aggro"], 32, "white"))
 
         self.set_bgm("result")
+
+        self.score = 0
 
         while True:
             self.screen.fill("black")
@@ -1538,13 +1573,11 @@ class Game:
         #[["닉네임", 점수], ["닉네임", 점수]]
 
         rankingDatas = db.collection("ranking").stream()
-
         players = []
 
         for doc in rankingDatas:
-            players.app
-
-        players = [["nickname1", 100000], ["nickname2", 10000]]
+            players.append([doc.id, doc.to_dict()["score"]])
+            
         players.sort(key=lambda x: x[1], reverse=True)
         for plr in players:
             rank = TextUi(str(list.index(players, plr) + 1), (500, 150 + margin * list.index(players, plr)), self.fonts["aggro"], 40, "white")
@@ -1933,37 +1966,6 @@ class Game:
         self.camera_shake_gain += 10
 
         if self.player.health <= 0:
-            if self.current_level_data["level_index"] == "BigBreakOut":
-                tokenFile = open("token.txt", "r")
-                token = tokenFile.read()
-
-                try:
-                    # ID 토큰을 검증하여 사용자 정보 가져오기
-                    decoded_token = auth.verify_id_token(token, clock_skew_seconds=30)
-                    uid = decoded_token['uid']
-                    user = auth.get_user(uid)
-
-                    userDoc_ref = db.collection("users").document(user.uid)
-                    userData = userDoc_ref.get()
-
-                    doc_ref = db.collection("ranking").document(userData.to_dict()["name"])
-                    doc = doc_ref.get()
-
-                    if doc.exists:
-                        if self.score > doc.to_dict()["score"]:
-                            data = {
-                                "score" : self.score
-                            }
-                            doc_ref.set(data)
-                    else:
-                        data = {
-                            "score" : self.score
-                        }
-                        doc_ref.set(data)
-                    
-                except Exception as e:
-                    print("Error verifying ID token:", e)
-
             self.end_scene()
             self.state_game_result(False)
         else:
