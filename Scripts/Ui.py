@@ -13,9 +13,28 @@ class TextUi:
 
     def update(self):
         self.render_surf = pg.font.Font(self.font, self.text_size).render(self.text, True, self.color)
+        self.render_surf = self.render_surf.convert_alpha()
 
     def render(self, surface):
         surface.blit(self.render_surf, self.pos)
+
+class VanishingTextUi(TextUi):
+    def __init__(self, game, text, pos, font, text_size, color, static_time, vanish_speed):
+        super().__init__(text, pos, font, text_size, color)
+        self.game = game
+        self.static_time = static_time
+        self.current_static_time = static_time
+        self.vanish_spd = vanish_speed
+        self.alpha = 255
+
+    def update(self):
+        if self.current_static_time > 0:
+            self.current_static_time -= 1
+        if self.current_static_time <= 0:
+            self.alpha -= self.vanish_spd
+            self.render_surf.set_alpha(self.alpha)
+        if self.alpha < 0:
+            self.game.uis.remove(self)
 
 class LinkUi(TextUi):
     def __init__(self, text, pos, font, text_size, color, hover_color, hover_audio : pg.mixer.Sound, link : str):
@@ -174,6 +193,8 @@ class Slider:
 
         self.bg = pg.Rect(self.center_left, self.top, self.size.x, self.size.y)
         self.btn = pg.Rect(self.center_left + self.init_val, self.top - 5, self.btn_size.x, self.btn_size.y)
+
+        
 
     def update(self):
         mouse_pos = pg.mouse.get_pos()

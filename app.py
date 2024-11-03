@@ -10,7 +10,7 @@ from Scripts.Shadows import Shadow
 from Scripts.Entities import Player, Entity, KillableEnemy, Obstacle, Ratbit, Helli, Brook, BlugLogger, Medicine, Ammo, Boss, Ufo, BossSoul
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
-from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField, Slider
+from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField, Slider, VanishingTextUi
 from Scripts.Bullets import Bullet, PlayerBullet, BossBullet
 
 import firebase_admin
@@ -86,17 +86,17 @@ class Game:
                 "quit_bg" : load_image("UI/QuitBg.png"),
                 "dogam_bg" : load_image("UI/DogamBg.png"),
                 "setting_bg" : load_image("UI/SettingBg.png"),
+                "login_bg" : load_image("UI/Login.png"),
 
                 "credits_서준범_icon" : load_image("서준범.png"),
                 "credits_이준영_icon" : load_image("못밤.png"),
+                "credits_motbam_icon" : load_image("UI/CupMotbam.png"),
 
                 "node" : load_image("UI/Node.png"),
                 "exit_node" : load_image("UI/ExitNode.png"),
                 "locked_node" : load_image("UI/Locked.png"),
 
                 "pawn" : load_image("UI/Pawn.png"),
-
-                "me" : load_image("UI/Me.png")
 
             },
 
@@ -181,6 +181,7 @@ class Game:
             "cutscenes" : {
                 "start" : load_images("Cutscenes/Start"),
                 "boss_intro" : load_images("Cutscenes/BossStart"),
+                "boss_end" : load_images("Cutscenes/BossEnd"),
             },
 
             "dogam" : {
@@ -207,8 +208,8 @@ class Game:
             "heal" : pg.mixer.Sound('Assets/Sfxs/Heal.wav'),
             "reload" : pg.mixer.Sound('Assets/Sfxs/Reload.wav'),
             "player_hurt" : pg.mixer.Sound('Assets/Sfxs/PlayerHurt.wav'),
-            "gamewon" : pg.mixer.Sound('Assets/Sfxs/GameOver.mp3'),
-            "gameover" : pg.mixer.Sound('Assets/Sfxs/GameWin.wav'),
+            "gamewon" : pg.mixer.Sound('Assets/Sfxs/GameWin.wav'),
+            "gameover" : pg.mixer.Sound('Assets/Sfxs/GameOver.mp3'),
             "explosion" : pg.mixer.Sound("Assets/Sfxs/Explosion.wav"),
             "cannon_fire" : pg.mixer.Sound("Assets/Sfxs/CannonFire.wav"),
             "ufo_attack" : pg.mixer.Sound("Assets/Sfxs/UfoAttack.wav"),
@@ -234,8 +235,7 @@ class Game:
 
         #게임 폰트
         self.fonts = {
-            "galmuri" : 'Assets/Fonts/Galmuri11-Bold.ttf',
-            "aggro" : "Assets/Fonts/SB 어그로 B.ttf"
+            "aggro" : 'Assets/Fonts/SB 어그로 B.ttf',
         }
 
         self.physic_rects = []
@@ -270,7 +270,7 @@ class Game:
                 self.particles.remove(particle)
     
     def manage_ui(self):
-        fps_ui = TextUi(f"FPS : {int(self.clock.get_fps())}", (1540, 0), self.fonts["galmuri"], 12, "white")
+        fps_ui = TextUi(f"FPS : {int(self.clock.get_fps())}", (1540, 0), self.fonts["aggro"], 12, "white")
         fps_ui.render(self.screen)
 
         for ui in self.uis:
@@ -459,7 +459,7 @@ class Game:
             except Exception as e:
                 print("Error verifying ID token:", e)
 
-        login_btn = TextButton(doc.to_dict()["name"] if token and user else "<로그인해주세요 현재 : 익명", self.fonts["galmuri"], 30, (30, 560), self.sfxs["ui_hover"], "yellow", "blue")
+        login_btn = TextButton(doc.to_dict()["name"] if token and user else "<로그인해주세요 현재 : 익명", self.fonts["aggro"], 30, (30, 560), self.sfxs["ui_hover"], "yellow", "blue")
         self.uis.append(login_btn)
 
         hover_image = pg.Surface((100, 100))
@@ -541,7 +541,7 @@ class Game:
                     self.state_settings()
             #로그인
             if login_btn.hovering:
-                hover_image = self.assets["ui"]["me"]
+                hover_image = self.assets["ui"]["login_bg"]
                 if mouse_click and token == "":
                     self.end_scene()
                     self.state_login_menu()
@@ -627,7 +627,7 @@ class Game:
         self.physic_rects = [floor, ceil]
 
         #ui
-        stat_ui = TextUi("", (50, 30), self.fonts["galmuri"], 30, "white")
+        stat_ui = TextUi("", (50, 30), self.fonts["aggro"], 30, "white")
         self.uis.append(stat_ui)
 
         #일시 정지 UI
@@ -637,7 +637,7 @@ class Game:
         esc_time = 35
         esc_pressing = False
         current_esc_time = 0
-        esc_txt = TextUi("ESC를 꾹눌러 월드로 돌아가기", (100, 490), self.fonts["galmuri"], 20, "white")
+        esc_txt = TextUi("ESC를 꾹눌러 월드로 돌아가기", (100, 490), self.fonts["aggro"], 20, "white")
 
         duration = self.current_level_data["level_length"]
         start_pos = (1000, 22)
@@ -801,10 +801,10 @@ class Game:
                 pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
                 self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
 
-                paused_txt = TextUi("일시정지", (100, 300), self.fonts["galmuri"], 100, "white")
+                paused_txt = TextUi("일시정지", (100, 300), self.fonts["aggro"], 100, "white")
                 paused_txt.update()
                 paused_txt.render(self.screen)
-                space_txt = TextUi("스페이스바로 게임으로 돌아가기", (100, 420), self.fonts["galmuri"], 30, "white")
+                space_txt = TextUi("스페이스바로 게임으로 돌아가기", (100, 420), self.fonts["aggro"], 30, "white")
                 space_txt.update()
                 space_txt.render(self.screen)
                 esc_txt.update()
@@ -896,7 +896,7 @@ class Game:
         self.physic_rects = [floor, ceil]
 
         #ui
-        stat_ui = TextUi("", (50, 30), self.fonts["galmuri"], 30, "white")
+        stat_ui = TextUi("", (50, 30), self.fonts["aggro"], 30, "white")
         self.uis.append(stat_ui)
 
         #일시 정지 UI
@@ -906,7 +906,7 @@ class Game:
         esc_time = 35
         esc_pressing = False
         current_esc_time = 0
-        esc_txt = TextUi("ESC를 꾹눌러 월드로 돌아가기", (100, 490), self.fonts["galmuri"], 20, "white")
+        esc_txt = TextUi("ESC를 꾹눌러 월드로 돌아가기", (100, 490), self.fonts["aggro"], 20, "white")
 
         duration = self.current_level_data["level_length"]
         start_pos = (1000, 22)
@@ -921,6 +921,8 @@ class Game:
         boss_soul = BossSoul(self, "world_doom", (1100, 300), (150, 150), (150, 150), 100, self.current_level_data["speed"]["world_doom_speed"])
         self.entities.append(boss_soul)
         self.boss_died = False
+
+        self.uis.append(VanishingTextUi(self, "A, D로 움직이기", (650, 730), self.fonts["aggro"], 40, "white", 60, 5))
 
         while(True):
             #update:
@@ -964,7 +966,8 @@ class Game:
                 #레벨 승리
                 if self.boss_died:
                     self.end_scene()
-                    self.state_game_result(True)
+                    self.state_cut_scene(self.assets["cutscenes"]["boss_end"], self.state_game_result)
+                    
 
                 boss_soul.check_time(elapsed_time)
                 self.spawn_boss_entity()
@@ -1024,10 +1027,10 @@ class Game:
                 pg.draw.rect(self.screen, "black", (0, 0, 300, SCREEN_SCALE[1]))
                 self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (300, 0))
 
-                paused_txt = TextUi("일시정지", (100, 300), self.fonts["galmuri"], 100, "white")
+                paused_txt = TextUi("일시정지", (100, 300), self.fonts["aggro"], 100, "white")
                 paused_txt.update()
                 paused_txt.render(self.screen)
-                space_txt = TextUi("스페이스바로 게임으로 돌아가기", (100, 420), self.fonts["galmuri"], 30, "white")
+                space_txt = TextUi("스페이스바로 게임으로 돌아가기", (100, 420), self.fonts["aggro"], 30, "white")
                 space_txt.update()
                 space_txt.render(self.screen)
                 esc_txt.update()
@@ -1187,7 +1190,7 @@ class Game:
             pg.display.flip()
 
     #게임 종료
-    def state_game_result(self, won = False):
+    def state_game_result(self, won = True):
         
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (1000, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
@@ -1207,8 +1210,12 @@ class Game:
                 set_data("Status.json", "level", 7)
             else:
                 set_data("Status.json", "level", max(int(self.current_level_data["level_index"]) + 1, int(self.status["level"])))
-        if self.score > self.status["high_scores"][f"{self.current_level_data["level_index"]}"]:
+        else:
+            print("짐 ㅋ")
             self.sfxs["gameover"].play()
+            
+
+        if self.score > self.status["high_scores"][f"{self.current_level_data["level_index"]}"]:
             set_data("Status.json", f"high_scores/{self.current_level_data['level_index']}", self.score)
         
         self.status = load_data("Status.json")
@@ -1256,14 +1263,14 @@ class Game:
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (70, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
 
-        self.uis.append(TextUi("98세 못밤할아버지의 마지막 물 한모금 팀", (600, 50), self.fonts["galmuri"], 50, "white"))
+        self.uis.append(TextUi("98세 못밤할아버지의 마지막 물 한모금 팀", (600, 50), self.fonts["aggro"], 50, "white"))
 
-        self.uis.append(TextUi("서준범", (830, 220), self.fonts["galmuri"], 50, "white"))
-        self.uis.append(LinkUi("깃허브", (850, 520), self.fonts["galmuri"], 40, "white", "blue", self.sfxs["ui_hover"], "https://github.com/Un-Uclied"))
-        self.uis.append(LinkUi("유튜브", (850, 600), self.fonts["galmuri"], 40, "white", "blue", self.sfxs["ui_hover"], "https://www.youtube.com/@null_plr/featured"))
+        self.uis.append(TextUi("서준범", (830, 220), self.fonts["aggro"], 50, "white"))
+        self.uis.append(LinkUi("깃허브", (850, 520), self.fonts["aggro"], 40, "white", "blue", self.sfxs["ui_hover"], "https://github.com/Un-Uclied"))
+        self.uis.append(LinkUi("유튜브", (850, 600), self.fonts["aggro"], 40, "white", "blue", self.sfxs["ui_hover"], "https://www.youtube.com/@null_plr/featured"))
 
-        self.uis.append(TextUi("이준영", (1130, 220), self.fonts["galmuri"], 50, "white"))
-        self.uis.append(LinkUi("깃허브", (1150, 520), self.fonts["galmuri"], 40, "white", "blue", self.sfxs["ui_hover"], ""))
+        self.uis.append(TextUi("이준영    (<-못밤)", (1130, 220), self.fonts["aggro"], 50, "white"))
+        self.uis.append(LinkUi("깃허브", (1150, 520), self.fonts["aggro"], 40, "white", "blue", self.sfxs["ui_hover"], ""))
 
         bg = self.assets["bg"]["office/1"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
@@ -1283,6 +1290,7 @@ class Game:
 
             self.screen.blit(self.assets["ui"]["credits_서준범_icon"], (800, 300))
             self.screen.blit(self.assets["ui"]["credits_이준영_icon"], (1100, 300))
+            self.screen.blit(pg.transform.scale(self.assets["ui"]["credits_motbam_icon"], (100, 100)), (470, 30))
 
             mouse_click = pg.mouse.get_pressed(3)[0]
             if quit_btn.hovering and mouse_click:
@@ -1310,21 +1318,21 @@ class Game:
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (70, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
 
-        email = InputField((750, 200), (500, 50), self.fonts["galmuri"], 30, "black", "white")
+        email = InputField((750, 200), (500, 50), self.fonts["aggro"], 30, "black", "white")
         self.uis.append(email)
-        password = InputField((750, 300), (500, 50), self.fonts["galmuri"], 30, "black", "white", True)
+        password = InputField((750, 300), (500, 50), self.fonts["aggro"], 30, "black", "white", True)
         self.uis.append(password)
 
-        self.uis.append(TextUi("로그인", (500, 50), self.fonts["galmuri"], 60, "white"))
-        self.uis.append(TextUi("이메일 : ", (500, 200), self.fonts["galmuri"], 40, "white"))
-        self.uis.append(TextUi("비밀번호 : ", (500, 300), self.fonts["galmuri"], 40, "white"))
+        self.uis.append(TextUi("로그인", (500, 50), self.fonts["aggro"], 60, "white"))
+        self.uis.append(TextUi("이메일 : ", (500, 200), self.fonts["aggro"], 40, "white"))
+        self.uis.append(TextUi("비밀번호 : ", (500, 300), self.fonts["aggro"], 40, "white"))
 
-        send_btn = TextButton("로그인!", self.fonts["galmuri"], 35, (500, 500), self.sfxs["ui_hover"], "yellow", "blue")
+        send_btn = TextButton("로그인!", self.fonts["aggro"], 35, (500, 500), self.sfxs["ui_hover"], "yellow", "blue")
         self.uis.append(send_btn)
-        create_btn = TextButton("전 계정이 없어요!", self.fonts["galmuri"], 35, (500, 600), self.sfxs["ui_hover"], "yellow", "blue")
+        create_btn = TextButton("전 계정이 없어요!", self.fonts["aggro"], 35, (500, 600), self.sfxs["ui_hover"], "yellow", "blue")
         self.uis.append(create_btn)
 
-        error = TextUi("", (500, 350), self.fonts["galmuri"], 35, "red")
+        error = TextUi("", (500, 350), self.fonts["aggro"], 35, "red")
 
         bg = self.assets["bg"]["office/1"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
@@ -1402,29 +1410,29 @@ class Game:
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (70, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
 
-        email = InputField((850, 200), (500, 50), self.fonts["galmuri"], 30, "black", "white")
+        email = InputField((850, 200), (500, 50), self.fonts["aggro"], 30, "black", "white")
         self.uis.append(email)
-        password = InputField((850, 300), (500, 50), self.fonts["galmuri"], 30, "black", "white", True)
+        password = InputField((850, 300), (500, 50), self.fonts["aggro"], 30, "black", "white", True)
         self.uis.append(password)
-        passwordCheck = InputField((850, 400), (500, 50), self.fonts["galmuri"], 30, "black", "white", True)
+        passwordCheck = InputField((850, 400), (500, 50), self.fonts["aggro"], 30, "black", "white", True)
         self.uis.append(passwordCheck)
-        nickname = InputField((850, 500), (500, 50), self.fonts["galmuri"], 30, "black", "white")
+        nickname = InputField((850, 500), (500, 50), self.fonts["aggro"], 30, "black", "white")
         self.uis.append(nickname)
 
-        self.uis.append(TextUi("계정 생성", (500, 50), self.fonts["galmuri"], 60, "white"))
-        self.uis.append(TextUi("이메일 : ", (500, 200), self.fonts["galmuri"], 40, "white"))
-        self.uis.append(TextUi("비밀번호 : ", (500, 300), self.fonts["galmuri"], 40, "white"))
-        self.uis.append(TextUi("비밀번호 확인 : ", (500, 400), self.fonts["galmuri"], 40, "white"))
-        self.uis.append(TextUi("닉네임 : ", (500, 500), self.fonts["galmuri"], 40, "white"))
+        self.uis.append(TextUi("계정 생성", (500, 50), self.fonts["aggro"], 60, "white"))
+        self.uis.append(TextUi("이메일 : ", (500, 200), self.fonts["aggro"], 40, "white"))
+        self.uis.append(TextUi("비밀번호 : ", (500, 300), self.fonts["aggro"], 40, "white"))
+        self.uis.append(TextUi("비밀번호 확인 : ", (500, 400), self.fonts["aggro"], 40, "white"))
+        self.uis.append(TextUi("닉네임 : ", (500, 500), self.fonts["aggro"], 40, "white"))
 
-        send_btn = TextButton("계정 만들기", self.fonts["galmuri"], 35, (500, 650), self.sfxs["ui_hover"], "yellow", "blue")
+        send_btn = TextButton("계정 만들기", self.fonts["aggro"], 35, (500, 650), self.sfxs["ui_hover"], "yellow", "blue")
         self.uis.append(send_btn)
 
         bg = self.assets["bg"]["office/1"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
         rect_surface.fill((0, 0, 0, 200)) 
 
-        error = TextUi("", (500, 550), self.fonts["galmuri"], 35, "red")
+        error = TextUi("", (500, 550), self.fonts["aggro"], 35, "red")
         self.uis.append(error)
 
         while True:
@@ -1577,7 +1585,7 @@ class Game:
         explain_texts = []
         bigo_texts = []
 
-        self.uis.append(TextUi("(<- or A , -> or D)로 넘기기", (750, 700), self.fonts["galmuri"], 35, "black"))
+        self.uis.append(VanishingTextUi(self, "(<- or A , -> or D)로 넘기기", (650, 730), self.fonts["aggro"], 40, "black", 60, 5))
 
         self.set_bgm("dogam")
 
@@ -1685,9 +1693,9 @@ class Game:
         
         self.uis.append(TextUi("설정", (300, 50), self.fonts["aggro"], 70, "white"))
 
-        sfx_vol = TextUi("효과음 음량 : {}".format(int(self.status["sfx_volume"] * 100)), (400, 200), self.fonts["galmuri"], 50, "white")
+        sfx_vol = TextUi("효과음 음량 : {}".format(int(self.status["sfx_volume"] * 100)), (400, 200), self.fonts["aggro"], 50, "white")
         self.uis.append(sfx_vol)
-        bgm_vol = TextUi("배경음악 음량 : {}".format(int(self.status["bgm_volume"] * 100)), (400, 400), self.fonts["galmuri"], 50, "white")
+        bgm_vol = TextUi("배경음악 음량 : {}".format(int(self.status["bgm_volume"] * 100)), (400, 400), self.fonts["aggro"], 50, "white")
         self.uis.append(bgm_vol)
 
         sfx_slider = Slider((700, 600), (500, 50), self.status["sfx_volume"], 0, 1)
@@ -1750,7 +1758,7 @@ class Game:
     def state_cut_scene(self, images, func):
         current_index = 0
         cutscene_len = len(images) - 1
-        cutscene_time = 40
+        cutscene_time = 10
         cutscene_current_time = 0
         can_next = False
 

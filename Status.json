@@ -2,15 +2,15 @@
     "is_first_play": false,
     "high_scores": {
         "BigBreakOut": 0,
-        "1": 0,
+        "1": 55500,
         "2": 0,
         "3": 0,
         "4": 0,
         "5": 0,
-        "6": 0,
-        "Boss": 0
+        "6": 50000,
+        "Boss": 112000
     },
     "level": 7,
-    "sfx_volume": 1,
-    "bgm_volume": 0.5
+    "sfx_volume": 0.6020408163265306,
+    "bgm_volume": 0.6020408163265306
 }

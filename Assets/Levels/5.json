@@ -16,7 +16,7 @@
     "attack_chance" : {"helli_attack_chance" : 75},
 
     "bg_name" : "horror_office",
-    "level_name" : "연구실동 C",
+    "level_name" : "연구실동 A",
     "level_length" : 160,
     "level_index" : "5"
 }

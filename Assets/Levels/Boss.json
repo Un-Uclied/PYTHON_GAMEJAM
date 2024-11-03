@@ -5,18 +5,18 @@
 
     "scores" : {"ufo_add_score" : 7000},
 
-    "damages" : {"cannon_damage" : 20, "ufo_damage" : 20, "boss_bullet_damage" : 20},
+    "damages" : {"cannon_damage" : 20, "ufo_damage" : 20, "boss_bullet_damage" : 10},
     
     "healths" : {"ufo_health" : 80},
 
     "amount" : {"heal_amount" : 100, "ammo_amount" : 35},
 
-    "speed" : {"boss_bullet_speed" : 25, "cannon_speed" : 35, "world_doom_speed" : 540, "ufo_move_speed" : 10 ,"ufo_attack_speed" : 260},
+    "speed" : {"boss_bullet_speed" : 25, "cannon_speed" : 30, "world_doom_speed" : 540, "ufo_move_speed" : 10 ,"ufo_attack_speed" : 200},
 
     "attack_chance" : {"boss_attack_chance" : 100},
 
     "bg_name" : "desert",
     "level_name" : "연구실 외부",
-    "level_length" : 200,
+    "level_length" : 170,
     "level_index" : "Boss"
 }
