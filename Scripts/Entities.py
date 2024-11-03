@@ -573,7 +573,6 @@ class Ammo(Entity):
 class Boss(Enemy):
     def __init__(self, game, name, pos, size, anim_size ,max_health, gun_img : pg.Surface, attack_damage, bullet_speed, attack_chance, offset = (0, 0)):
         super().__init__(game, name, pos, size, anim_size, attack_damage)
-        self.state = "idle"
         #Status / number
         self.max_health = 6
         self.health = 6
@@ -677,7 +676,7 @@ class BossSoul(KillableEnemy):
             surface.blit(pg.transform.flip(self.mask_img, self.flipx, False), (self.pos[0] - offset[0] + self.anim_offset[0], self.pos[1] - offset[1] + self.anim_offset[1] - self.wiggle_offset))
 
     def check_time(self, current_time):
-        if int(current_time) % 40 == 0:
+        if not int(current_time) == 0 and int(current_time) % 40 == 0:
             self.is_triggered = True
 
     def take_damage(self, damage_amount):
@@ -735,19 +734,32 @@ class Ufo(FollowingEnemy):
             if self.current_lazer_time < self.lazer_time:
                 self.current_lazer_time += 1
             else:
+                self.attacked = False
                 self.attacking = False
-                self.attacking = False
-                self.destroy()
-                self.game.entities.remove(self)
+                self.current_target_speed = 0
+                self.current_term_speed = 0
+                self.current_lazer_time = 0
         
         if self.attacking and self.lazer.colliderect(self.game.player.get_rect()):
             self.game.on_player_damaged(self.damage)
             self.attacking = False
-            self.destroy()
-            self.game.entities.remove(self)
+            self.current_target_speed = 0
+            self.current_term_speed = 0
+            self.current_lazer_time = 0
 
     def take_damage(self, damage_amount):
-        return
+        self.health -= damage_amount
+        
+        if self.health <= 0:
+            self.game.on_player_kill(self)
+            self.destroy()
+            if self in self.game.entities : self.game.entities.remove(self)
+        else:
+            self.game.sfxs["enemy_hit"].play()
+            for i in range(10):
+                self.game.sparks.append(Spark(tuple(self.get_center_pos()), math.radians(360) * random.random(), 4, "black"))
+            for i in range(10):
+                self.game.sparks.append(Spark(tuple(self.get_center_pos()), math.radians(360) * random.random(), 4, "green"))
 
     def can_interact(self):
         pass

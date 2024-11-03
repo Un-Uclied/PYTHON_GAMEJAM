@@ -1,11 +1,13 @@
 {   
     "entities" : {"cannon" : true, "ufo" : true, "world_doom" : true, "medicine" : true, "ammo" : true},
 
-    "spawn_rates" : {"cannon_spawn_rate" : 200, "ufo_spawn_rate" : 450, "world_doom_spawn_rate" : 900, "medicine_spawn_rate" : 180, "ammo_spawn_rate" : 180},
+    "spawn_rates" : {"cannon_spawn_rate" : 300, "ufo_spawn_rate" : 550, "medicine_spawn_rate" : 180, "ammo_spawn_rate" : 180},
 
-    "scores" : {},
+    "scores" : {"ufo_add_score" : 7000},
 
-    "damages" : {"cannon_damage" : 30, "ufo_damage" : 30},
+    "damages" : {"cannon_damage" : 20, "ufo_damage" : 20},
+    
+    "healths" : {"ufo_health" : 100},
 
     "amount" : {"heal_amount" : 100, "ammo_amount" : 35},
 

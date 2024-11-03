@@ -395,7 +395,7 @@ class Game:
         
         if self.current_level_data["entities"]["ufo"] and random.randint(1, self.current_level_data["spawn_rates"]["ufo_spawn_rate"]) == 1:
             self.entities.append(Ufo(self, "ufo", (1600, 0), (150, 150), (150, 150),
-                                     self.current_level_data["speed"]["ufo_move_speed"], 1,
+                                     self.current_level_data["speed"]["ufo_move_speed"], self.current_level_data["healths"]["ufo_health"],
                                      self.current_level_data["damages"]["ufo_damage"], self.current_level_data["speed"]["ufo_attack_speed"]))
 
     #타이틀 스크린
