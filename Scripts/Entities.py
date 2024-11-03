@@ -664,6 +664,7 @@ class BossSoul(KillableEnemy):
             if self.current_attack_timer < self.attack_timer:
                 self.current_attack_timer += 1
             else:
+                self.game.sfxs["world_doom"].play()
                 self.attack()
 
         super().update()
@@ -687,6 +688,7 @@ class BossSoul(KillableEnemy):
                 self.destroy()
                 if self in self.game.entities : self.game.entities.remove(self)
                 self.game.sfxs["enemy_dying"].play()
+                self.game.boss_died = True
             else:
                 self.game.sfxs["enemy_hit"].play()
                 for i in range(10):

@@ -210,6 +210,7 @@ class Game:
             "cannon_fire" : pg.mixer.Sound("Assets/Sfxs/CannonFire.wav"),
             "ufo_attack" : pg.mixer.Sound("Assets/Sfxs/UfoAttack.wav"),
             "ufo_explosion" : pg.mixer.Sound("Assets/Sfxs/UfoExplosion.wav"),
+            "world_doom" : pg.mixer.Sound("Assets/Sfxs/WorldDoom.wav"),
         }
 
         self.bgm = {
@@ -300,7 +301,11 @@ class Game:
             if not projectile.tag == "player's bullet" and self.player.get_rect().collidepoint(projectile.pos[0], projectile.pos[1]) and projectile in self.projectiles:
                 #패링 : 적 탄막 => 플레이어 탄막으로 변경
                 if self.player.blocking:
-                    projectile.direction =  pg.math.Vector2(projectile.shoot_by.get_center_pos().x - projectile.pos.x, projectile.shoot_by.get_center_pos().y - projectile.pos.y).normalize() * projectile.speed
+                    #패링
+                    if projectile.shoot_by in self.entities:
+                        projectile.direction =  pg.math.Vector2(projectile.shoot_by.get_center_pos().x - projectile.pos.x, projectile.shoot_by.get_center_pos().y - projectile.pos.y).normalize() * projectile.speed
+                    else:
+                        projectile.direction =  pg.math.Vector2(1, 0).normalize() * projectile.speed
                     self.on_player_blocked()
                     projectile.timer = projectile.max_timer
                     projectile.tag = "player's bullet"
@@ -906,6 +911,7 @@ class Game:
         self.entities.append(boss)
         boss_soul = BossSoul(self, "world_doom", (1100, 300), (150, 150), (150, 150), 100, self.current_level_data["speed"]["world_doom_speed"])
         self.entities.append(boss_soul)
+        self.boss_died = False
 
         while(True):
             #update:
@@ -946,7 +952,7 @@ class Game:
                 self.screen.blit(pg.transform.scale(self.assets["ui"]["pawn"], (60, 60)), (current_pos[0] - 30, current_pos[1]))
 
                 #레벨 승리
-                if elapsed_time >= duration:
+                if self.boss_died:
                     self.end_scene()
                     self.state_game_result(True)
 
@@ -1186,7 +1192,10 @@ class Game:
 
         if won:
             self.sfxs["gamewon"].play()
-            set_data("Status.json", "level", max(int(self.current_level_data["level_index"]) + 1, int(self.status["level"])))
+            if self.current_level_data["level_index"] == "Boss":
+                set_data("Status.json", "level", 7)
+            else:
+                set_data("Status.json", "level", max(int(self.current_level_data["level_index"]) + 1, int(self.status["level"])))
         if self.score > self.status["high_scores"][f"{self.current_level_data["level_index"]}"]:
             self.sfxs["gameover"].play()
             set_data("Status.json", f"high_scores/{self.current_level_data['level_index']}", self.score)
