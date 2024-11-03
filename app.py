@@ -1548,6 +1548,10 @@ class Game:
 
         self.uis.append(TextUi("랭킹               닉네임                            점수", (500, 30), self.fonts["aggro"], 40, "white"))
 
+        #[["닉네임", 점수], ["닉네임", 점수]]
+        players = [["nickname1", 100000], ["nickname2", 10000]]
+        players = players.sort(key=lambda x: x[1], reverse=True)
+
         self.set_bgm("rankings")
 
         while True:
