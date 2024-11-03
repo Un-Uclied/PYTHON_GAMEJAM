@@ -215,6 +215,8 @@ class Game:
             "ufo_attack" : pg.mixer.Sound("Assets/Sfxs/UfoAttack.wav"),
             "ufo_explosion" : pg.mixer.Sound("Assets/Sfxs/UfoExplosion.wav"),
             "world_doom" : pg.mixer.Sound("Assets/Sfxs/WorldDoom.wav"),
+            "world_doom_start" : pg.mixer.Sound("Assets/Sfxs/WorldDoomStart.wav"),
+            "world_doom_cancel" : pg.mixer.Sound("Assets/Sfxs/WorldDoomCancel.wav"),
         }
 
         self.bgm = {
@@ -227,7 +229,7 @@ class Game:
             "dialouge" : pg.mixer.Sound("Assets/Bgms/Dialogue.mp3"),
             "rankings" : pg.mixer.Sound("Assets/Bgms/Rankings.mp3"),
             "login" : pg.mixer.Sound("Assets/Bgms/Lab.mp3"),
-            "boss" : pg.mixer.Sound("Assets/Bgms/Boss.wav"),
+            "boss" : pg.mixer.Sound("Assets/Bgms/Boss.wav")
         }
 
         #음량 설정

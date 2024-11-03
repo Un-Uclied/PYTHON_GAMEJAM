@@ -663,6 +663,8 @@ class BossSoul(KillableEnemy):
         self.wiggle_offset = math.sin(tween_value * math.pi * 2) * self.wiggle_amount
 
         if self.is_triggered:
+            if self.current_attack_timer == 0:
+                self.game.sfxs["world_doom_start"].play()
             if self.current_attack_timer < self.attack_timer:
                 self.current_attack_timer += 1
             else:
@@ -700,6 +702,7 @@ class BossSoul(KillableEnemy):
                 self.game.sfxs["enemy_dying"].play()
                 self.game.boss_died = True
             else:
+                self.game.sfxs["world_doom_cancel"].play()
                 self.game.sfxs["enemy_hit"].play()
                 for i in range(10):
                     self.game.sparks.append(Spark(tuple(self.get_center_pos()), math.radians(360) * random.random(), 7, "white"))
