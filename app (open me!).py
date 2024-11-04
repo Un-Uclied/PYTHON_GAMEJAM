@@ -6,7 +6,6 @@ import time
 import json
 
 from Scripts.utils import load_image, load_images, load_data, set_data
-from Scripts.Shadows import Shadow
 from Scripts.Entities import Player, Entity, KillableEnemy, Obstacle, Ratbit, Helli, Brook, BlugLogger, Medicine, Ammo, Boss, Ufo, BossSoul
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
