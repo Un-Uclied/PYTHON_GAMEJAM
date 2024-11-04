@@ -504,6 +504,11 @@ class Game:
                 
             except Exception as e:
                 print("Error verifying ID token:", e)
+                if "expired" in str(e):
+                    tokenFile = open("token.txt", "w")
+                    w = tokenFile.write("")
+                    tokenFile.close()
+                    token = ""
 
         login_btn = TextButton(doc.to_dict()["name"] if token and user else "<로그인해주세요 현재 : 익명", self.fonts["aggro"], 30, (30, 560), self.sfxs["ui_hover"], "yellow", "blue")
         self.uis.append(login_btn)
@@ -1445,9 +1450,9 @@ class Game:
                 else:
                     print("Failed to sign in:", response.json())
                     target = ""
-                    if response.json()["error"]["message"] == 'INVALID_LOGIN_CREDENTIALS':
+                    if response.json()["error"]["message"] == "INVALID_LOGIN_CREDENTIALS":
                         target = "비밀번호 오류!"
-                    elif response.json()["error"]["message"] == 'INVALID_EMAIL':
+                    elif response.json()["error"]["message"] == "INVALID_EMAIL":
                         target = "메일주소가 유효하지 않습니다!"
                     error.text = f"오류! : {target}"
 
@@ -1581,7 +1586,7 @@ class Game:
                         else:
                             print("Failed to sign up:", response.json())
                             target = ""
-                            if response.json()["error"]["message"] == 'INVALID_EMAIL':
+                            if response.json()["error"]["message"] == "INVALID_EMAIL":
                                 target = "메일주소가 유효하지 않습니다!"
                             error.text = f"오류! : {target}"
                     # 비밀번호 확인이 일치하지 않는 경우
@@ -1610,6 +1615,9 @@ class Game:
     
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
+
+    def state_logout(self):
+        pass
 
     #레코드
     def state_records(self):
