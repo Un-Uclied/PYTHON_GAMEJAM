@@ -1,5 +1,5 @@
 {
-    "is_first_play": false,
+    "is_first_play": true,
     "need_to_see_made_by": false,
     "high_scores": {
         "BigBreakOut": 0,

@@ -1628,7 +1628,7 @@ class Game:
                                 # 유저의 정보를 db에 저장
                                 data = {
                                     "name": nickname.text,
-                                    "is_first_play": False,
+                                    "is_first_play": True,
                                     "need_to_see_made_by": False,
                                     "high_scores": {
                                         "BigBreakOut": 0,
@@ -1698,7 +1698,7 @@ class Game:
         tokenFile.close()
 
         clear_data = {
-            "is_first_play": False,
+            "is_first_play": True,
             "need_to_see_made_by": False,
             "high_scores": {
             "BigBreakOut": 0,
