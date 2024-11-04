@@ -503,15 +503,24 @@ class Game:
                 else:
                     print("에러! : 계정 정보 없음")
                 
+            except auth.InvalidIdTokenError:
+                tokenFile = open("token.txt", "w")
+                w = tokenFile.write("")
+                tokenFile.close()
+
             except Exception as e:
                 print("Error verifying ID token:", e)
-                if "expired" in str(e):
-                    tokenFile = open("token.txt", "w")
-                    w = tokenFile.write("")
-                    tokenFile.close()
-                    token = ""
 
         login_btn = TextButton(doc.to_dict()["name"] if token and user else "<로그인해주세요 현재 : 익명", self.fonts["aggro"], 30, (30, 560), self.sfxs["ui_hover"], "yellow", "blue")
+        logout_btn = 0
+        save_data_btn = 0
+        if token and user:
+            logout_btn = TextButton("로그아웃", self.fonts["aggro"], 30, (30, 660), self.sfxs["ui_hover"], "yellow", "blue")
+            self.uis.append(logout_btn)
+            save_data_btn = TextButton("정보 저장", self.fonts["aggro"], 30, (180, 660), self.sfxs["ui_hover"], "yellow", "blue")
+            self.uis.append(save_data_btn)
+
+
         self.uis.append(login_btn)
 
         self.uis.append(VanishingTextUi(self, f"마우스 휠로 메뉴 스크롤", (800, 730), self.fonts["aggro"], 40, "white", 60, 5))
@@ -625,7 +634,13 @@ class Game:
                     if login_btn.hovering and user == 0:
                         self.end_scene()
                         self.state_login_menu()
-                            
+                    #로그아웃
+                    if logout_btn !=0 and logout_btn.hovering:
+                        self.end_scene()
+                        self.state_logout()
+                    #정보 저장
+                    if save_data_btn !=0 and save_data_btn.hovering:
+                        pass
 
             dt = self.clock.tick(TARGET_FPS) / 1000
             elapsed_time += dt
@@ -1618,7 +1633,12 @@ class Game:
             pg.display.flip()
 
     def state_logout(self):
-        pass
+        tokenFile = open("token.txt", "w")
+        w = tokenFile.write("")
+        tokenFile.close()
+
+        self.end_scene()
+        self.state_title_screen()
 
     #레코드
     def state_records(self):
