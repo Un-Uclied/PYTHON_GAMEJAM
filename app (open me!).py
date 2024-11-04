@@ -455,6 +455,7 @@ class Game:
         if self.status["need_to_see_made_by"]:
             self.end_scene()
             self.state_made_by()
+            
 
         margin = 150
         y_offset = 0
@@ -1641,6 +1642,7 @@ class Game:
         players = []
 
         for doc in rankingDatas:
+            print([doc.id, doc.to_dict()["score"]])
             players.append([doc.id, doc.to_dict()["score"]])
             
         players.sort(key=lambda x: x[1], reverse=True)
