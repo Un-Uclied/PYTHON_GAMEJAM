@@ -1,6 +1,6 @@
 {
-    "is_first_play": false,
-    "need_to_see_made_by": false,
+    "is_first_play": true,
+    "need_to_see_made_by": true,
     "high_scores": {
         "BigBreakOut": 0,
         "1": 0,
@@ -9,7 +9,7 @@
         "4": 0,
         "5": 0,
         "6": 0,
-        "Boss": 126000
+        "Boss": 0
     },
     "key_bindings": {
         "좌로 움직이기키": 97,
