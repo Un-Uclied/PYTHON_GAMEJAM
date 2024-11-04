@@ -1337,7 +1337,7 @@ class Game:
         self.uis.append(LinkUi("유튜브", (850, 600), self.fonts["aggro"], 40, "white", "blue", self.sfxs["ui_hover"], "https://www.youtube.com/@null_plr/featured"))
 
         self.uis.append(TextUi("이준영    (<-못밤)", (1130, 220), self.fonts["aggro"], 50, "white"))
-        self.uis.append(LinkUi("깃허브", (1150, 520), self.fonts["aggro"], 40, "white", "blue", self.sfxs["ui_hover"], ""))
+        self.uis.append(LinkUi("깃허브", (1150, 520), self.fonts["aggro"], 40, "white", "blue", self.sfxs["ui_hover"], "https://github.com/MicKoreaYoutube"))
 
         bg = self.assets["bg"]["office/1"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
