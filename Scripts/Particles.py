@@ -35,6 +35,7 @@ class Spark:
         self.angle = angle
         self.speed = speed
         self.color = color
+        self.init_len = 3 #스@파이크
     
     def update(self):
         self.pos[0] += math.cos(self.angle) * self.speed
@@ -46,12 +47,16 @@ class Spark:
 
     def render(self, surface, offset=(0,0)):
         render_points = [
-            (self.pos[0] + math.cos(self.angle) * self.speed * 3 - offset[0],
-              self.pos[1] + math.sin(self.angle) * self.speed * 3 - offset[1]),
+            #앞
+            (self.pos[0] + math.cos(self.angle) * self.speed * self.init_len - offset[0],
+              self.pos[1] + math.sin(self.angle) * self.speed * self.init_len - offset[1]),
+            #왼
             (self.pos[0] + math.cos(self.angle + math.pi * 0.5) * self.speed * 0.5 - offset[0],
               self.pos[1] + math.sin(self.angle + math.pi * 0.5) * self.speed * 0.5 - offset[1]),
-            (self.pos[0] + math.cos(self.angle + math.pi) * self.speed * 3 - offset[0],
-              self.pos[1] + math.sin(self.angle + math.pi) * self.speed * 3 - offset[1]),
+            #끝
+            (self.pos[0] + math.cos(self.angle + math.pi) * self.speed * self.init_len - offset[0],
+              self.pos[1] + math.sin(self.angle + math.pi) * self.speed * self.init_len - offset[1]),
+            #오
             (self.pos[0] + math.cos(self.angle - math.pi * 0.5) * self.speed * 0.5 - offset[0],
               self.pos[1] + math.sin(self.angle + math.pi * 0.5) * self.speed * 0.5 - offset[1]),
         ]
