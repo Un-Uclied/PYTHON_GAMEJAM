@@ -10,7 +10,7 @@ from Scripts.Shadows import Shadow
 from Scripts.Entities import Player, Entity, KillableEnemy, Obstacle, Ratbit, Helli, Brook, BlugLogger, Medicine, Ammo, Boss, Ufo, BossSoul
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
-from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField, Slider, VanishingTextUi, KeyInputField
+from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField, Slider, VanishingTextUi, KeyInputField, VanishingImageUi
 from Scripts.Bullets import Bullet, PlayerBullet, BossBullet
 
 import firebase_admin
@@ -78,6 +78,9 @@ class Game:
                 "escape" : load_image("UI/Escape.png"),
                 "dogam" : load_image("UI/Dogam.png"),
                 "setting" : load_image("UI/Settings.png"),
+                "replay" : load_image("UI/Replay.png"),
+                
+                "made_by" : load_image("UI/MadeBy.png"),
 
                 "world_bg" : load_image("UI/WorldBg.png"),
                 "endless_bg" : load_image("UI/EndlessBg.png"),
@@ -217,6 +220,7 @@ class Game:
             "world_doom" : pg.mixer.Sound("Assets/Sfxs/WorldDoom.wav"),
             "world_doom_start" : pg.mixer.Sound("Assets/Sfxs/WorldDoomStart.wav"),
             "world_doom_cancel" : pg.mixer.Sound("Assets/Sfxs/WorldDoomCancel.wav"),
+            "drink" : pg.mixer.Sound("Assets/Sfxs/Drink.mp3"),
         }
 
         self.bgm = {
@@ -412,13 +416,49 @@ class Game:
                                      self.current_level_data["speed"]["ufo_move_speed"], self.current_level_data["healths"]["ufo_health"],
                                      self.current_level_data["damages"]["ufo_damage"], self.current_level_data["speed"]["ufo_attack_speed"]))
 
+    def state_made_by(self):
+        timer = 180
+        self.sfxs["drink"].play()
+        while True:
+            self.screen.fill("black")
+            self.camera.fill("black")
+
+            self.screen.blit(pg.transform.scale(self.assets["ui"]["made_by"], SCREEN_SCALE), (0, 0))
+
+            self.manage_spark()
+            self.manage_particle()
+            self.manage_ui()
+            self.manage_camera_shake()
+
+            if timer <= 0:
+                set_data("Status.json", "need_to_see_made_by", False)
+                self.end_scene()
+                self.state_title_screen()
+            else:
+                timer -= 1
+
+            self.camera.blit(self.screen, self.shake)
+
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    self.end_scene()
+                    pg.quit()
+                    sys.exit()
+    
+            self.clock.tick(TARGET_FPS)
+            pg.display.flip()
+
     #타이틀 스크린
     def state_title_screen(self):
         #start:
+        if self.status["need_to_see_made_by"]:
+            self.end_scene()
+            self.state_made_by()
 
         margin = 150
         y_offset = 0
         scroll_speed = 30
+        btns = []
         map_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 150)), (500, 20), self.sfxs["ui_hover"], 1, 20)
         endless_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["endless"], (200, 150)), (500, 20 + margin), self.sfxs["ui_hover"], 1, 20)
         records_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["records"], (200, 150)), (500, 20 + margin * 2), self.sfxs["ui_hover"], 1, 20)
@@ -427,13 +467,16 @@ class Game:
         setting_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["setting"], (200, 150)), (500, 20 + margin * 5), self.sfxs["ui_hover"], 1, 20)
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (500, 20 + margin * 6), self.sfxs["ui_hover"], 1, 20)
 
-        self.uis.append(map_btn)
-        self.uis.append(endless_btn)
-        self.uis.append(records_btn)
-        self.uis.append(credits_btn)
-        self.uis.append(dogam_btn)
-        self.uis.append(quit_btn)
-        self.uis.append(setting_btn)
+        btns.append(map_btn)
+        btns.append(endless_btn)
+        btns.append(records_btn)
+        btns.append(credits_btn)
+        btns.append(dogam_btn)
+        btns.append(quit_btn)
+        btns.append(setting_btn)
+
+        for btn in btns:
+            self.uis.append(btn)
 
         tokenFile = open("token.txt", "r")
         token = tokenFile.read()
@@ -480,21 +523,17 @@ class Game:
             self.screen.fill("black")
             self.camera.fill("black")
 
-            #pg.draw.rect(self.screen, "white", (0, 0, 1600, 800))
             self.screen.blit(hover_image, (700, 0))
             self.screen.blit(pg.transform.rotate(self.assets["ui"]["bottom_fade"], -90), (800, 0))
             pg.draw.rect(self.screen, "black", (0, 0, 800, 800))
 
-            #버튼 위치 조정     tlqkf 나도 좀 똥코드인건 아는데 어쩔수가;
-            map_btn.pos[1] = 20 + y_offset
-            endless_btn.pos[1] = 20 + margin + y_offset
-            records_btn.pos[1] = 20 + margin * 2 + y_offset
-            credits_btn.pos[1] = 20 + margin * 3 + y_offset
-            dogam_btn.pos[1] = 20 + margin * 4 + y_offset
-            setting_btn.pos[1] = 20 + margin * 5 + y_offset
-            quit_btn.pos[1] = 20 + margin * 6 + y_offset
+            self.screen.blit(self.assets["ui"]["title"], (0, 0))
+
+            #버튼 위치 조정 
+            for btn in btns:
+                btn.pos[1] = 20 + y_offset + margin * btns.index(btn)
     
-            #지도 버튼
+            #지도 버튼    tlqkf 나도 좀 똥코드인건 아는데 어쩔수가;
             if map_btn.hovering:
                 hover_image = self.assets["ui"]["world_bg"]
             #엔드레스 게임으로
@@ -523,8 +562,6 @@ class Game:
             self.manage_particle()
             self.manage_ui()
             self.manage_camera_shake()
-
-            self.screen.blit(self.assets["ui"]["title"], (0, 0))
 
             #화면 렌더
             self.camera.blit(self.screen, (0, 0))
@@ -908,7 +945,7 @@ class Game:
         self.entities.append(boss_soul)
         self.boss_died = False
 
-        self.uis.append(VanishingTextUi(self, f"{pg.key.name(self.status["key_bindings"]["좌로 움직이기키"])}, {pg.key.name(self.status["key_bindings"]["우로 움직이기키"])}로 움직이기", (650, 730), self.fonts["aggro"], 40, "white", 60, 5))
+        self.uis.append(VanishingTextUi(self, f"{pg.key.name(self.status["key_bindings"]["좌로 움직이기키"]).upper()}, {pg.key.name(self.status["key_bindings"]["우로 움직이기키"]).upper()}로 움직이기", (650, 730), self.fonts["aggro"], 40, "white", 60, 5))
 
         while(True):
             #update:
@@ -951,7 +988,6 @@ class Game:
                     self.end_scene()
                     self.state_cut_scene(self.assets["cutscenes"]["boss_end"], self.state_game_result)
                     
-
                 boss_soul.check_time(elapsed_time)
                 self.spawn_boss_entity()
                 self.spawn_items()
@@ -1176,10 +1212,12 @@ class Game:
     #게임 종료
     def state_game_result(self, won = True):
         
-        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (1000, 650), self.sfxs["ui_hover"], 1, 20)
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (700, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
-        map_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 150)), (700, 650), self.sfxs["ui_hover"], 1, 20)
+        map_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 150)), (400, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(map_btn)
+        replay_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["replay"], (200, 150)), (1000, 650), self.sfxs["ui_hover"], 1, 20)
+        self.uis.append(replay_btn)
 
         bg = self.assets["bg"][f"{self.current_level_data["bg_name"]}/0"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
@@ -1195,7 +1233,6 @@ class Game:
             else:
                 set_data("Status.json", "level", max(int(self.current_level_data["level_index"]) + 1, int(self.status["level"])))
         else:
-            print("짐 ㅋ")
             self.sfxs["gameover"].play()
             
 
@@ -1240,6 +1277,7 @@ class Game:
 
         self.set_bgm("result")
 
+        #점su 초기화잉
         self.score = 0
 
         while True:
@@ -1271,6 +1309,15 @@ class Game:
                     if map_btn.hovering:
                         self.end_scene()
                         self.state_main_world()
+                    if replay_btn.hovering:
+                        self.end_scene()
+                        if self.current_level_data["level_index"] == "Boss":
+                            self.state_boss()
+                        elif self.current_level_data["level_index"] == "BigBreakOut":
+                            self.state_main_game(True)
+                        else:
+                            self.state_main_game(False)
+                        
     
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
@@ -1352,6 +1399,7 @@ class Game:
         self.uis.append(create_btn)
 
         error = TextUi("", (500, 350), self.fonts["aggro"], 35, "red")
+        self.uis.append(error)
 
         bg = self.assets["bg"]["office/1"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
@@ -1395,7 +1443,12 @@ class Game:
 
                 else:
                     print("Failed to sign in:", response.json())
-                    error.text = f"오류! : {response.json()["error"]["message"]}"
+                    target = ""
+                    if response.json()["error"]["message"] == 'INVALID_LOGIN_CREDENTIALS':
+                        target = "비밀번호 오류!"
+                    elif response.json()["error"]["message"] == 'INVALID_EMAIL':
+                        target = "메일주소가 유효하지 않습니다!"
+                    error.text = f"오류! : {target}"
 
             if create_btn.hovering and mouse_click:
                 self.end_scene()
@@ -1526,7 +1579,10 @@ class Game:
 
                         else:
                             print("Failed to sign up:", response.json())
-                            error.text = f"오류! : {response.json()['error']['message']}"
+                            target = ""
+                            if response.json()["error"]["message"] == 'INVALID_EMAIL':
+                                target = "메일주소가 유효하지 않습니다!"
+                            error.text = f"오류! : {target}"
                     # 비밀번호 확인이 일치하지 않는 경우
                 else:
                     error.text = "오류! : 비밀번호와 비밀번호 확인란이 일치하지 않습니다!"
@@ -1569,7 +1625,7 @@ class Game:
         y_offset = 0
         scroll_speed = 60
         plr_texts = [] #[[rank : TextUi, nickname : TextUi, score : TextUi], [rank, nickname, score],]
-        margin = 50
+        margin = 100
         #[["닉네임", 점수], ["닉네임", 점수]]
 
         rankingDatas = db.collection("ranking").stream()

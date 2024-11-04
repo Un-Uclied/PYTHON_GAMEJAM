@@ -36,6 +36,35 @@ class VanishingTextUi(TextUi):
         if self.alpha < 0:
             self.game.uis.remove(self)
 
+class VanishingImageUi:
+    def __init__(self, game, image, pos, static_time, vanish_speed):
+        self.game = game
+        self.original_image = image
+        self.image = self.original_image.copy()  # 사본을 만들어서 알파값을 적용
+        self.pos = pos
+        self.static_time = static_time
+        self.current_static_time = static_time
+        self.vanish_spd = vanish_speed
+        self.alpha = 255
+
+    def update(self):
+        # static_time 동안 유지
+        if self.current_static_time > 0:
+            self.current_static_time -= 1
+        else:
+            # 점점 투명하게 만들기
+            self.alpha -= self.vanish_spd
+            self.alpha = max(self.alpha, 0)  # 알파값이 0 이하로 내려가지 않게 처리
+            self.image = self.original_image.copy()  # 원본 이미지를 복사해서 알파 적용
+            self.image.set_alpha(self.alpha)  # 복사된 이미지에 알파값 적용
+
+        # 알파값이 0이면 UI에서 제거
+        if self.alpha <= 0:
+            self.game.uis.remove(self)
+
+    def render(self, surface):
+        surface.blit(self.image, self.pos)
+
 class LinkUi(TextUi):
     def __init__(self, text, pos, font, text_size, color, hover_color, hover_audio : pg.mixer.Sound, link : str):
         super().__init__(text, pos, font, text_size, color)

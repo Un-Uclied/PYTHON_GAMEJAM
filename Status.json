@@ -1,5 +1,6 @@
 {
-    "is_first_play": false,
+    "is_first_play": true,
+    "need_to_see_made_by": false,
     "high_scores": {
         "BigBreakOut": 0,
         "1": 0,
@@ -17,5 +18,5 @@
     },
     "level": 1,
     "sfx_volume": 1,
-    "bgm_volume": 1
+    "bgm_volume": 0.5
 }
