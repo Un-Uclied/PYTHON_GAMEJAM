@@ -1748,12 +1748,7 @@ class Game:
         players = []
 
         for doc in rankingDatas:
-<<<<<<< HEAD
             players.append([doc.id, doc.to_dict().get("score")])
-=======
-            print([doc.id, doc.to_dict()["score"]])
-            players.append([doc.id, doc.to_dict()["score"]])
->>>>>>> 7d10944ad51e3c5b1d2c67a915a7990ed69aab5b
             
         players.sort(key=lambda x: x[1], reverse=True)
         for plr in players:
