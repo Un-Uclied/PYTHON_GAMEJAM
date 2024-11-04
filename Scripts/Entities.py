@@ -373,6 +373,7 @@ class Helli(FollowingEnemy):
 
     def attack(self):
         #탄막을 쏘기에 super().attack()안함
+        self.game.sfxs["fire"].play()
         self.game.projectiles.append(Bullet(self.game, self.pos, pg.math.Vector2(-1, 0), self.bullet_speed, self.game.assets["projectiles"]["helli_fire_bullet"], 60, "helli's bullet", self, self.damage))
 
 class Brook(FollowingEnemy):
@@ -632,6 +633,7 @@ class Boss(Enemy):
             surface.blit(render_arm, rect_arm)
     
     def gun_fire(self, target_pos : tuple):
+        self.game.sfxs["laser_shoot"].play()
         self.game.projectiles.append(
                 BossBullet(self.game, self.get_center_pos(), pg.math.Vector2(target_pos[0] - self.get_center_pos().x, target_pos[1] - self.get_center_pos().y), self.bullet_speed, self.game.assets["projectiles"]["energy_bullet"], 60, "Boss's Bullet", self, self.attack_damage)
         )
@@ -642,7 +644,7 @@ class Boss(Enemy):
 
 class BossSoul(KillableEnemy):
     def __init__(self, game, name, pos, size, anim_size, damage, doom_speed):
-        super().__init__(game, name, pos, size, anim_size, 4, damage)
+        super().__init__(game, name, pos, size, anim_size, 5, damage)
 
         self.elapsed_time = 0
         self.wiggle_speed = 1
@@ -686,7 +688,7 @@ class BossSoul(KillableEnemy):
             surface.blit(pg.transform.flip(self.mask_img, self.flipx, False), (self.pos[0] - offset[0] + self.anim_offset[0], self.pos[1] - offset[1] + self.anim_offset[1] - self.wiggle_offset))
 
     def check_time(self, current_time):
-        if not int(current_time) == 0 and int(current_time) % 40 == 0 and not self.got_hit:
+        if not int(current_time) == 0 and int(current_time) % 35 == 0 and not self.got_hit:
             self.is_triggered = True
 
     def take_damage(self, damage_amount):

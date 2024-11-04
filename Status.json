@@ -1,5 +1,5 @@
 {
-    "is_first_play": true,
+    "is_first_play": false,
     "need_to_see_made_by": false,
     "high_scores": {
         "BigBreakOut": 0,
@@ -9,14 +9,14 @@
         "4": 0,
         "5": 0,
         "6": 0,
-        "Boss": 0
+        "Boss": 126000
     },
     "key_bindings": {
         "좌로 움직이기키": 97,
         "우로 움직이기키": 100,
         "점프키": 32
     },
-    "level": 1,
+    "level": 7,
     "sfx_volume": 1,
     "bgm_volume": 0.5
 }

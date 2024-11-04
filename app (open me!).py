@@ -221,6 +221,8 @@ class Game:
             "world_doom_start" : pg.mixer.Sound("Assets/Sfxs/WorldDoomStart.wav"),
             "world_doom_cancel" : pg.mixer.Sound("Assets/Sfxs/WorldDoomCancel.wav"),
             "drink" : pg.mixer.Sound("Assets/Sfxs/Drink.mp3"),
+            "fire" :  pg.mixer.Sound("Assets/Sfxs/Fire.mp3"),
+            "laser_shoot" :  pg.mixer.Sound("Assets/Sfxs/LaserShoot.wav"),
         }
 
         self.bgm = {
