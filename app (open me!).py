@@ -670,13 +670,31 @@ class Game:
                         
                         print("정보가 저장되었습니다.")
                     if get_data_btn !=0 and get_data_btn.hovering:
+                        #기존 데이터 가져오기
+                        with open("Status.json", "r", encoding="utf-8") as file:
+                            #high_scores만 비교
+                            current_high_scores = json.load(file).pop("high_scores")
+
+                        #firebase에서 데이터 가져오기
                         doc_ref = db.collection("users").document(user.uid)
-                        data = doc_ref.get()
+                        data = doc_ref.get().to_dict()
 
-                        filtered_data = 0
-                        if data:
-                            filtered_data = {key: value for key, value in data.to_dict().items() if key != "name"}
+                        #name 항목은 제외
+                        filtered_data = {key: value for key, value in data.items() if key != "name"}
 
+                        #high_scores와 나머지 분리
+                        high_scores = filtered_data.pop("high_scores")
+
+                        #기존 데이터와 비교해서 큰 데이터로 저장
+                        final_high_scores = {
+                            key: max(high_scores.get(key, 0), current_high_scores.get(key, 0))
+                            for key in set(high_scores) | set(current_high_scores)
+                        }
+
+                        #데이터 합치기
+                        filtered_data["high_scores"] = final_high_scores
+
+                        #저장 과정
                         with open("status.json", "w", encoding="utf-8") as file:
                             json.dump(filtered_data, file, indent=4, ensure_ascii=False)
                         
