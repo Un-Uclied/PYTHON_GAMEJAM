@@ -505,14 +505,17 @@ class Game:
             except Exception as e:
                 print("Error verifying ID token:", e)
 
-        login_btn = TextButton(doc.to_dict()["name"] if token and user else "<로그인해주세요 현재 : 익명", self.fonts["aggro"], 30, (30, 560), self.sfxs["ui_hover"], "yellow", "blue")
+        login_btn = TextButton(doc.to_dict().get("name") if token and user else "<로그인해주세요 현재 : 익명", self.fonts["aggro"], 30, (30, 560), self.sfxs["ui_hover"], "yellow", "blue")
         logout_btn = 0
         save_data_btn = 0
+        get_data_btn = 0
         if token and user:
-            logout_btn = TextButton("로그아웃", self.fonts["aggro"], 30, (30, 660), self.sfxs["ui_hover"], "yellow", "blue")
+            logout_btn = TextButton("로그아웃", self.fonts["aggro"], 30, (30, 610), self.sfxs["ui_hover"], "yellow", "blue")
             self.uis.append(logout_btn)
-            save_data_btn = TextButton("정보 저장", self.fonts["aggro"], 30, (180, 660), self.sfxs["ui_hover"], "yellow", "blue")
+            save_data_btn = TextButton("정보 저장", self.fonts["aggro"], 30, (30, 660), self.sfxs["ui_hover"], "yellow", "blue")
             self.uis.append(save_data_btn)
+            get_data_btn = TextButton("정보 불러오기", self.fonts["aggro"], 30, (180, 660), self.sfxs["ui_hover"], "yellow", "blue")
+            self.uis.append(get_data_btn)
 
 
         self.uis.append(login_btn)
@@ -634,7 +637,44 @@ class Game:
                         self.state_logout()
                     #정보 저장
                     if save_data_btn !=0 and save_data_btn.hovering:
-                        pass
+                        with open("Status.json", "r", encoding="utf-8") as file:
+                            status_data = json.load(file)
+
+                        # high_scores 분리
+                        high_scores = status_data.pop("high_scores")
+
+                        # 기존 데이터는 그냥 저장
+                        doc_ref = db.collection("users").document(user.uid)
+                        doc_ref.update(status_data)
+                        
+                        current_high_scores = doc_ref.get()
+
+                        # 이미 존재하면 비교해서 큰 데이터로 저장
+                        if current_high_scores.exists:
+                            current_high_scores = current_high_scores.to_dict().get("high_scores", {})
+                            final_high_scores = {
+                                key: max(high_scores.get(key, 0), current_high_scores.get(key, 0))
+                                for key in set(high_scores) | set(current_high_scores)
+                            }
+                            doc_ref.update({"high_scores": final_high_scores})
+
+                        # 아니면 그냥 저장
+                        else:
+                            doc_ref.update({"high_scores": high_scores})
+                        
+                        print("정보가 저장되었습니다.")
+                    if get_data_btn !=0 and get_data_btn.hovering:
+                        doc_ref = db.collection("users").document(user.uid)
+                        data = doc_ref.get()
+
+                        filtered_data = 0
+                        if data:
+                            filtered_data = {key: value for key, value in data.to_dict().items() if key != "name"}
+
+                        with open("status.json", "w", encoding="utf-8") as file:
+                            json.dump(filtered_data, file, indent=4, ensure_ascii=False)
+                        
+                        print("정보를 불러왔습니다.")
 
             dt = self.clock.tick(TARGET_FPS) / 1000
             elapsed_time += dt
@@ -1269,12 +1309,12 @@ class Game:
                 userData = userDoc_ref.get()
 
                 #기존 자신의 랭킹 정보 불러오기
-                doc_ref = db.collection("ranking").document(userData.to_dict()["name"])
+                doc_ref = db.collection("ranking").document(userData.to_dict().get("name"))
                 doc = doc_ref.get()
 
                 if doc.exists:
                     #기존 기록보다 좋을 때만 변경
-                    if self.score > doc.to_dict()["score"]:
+                    if self.score > doc.to_dict().get("score"):
                         data = {
                             "score" : self.score
                         }
@@ -1545,7 +1585,7 @@ class Game:
                     nickname_exists = False  # 닉네임 존재 여부를 추적하는 변수
 
                     for doc in docs:
-                        if nickname.text == doc.to_dict()["name"]:
+                        if nickname.text == doc.to_dict().get("name"):
                             error.text = "오류! : 이미 사용 중인 닉네임입니다!"
                             nickname_exists = True
                             break  # 중복 닉네임을 찾으면 더 이상 확인하지 않고 종료
@@ -1581,7 +1621,27 @@ class Game:
 
                                 # 유저의 정보를 db에 저장
                                 data = {
-                                    "name": nickname.text
+                                    "name": nickname.text,
+                                    "is_first_play": True,
+                                    "need_to_see_made_by": False,
+                                    "high_scores": {
+                                        "BigBreakOut": 0,
+                                        "1": 0,
+                                        "2": 0,
+                                        "3": 0,
+                                        "4": 0,
+                                        "5": 0,
+                                        "6": 0,
+                                        "Boss": 0
+                                    },
+                                    "key_bindings": {
+                                        "좌로 움직이기키": 97,
+                                        "우로 움직이기키": 100,
+                                        "점프키": 32
+                                    },
+                                    "level": 1,
+                                    "sfx_volume": 1,
+                                    "bgm_volume": 1
                                 }
 
                                 doc_ref = db.collection("users").document(user.uid)
@@ -1631,6 +1691,32 @@ class Game:
         w = tokenFile.write("")
         tokenFile.close()
 
+        clear_data = {
+            "is_first_play": True,
+            "need_to_see_made_by": False,
+            "high_scores": {
+            "BigBreakOut": 0,
+                "1": 0,
+                "2": 0,
+                "3": 0,
+                "4": 0,
+                "5": 0,
+                "6": 0,
+                "Boss": 0
+            },
+            "key_bindings": {
+                "좌로 움직이기키": 97,
+                "우로 움직이기키": 100,
+                "점프키": 32
+            },
+                "level": 1,
+                "sfx_volume": 1,
+                "bgm_volume": 1
+        }
+
+        with open("status.json", "w", encoding="utf-8") as file:
+            json.dump(clear_data, file, indent=4, ensure_ascii=False)
+
         self.end_scene()
         self.state_title_screen()
 
@@ -1656,8 +1742,7 @@ class Game:
         players = []
 
         for doc in rankingDatas:
-            print([doc.id, doc.to_dict()["score"]])
-            players.append([doc.id, doc.to_dict()["score"]])
+            players.append([doc.id, doc.to_dict().get("score")])
             
         players.sort(key=lambda x: x[1], reverse=True)
         for plr in players:
