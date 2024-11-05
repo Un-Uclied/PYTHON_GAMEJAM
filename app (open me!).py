@@ -432,7 +432,6 @@ class Game:
             self.manage_camera_shake()
 
             if timer <= 0:
-                set_data("Status.json", "need_to_see_made_by", False)
                 self.end_scene()
                 self.state_title_screen()
             else:
@@ -452,11 +451,6 @@ class Game:
     #타이틀 스크린
     def state_title_screen(self):
         #start:
-        if self.status["need_to_see_made_by"]:
-            self.end_scene()
-            self.state_made_by()
-            
-
         margin = 150
         y_offset = 0
         scroll_speed = 30
@@ -2081,4 +2075,4 @@ class Game:
      
 # #게임 실행
 game = Game()
-game.state_title_screen()
+game.state_made_by()
