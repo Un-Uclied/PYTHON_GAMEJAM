@@ -506,9 +506,9 @@ class Game:
                 print("Error verifying ID token:", e)
 
         login_btn = TextButton(doc.to_dict().get("name") if token and user else "<로그인해주세요 현재 : 익명", self.fonts["aggro"], 30, (30, 560), self.sfxs["ui_hover"], "yellow", "blue")
-        logout_btn = 0
-        save_data_btn = 0
-        get_data_btn = 0
+        logout_btn = None
+        save_data_btn = None
+        get_data_btn = None
         if token and user:
             logout_btn = TextButton("로그아웃", self.fonts["aggro"], 30, (30, 610), self.sfxs["ui_hover"], "yellow", "blue")
             self.uis.append(logout_btn)
@@ -568,7 +568,7 @@ class Game:
             if setting_btn.hovering:
                 hover_image = self.assets["ui"]["setting_bg"]
             #로그인
-            if login_btn.hovering:
+            if login_btn.hovering or(logout_btn in self.uis and logout_btn.hovering)or (get_data_btn in self.uis and get_data_btn.hovering) or (save_data_btn in self.uis and save_data_btn.hovering):
                 hover_image = self.assets["ui"]["login_bg"]
 
             self.manage_spark()
