@@ -352,20 +352,20 @@ class Game:
             self.entities.append(Ratbit(self, "ratbit",
                                         pos=CEIL_SPAWN_POS if random.random() > .5 else FLOOR_SPAWN_POS,
                                         size=(150, 150), anim_size=(150, 150), 
-                                        following_speed=30, 
+                                        following_speed=self.current_level_data["speed"]["ratbit_speed"], 
                                         health=1, damage=self.current_level_data["damages"]["ratbit_damage"], attack_range=100))
         #STRUCKER
         if self.current_level_data["entities"]["strucker"] and random.randint(1, self.current_level_data["spawn_rates"]["strucker_spawn_rate"]) == 1:
             self.entities.append(Obstacle(self, "strucker", 
                                         pos=(FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1] + 40),
                                         size=(100, 150), anim_size=(150, 150), 
-                                        speed=20, damage=self.current_level_data["damages"]["strucker_damage"]))
+                                        speed=self.current_level_data["speed"]["strucker_speed"], damage=self.current_level_data["damages"]["strucker_damage"]))
         #STALKER
         if self.current_level_data["entities"]["stalker"] and random.randint(1, self.current_level_data["spawn_rates"]["stalker_spawn_rate"]) == 1:
             self.entities.append(Obstacle(self, "stalker", 
                                         pos=(CEIL_SPAWN_POS[0], CEIL_SPAWN_POS[1] - 100),
                                         size=(150, 400), anim_size=(150, 400), 
-                                        speed=20, damage=self.current_level_data["damages"]["stalker_damage"]))
+                                        speed=self.current_level_data["speed"]["stalker_speed"], damage=self.current_level_data["damages"]["stalker_damage"]))
         #HELLI
         if self.current_level_data["entities"]["helli"] and random.randint(1, self.current_level_data["spawn_rates"]["helli_spawn_rate"]) == 1:
             self.entities.append(Helli(self, "helli", 
@@ -373,14 +373,14 @@ class Game:
                                         size=(200, 200), anim_size=(150, 150), speed=5, health=self.current_level_data["healths"]["helli_health"], damage=self.current_level_data["damages"]["helli_damage"], 
                                         up=(CEIL_SPAWN_POS[0] - 200, CEIL_SPAWN_POS[1] - 100), 
                                         down=(FLOOR_SPAWN_POS[0] - 200, FLOOR_SPAWN_POS[1] + 100),
-                                        attack_chance=90, bullet_speed=30))
+                                        attack_chance=self.current_level_data["attack_chance"]["helli_attack_chance"], bullet_speed=self.current_level_data["speed"]["helli_bullet_speed"]))
         #BROOK
         if self.current_level_data["entities"]["brook"] and random.randint(1, self.current_level_data["spawn_rates"]["brook_spawn_rate"]) == 1:
             self.entities.append(Brook(self, "brook", 
                                        pos=(CEIL_SPAWN_POS[0] + 100, 350), 
                                        size=(200, 200), anim_size=(150, 150),
                                        start_following_speed = 3,
-                                       following_speed=55, max_health=1, damage=self.current_level_data["damages"]["brook_damage"], speed_change_speed = 5))
+                                       following_speed=60, max_health=1, damage=self.current_level_data["damages"]["brook_damage"], speed_change_speed = 5))
         #BLUGLOGGER
         if self.current_level_data["entities"]["bluglogger"] and random.randint(1, self.current_level_data["spawn_rates"]["bluglogger_spawn_rate"]) == 1:
             #블러그로거는 한 장면에 하나만 나옴
@@ -388,19 +388,19 @@ class Game:
                 self.entities.append(BlugLogger(self, "bluglogger", 
                                                 pos= (FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1] + 35), size=(150, 150), anim_size=(150, 150), 
                                                 following_speed=10, max_health=self.current_level_data["healths"]["bluglogger_health"], damage=self.current_level_data["damages"]["bluglogger_damage"], 
-                                                wait_time=90, attack_rate=50))
+                                                wait_time=self.current_level_data["speed"]["blug_logger_wait_time"], attack_rate=50))
 
         #스포닝 에너미 끝
 
     def spawn_items(self):
         if self.current_level_data["entities"]["medicine"] and random.randint(1, self.current_level_data["spawn_rates"]["medicine_spawn_rate"]) == 1:
             self.entities.append(
-                Medicine(self, "medicine", FLOOR_SPAWN_POS, (130 , 130), (130, 130), 20, self.current_level_data["amount"]["heal_amount"])
+                Medicine(self, "medicine", FLOOR_SPAWN_POS, (130 , 130), (130, 130), self.current_level_data["speed"]["medicine_speed"], self.current_level_data["amount"]["heal_amount"])
             )
         #추가 탄약은 플레이어가 최대 탄약이 아닐때 생김
         if self.player.ammo != self.player.max_ammo and self.current_level_data["entities"]["ammo"] and random.randint(1, self.current_level_data["spawn_rates"]["ammo_spawn_rate"]) == 1:
             self.entities.append(
-                Ammo(self, "ammo", FLOOR_SPAWN_POS, (130 , 130), (130, 130), 20, self.current_level_data["amount"]["ammo_amount"])
+                Ammo(self, "ammo", FLOOR_SPAWN_POS, (130 , 130), (130, 130), self.current_level_data["speed"]["ammo_speed"], self.current_level_data["amount"]["ammo_amount"])
             )
 
     def spawn_boss_entity(self):
@@ -632,11 +632,11 @@ class Game:
                         self.end_scene()
                         self.state_login_menu()
                     #로그아웃
-                    if logout_btn !=0 and logout_btn.hovering:
+                    if logout_btn != None and logout_btn.hovering:
                         self.end_scene()
                         self.state_logout()
                     #정보 저장
-                    if save_data_btn !=0 and save_data_btn.hovering:
+                    if save_data_btn != None and save_data_btn.hovering:
                         with open("Status.json", "r", encoding="utf-8") as file:
                             status_data = json.load(file)
 
@@ -663,7 +663,7 @@ class Game:
                             doc_ref.update({"high_scores": high_scores})
                         
                         print("정보가 저장되었습니다.")
-                    if get_data_btn !=0 and get_data_btn.hovering:
+                    if get_data_btn != None and get_data_btn.hovering:
                         doc_ref = db.collection("users").document(user.uid)
                         data = doc_ref.get()
 
@@ -713,15 +713,17 @@ class Game:
         #구렁이 끝
 
         #백그라운드 스크롤
-        background1 = self.assets["bg"][f"{self.current_level_data['bg_name']}/0"]
-        background2 = self.assets["bg"][f"{self.current_level_data['bg_name']}/1"]
+        
         if is_endless:
             choice = random.choice(["office", "steam_room", "foyer", "secure_room", "horror_office", "dark_office"])
             background1 = self.assets["bg"][f"{choice}/0"]
             background2 = self.assets["bg"][f"{choice}/1"]
+        else:
+            background1 = self.assets["bg"][f"{self.current_level_data['bg_name']}/0"]
+            background2 = self.assets["bg"][f"{self.current_level_data['bg_name']}/1"]
 
         bg_width = background1.get_width()
-        bg_scroll_speed = 20
+        bg_scroll_speed = self.current_level_data["scroll_speed"]
 
         bg_x1 = 0
         bg_x2 = bg_width
@@ -749,6 +751,7 @@ class Game:
         duration = self.current_level_data["level_length"]
         start_pos = (1000, 22)
         end_pos = (1520, 22)
+
         start_time = time.time()
 
         self.set_bgm(f"run{random.randint(1, 2)}")
@@ -765,7 +768,7 @@ class Game:
                 elapsed_time = time.time() - start_time
                 
                 #레벨 끝나기 1초전에 엔딩애니메이션 보여주기
-                if duration - elapsed_time <= 1 and not is_endless:
+                if not is_endless and duration - elapsed_time <= 1:
                     ENDING = True
                     self.player.pos.x += 25
                     self.player.invincible = True

@@ -1,22 +1,24 @@
 {   
-    "entities" : {"ratbit" : true, "strucker" : true, "helli" : true, "brook" : true, "bluglogger" : true, "stalker" : true,"medicine" : true, "ammo" : true},
+    "entities" : {"ratbit" : true, "strucker" : true, "helli" : true, "brook" : true, "bluglogger" : true, "stalker" : true, "medicine" : true, "ammo" : true},
 
-    "spawn_rates" : {"ratbit_spawn_rate" : 300, "strucker_spawn_rate" : 200, "helli_spawn_rate" : 500, "brook_spawn_rate" : 800, "bluglogger_spawn_rate" : 900, "stalker_spawn_rate" : 300, "medicine_spawn_rate" : 450, "ammo_spawn_rate" : 450},
+    "spawn_rates" : {"ratbit_spawn_rate" : 400, "strucker_spawn_rate" : 500, "helli_spawn_rate" : 450, "brook_spawn_rate" : 1200, "bluglogger_spawn_rate" : 1500, "stalker_spawn_rate" : 500, "medicine_spawn_rate" : 180, "ammo_spawn_rate" : 180},
 
     "scores" : {"ratbit_add_score" : 2000, "helli_add_score" : 3500, "brook_add_score" : 5000, "bluglogger_add_score" : 4500},
 
     "damages" : {"ratbit_damage" : 20, "strucker_damage" : 20, "helli_damage" : 20, "brook_damage" : 30, "bluglogger_damage" : 10, "stalker_damage" : 30},
 
-    "healths" : {"helli_health" : 40, "bluglogger_health" : 100},
+    "healths" : {"helli_health" : 80, "bluglogger_health" : 100},
 
-    "amount" : {"heal_amount" : 100, "ammo_amount" : 35},
+    "amount" : {"heal_amount" : 30, "ammo_amount" : 25},
 
-    "speed" : {"ratbit_speed" : 30, "strucker_speed" : 20, "stalker_speed" : 20, "helli_bullet_speed" : 35, "blug_logger_wait_time" : 120},
+    "speed" : {"ratbit_speed" : 42, "strucker_speed" : 35, "stalker_speed" : 35, "helli_bullet_speed" : 45, "blug_logger_wait_time" : 140, "medicine_speed" : 30, "ammo_speed" : 30},
 
-    "attack_chance" : {"helli_attack_chance" : 90},
+    "attack_chance" : {"helli_attack_chance" : 65},
 
-    "bg_name" : "steam_room",
+    "bg_name" : "",
     "level_name" : "",
     "level_length" : 0,
-    "level_index" : "BigBreakOut"
+    "level_index" : "BigBreakOut",
+    "scroll_speed" : 30
+    
 }

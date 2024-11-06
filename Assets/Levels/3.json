@@ -11,12 +11,13 @@
 
     "amount" : {"heal_amount" : 80, "ammo_amount" : 20},
 
-    "speed" : {"ratbit_speed" : 35, "strucker_speed" : 22, "stalker_speed" : 20, "helli_bullet_speed" : 32, "blug_logger_wait_time" : 120},
+    "speed" : {"ratbit_speed" : 35, "strucker_speed" : 20, "stalker_speed" : 20, "helli_bullet_speed" : 32, "blug_logger_wait_time" : 120, "medicine_speed" : 20, "ammo_speed" : 20},
 
     "attack_chance" : {"helli_attack_chance" : 100},
 
     "bg_name" : "steam_room",
     "level_name" : "가스 조절실",
     "level_length" : 90,
-    "level_index" : "3"
+    "level_index" : "3",
+    "scroll_speed" : 20
 }

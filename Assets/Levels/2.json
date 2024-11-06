@@ -11,12 +11,13 @@
 
     "amount" : {"heal_amount" : 100, "ammo_amount" : 20},
 
-    "speed" : {"ratbit_speed" : 35, "strucker_speed" : 22, "stalker_speed" : 20, "helli_bullet_speed" : 32, "blug_logger_wait_time" : 120},
+    "speed" : {"ratbit_speed" : 35, "strucker_speed" : 22, "stalker_speed" : 20, "helli_bullet_speed" : 32, "blug_logger_wait_time" : 120, "medicine_speed" : 20, "ammo_speed" : 20},
 
     "attack_chance" : {"helli_attack_chance" : 100},
 
     "bg_name" : "foyer",
     "level_name" : "연구실동 B",
     "level_length" : 70,
-    "level_index" : "2"
+    "level_index" : "2",
+    "scroll_speed" : 20
 }
