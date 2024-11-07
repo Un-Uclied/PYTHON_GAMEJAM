@@ -1,7 +1,7 @@
 {   
     "entities" : {"ratbit" : true, "strucker" : true, "helli" : true, "brook" : true, "bluglogger" : true, "stalker" : true, "medicine" : true, "ammo" : true},
 
-    "spawn_rates" : {"ratbit_spawn_rate" : 400, "strucker_spawn_rate" : 500, "helli_spawn_rate" : 450, "brook_spawn_rate" : 1200, "bluglogger_spawn_rate" : 1500, "stalker_spawn_rate" : 500, "medicine_spawn_rate" : 180, "ammo_spawn_rate" : 180},
+    "spawn_rates" : {"ratbit_spawn_rate" : 350, "strucker_spawn_rate" : 470, "helli_spawn_rate" : 430, "brook_spawn_rate" : 1100, "bluglogger_spawn_rate" : 1300, "stalker_spawn_rate" : 400, "medicine_spawn_rate" : 180, "ammo_spawn_rate" : 180},
 
     "scores" : {"ratbit_add_score" : 2000, "helli_add_score" : 3500, "brook_add_score" : 5000, "bluglogger_add_score" : 4500},
 
@@ -13,7 +13,7 @@
 
     "speed" : {"ratbit_speed" : 42, "strucker_speed" : 35, "stalker_speed" : 35, "helli_bullet_speed" : 45, "blug_logger_wait_time" : 140, "medicine_speed" : 30, "ammo_speed" : 30},
 
-    "attack_chance" : {"helli_attack_chance" : 65},
+    "attack_chance" : {"helli_attack_chance" : 60},
 
     "bg_name" : "dark_office",
     "level_name" : "로비",

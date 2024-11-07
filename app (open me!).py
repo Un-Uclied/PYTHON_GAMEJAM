@@ -9,7 +9,7 @@ from Scripts.utils import load_image, load_images, load_data, set_data
 from Scripts.Entities import Player, Entity, KillableEnemy, Obstacle, Ratbit, Helli, Brook, BlugLogger, Medicine, Ammo, Boss, Ufo, BossSoul
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
-from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField, Slider, VanishingTextUi, KeyInputField, VanishingImageUi
+from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField, Slider, VanishingTextUi, KeyInputField, MouseCursor,ClickableUi
 from Scripts.Bullets import Bullet, PlayerBullet, BossBullet
 
 import firebase_admin
@@ -99,7 +99,15 @@ class Game:
                 "locked_node" : load_image("UI/Locked.png"),
 
                 "pawn" : load_image("UI/Pawn.png"),
-
+                "cursors" : {
+                    "default" : load_image("UI/Mouse.png"),
+                    "finger" : load_image("UI/Finger.png"),
+                    "crosshair" : load_image("UI/Crosshair.png"),
+                },
+                "distance_icon" : load_image("UI/Dist.png"),
+                "health_icon" : load_image("UI/Health.png"),
+                "remain_ammo_icon" : load_image("UI/Bullets.png"),
+                "score_icon" : load_image("UI/Score.png"),
             },
 
             "projectiles" : {
@@ -261,6 +269,10 @@ class Game:
 
         #스폰된 탄들
         self.projectiles = []
+
+        #쌈@뽕한 새삥 마우스 마련
+        self.mouse = MouseCursor(self, "default")
+        self.uis.append(self.mouse)
     
     def manage_spark(self):
         for spark in self.sparks.copy():
@@ -276,17 +288,24 @@ class Game:
             if kill:
                 self.particles.remove(particle)
     
-    def manage_ui(self):
+    def manage_ui(self, is_main_game = False):
         fps_ui = TextUi(f"FPS : {int(self.clock.get_fps())}", (1540, 0), self.fonts["aggro"], 12, "white")
         fps_ui.render(self.screen)
 
         for ui in self.uis:
-            if hasattr(ui, "update"):
-                ui.update()
-            if hasattr(ui, "render"):
-                ui.render(self.screen)
-            if hasattr(ui, "wiggle"):
-                    ui.wiggle()
+            if not isinstance(ui, MouseCursor):
+                if hasattr(ui, "update"):
+                    ui.update()
+                if hasattr(ui, "render"):
+                    ui.render(self.screen)
+                if hasattr(ui, "wiggle"):
+                        ui.wiggle()
+        
+        #self.uis[0]는 무조건 Cursor임 i know it is 헬적화 그래도 state마다 이거 하는것보단 나음 ㅇㅈ?
+        self.uis[0].update()
+        if is_main_game:
+            self.uis[0].set_image("crosshair")
+        self.uis[0].render(self.screen)
 
     def manage_projectiles(self):
         for projectile in self.projectiles:
@@ -528,6 +547,7 @@ class Game:
 
         self.set_bgm("main_title")
 
+
         while(True):
             #update:
             self.current_time = pg.time.get_ticks()
@@ -736,8 +756,12 @@ class Game:
         self.physic_rects = [floor, ceil]
 
         #ui
-        stat_ui = TextUi("", (50, 30), self.fonts["aggro"], 30, "white")
-        self.uis.append(stat_ui)
+        ammo_text = TextUi("", (100, 30), self.fonts["aggro"], 30, "white")
+        self.uis.append(ammo_text)
+        health_text = TextUi("", (250, 30), self.fonts["aggro"], 30, "white")
+        self.uis.append(health_text)
+        score_text = TextUi("", (475, 30), self.fonts["aggro"], 30, "white")
+        self.uis.append(score_text)
 
         #일시 정지 UI
         pause_bg = background1
@@ -755,7 +779,7 @@ class Game:
         start_time = time.time()
 
         self.set_bgm(f"run{random.randint(1, 2)}")
-            
+
         while(True):
             #update:
             #화면 초기화
@@ -793,10 +817,16 @@ class Game:
                     self.screen.blit(self.assets["bg"]["light"], (light_pos[0], light_pos[1]))
 
                 #UI렌더
-                stat_ui.text = f"남은 탄: {self.player.ammo} | {self.score} | 거대 괴물로부터 남은 거리 : {self.player.health}cm"
+                ammo_text.text = str(self.player.ammo)
+                health_text.text = str(self.player.health) + " cm"
+                score_text.text = str(self.score)
                 self.screen.blit(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), (0, 700))
                 self.screen.blit(pg.transform.flip(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), False, True), (0, 0))
                 self.screen.blit(pg.transform.flip(pg.transform.rotate(self.assets["ui"]["bottom_fade"], 90), True, False), (0, 0))
+                
+                self.screen.blit(pg.transform.scale(self.assets["ui"]["remain_ammo_icon"], (50, 50)), (20, 20))
+                self.screen.blit(pg.transform.scale(self.assets["ui"]["distance_icon"], (50, 50)), (170, 20))
+                self.screen.blit(pg.transform.scale(self.assets["ui"]["score_icon"], (50, 50)), (400, 20))
 
                 #쿠키런 마냥 움직이는 바 어쩌구 유남생?
                 current_pos = [0, 0]
@@ -836,10 +866,15 @@ class Game:
                 worm.render(self.screen)
                 #구렁이 ㅋㅋ 끝
 
+                if not PAUSED:
+                    self.mouse.set_image("crosshair")
+                else:
+                    self.mouse.set_image("default")
+
                 #매니징
                 self.manage_particle()
                 self.manage_spark()
-                self.manage_ui()
+                self.manage_ui(True)
                 #매니징 끝 
                 
                 #ui인데 그 뭐냐 그거 움직이는거
@@ -965,7 +1000,7 @@ class Game:
         background2 = self.assets["bg"][f"{self.current_level_data['bg_name']}/1"]
 
         bg_width = background1.get_width()
-        bg_scroll_speed = 20
+        bg_scroll_speed = self.current_level_data["scroll_speed"]
 
         bg_x1 = 0
         bg_x2 = bg_width
@@ -978,8 +1013,12 @@ class Game:
         self.physic_rects = [floor, ceil]
 
         #ui
-        stat_ui = TextUi("", (50, 30), self.fonts["aggro"], 30, "white")
-        self.uis.append(stat_ui)
+        ammo_text = TextUi("", (100, 30), self.fonts["aggro"], 30, "white")
+        self.uis.append(ammo_text)
+        health_text = TextUi("", (250, 30), self.fonts["aggro"], 30, "white")
+        self.uis.append(health_text)
+        score_text = TextUi("", (475, 30), self.fonts["aggro"], 30, "white")
+        self.uis.append(score_text)
 
         #일시 정지 UI
         pause_bg = background1
@@ -1029,9 +1068,6 @@ class Game:
                 self.screen.blit(background2, (bg_x2, 0))
                 self.screen.blit(rect_surface, (0, 0))
 
-                #UI렌더
-                stat_ui.text = f"남은 탄: {self.player.ammo} | {self.score} | HP : {self.player.health}"
-
                 #쿠키런 마냥 움직이는 바 어쩌구 유남생?
                 current_pos = [0, 0]
                 t = min(elapsed_time / duration, 1)
@@ -1063,10 +1099,24 @@ class Game:
                 self.manage_entity()
                 #매니징 끝
 
+                if not PAUSED:
+                    self.mouse.set_image("crosshair")
+                else:
+                    self.mouse.set_image("default")
+
+                #UI렌더
+                ammo_text.text = str(self.player.ammo)
+                health_text.text = str(self.player.health) + " hp"
+                score_text.text = str(self.score)
+                
+                self.screen.blit(pg.transform.scale(self.assets["ui"]["remain_ammo_icon"], (50, 50)), (20, 20))
+                self.screen.blit(pg.transform.scale(self.assets["ui"]["distance_icon"], (50, 50)), (170, 20))
+                self.screen.blit(pg.transform.scale(self.assets["ui"]["score_icon"], (50, 50)), (400, 20))
+
                 #매니징
                 self.manage_particle()
                 self.manage_spark()
-                self.manage_ui()
+                self.manage_ui(True)
                 #매니징 끝 
                 
                 #화면 렌더
@@ -1338,6 +1388,7 @@ class Game:
 
         #점su 초기화잉
         self.score = 0
+        
 
         while True:
             self.screen.fill("black")
@@ -1696,7 +1747,6 @@ class Game:
 
         clear_data = {
             "is_first_play": True,
-            "need_to_see_made_by": False,
             "high_scores": {
             "BigBreakOut": 0,
                 "1": 0,
@@ -1714,7 +1764,7 @@ class Game:
             },
                 "level": 1,
                 "sfx_volume": 1,
-                "bgm_volume": 1
+                "bgm_volume": 0.5
         }
 
         with open("status.json", "w", encoding="utf-8") as file:
@@ -1825,6 +1875,7 @@ class Game:
         self.uis.append(VanishingTextUi(self, "(<- or A , -> or D)로 넘기기", (650, 730), self.fonts["aggro"], 40, "black", 240, 5))
 
         self.set_bgm("dogam")
+
 
         while True:
             self.screen.fill("black")
@@ -2119,6 +2170,10 @@ class Game:
         self.projectiles.clear()
         self.entities.clear()
         self.status = load_data("Status.json")
+
+        #쌈@뽕한 새삥 마우스 마련
+        self.mouse = MouseCursor(self, "default")
+        self.uis.append(self.mouse)
 
     def on_player_kill(self, killed_entity : Entity):
         self.camera_shake_gain += 5

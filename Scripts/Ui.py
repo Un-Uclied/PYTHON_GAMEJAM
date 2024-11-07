@@ -36,35 +36,6 @@ class VanishingTextUi(TextUi):
         if self.alpha < 0:
             self.game.uis.remove(self)
 
-class VanishingImageUi:
-    def __init__(self, game, image, pos, static_time, vanish_speed):
-        self.game = game
-        self.original_image = image
-        self.image = self.original_image.copy()  # 사본을 만들어서 알파값을 적용
-        self.pos = pos
-        self.static_time = static_time
-        self.current_static_time = static_time
-        self.vanish_spd = vanish_speed
-        self.alpha = 255
-
-    def update(self):
-        # static_time 동안 유지
-        if self.current_static_time > 0:
-            self.current_static_time -= 1
-        else:
-            # 점점 투명하게 만들기
-            self.alpha -= self.vanish_spd
-            self.alpha = max(self.alpha, 0)  # 알파값이 0 이하로 내려가지 않게 처리
-            self.image = self.original_image.copy()  # 원본 이미지를 복사해서 알파 적용
-            self.image.set_alpha(self.alpha)  # 복사된 이미지에 알파값 적용
-
-        # 알파값이 0이면 UI에서 제거
-        if self.alpha <= 0:
-            self.game.uis.remove(self)
-
-    def render(self, surface):
-        surface.blit(self.image, self.pos)
-
 class LinkUi(TextUi):
     def __init__(self, text, pos, font, text_size, color, hover_color, hover_audio : pg.mixer.Sound, link : str):
         super().__init__(text, pos, font, text_size, color)
@@ -225,6 +196,10 @@ class KeyInputField:
         self.active = False
         self.max_len = max_len
         self.name_pos = name_pos
+        self.hovering = False
+
+    def update(self):
+        self.hovering = self.rect.collidepoint(pg.mouse.get_pos())
 
     def get_event(self, event : pg.event.Event):
         if event.type == pg.MOUSEBUTTONDOWN:
@@ -260,13 +235,15 @@ class Slider:
         self.bg = pg.Rect(self.center_left, self.top, self.size.x, self.size.y)
         self.btn = pg.Rect(self.center_left + self.init_val, self.top - 5, self.btn_size.x, self.btn_size.y)
 
-        
+        self.hovering = False
 
     def update(self):
         mouse_pos = pg.mouse.get_pos()
         mouse_pressed = pg.mouse.get_pressed()[0]
         if self.bg.collidepoint(mouse_pos) and mouse_pressed:
             self.btn.centerx = mouse_pos[0]
+
+        self.hovering = self.bg.collidepoint(pg.mouse.get_pos())
     
     def get_val(self):
         val_range = self.center_right - self.center_left - 10
@@ -278,3 +255,35 @@ class Slider:
     def render(self, surface):
         pg.draw.rect(surface, "grey", self.bg)
         pg.draw.rect(surface, "white", self.btn)
+
+class MouseCursor:
+    def __init__(self, game, image_name):
+        self.game = game
+        self.img = game.assets["ui"]["cursors"][image_name]
+        self.img_name = image_name
+        self.pos = list(pg.mouse.get_pos())
+        pg.mouse.set_visible(False)
+        self.visible = True
+
+    def set_image(self, name : str):
+        self.img = self.game.assets["ui"]["cursors"][name]
+        self.img_name = name
+
+    def set_visible(self, condition) : self.visible = condition
+
+    def update(self):
+        self.pos = list(pg.mouse.get_pos())
+        clickable = 0
+        for ui in self.game.uis:
+            if hasattr(ui, "hovering") and ui.hovering:
+                self.set_image("finger")
+                clickable += 1
+        if not clickable:
+            self.set_image("default")
+        
+    def render(self, surface):
+        if self.visible:
+            if self.img_name == "crosshair":
+                self.pos[0] -= self.img.get_size()[0] // 2
+                self.pos[1] -= self.img.get_size()[1] // 2
+            surface.blit(self.img, self.pos)
