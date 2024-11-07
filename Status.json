@@ -1,5 +1,5 @@
 {
-    "is_first_play": false,
+    "is_first_play": true,
     "high_scores": {
         "BigBreakOut": 0,
         "1": 0,
@@ -15,7 +15,7 @@
         "우로 움직이기키": 100,
         "점프키": 32
     },
-    "level": 7,
-    "sfx_volume": 0.9,
-    "bgm_volume": 0.5285714285714286
+    "level": 1,
+    "sfx_volume": 1,
+    "bgm_volume": 0.5
 }

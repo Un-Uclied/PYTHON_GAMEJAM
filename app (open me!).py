@@ -44,6 +44,7 @@ class Game:
     def __init__(self):
         #init함수
         pg.init()
+        pg.mixer.set_num_channels(16)
         pg.display.set_caption(GAME_NAME)
 
         self.camera = pg.display.set_mode(SCREEN_SCALE)
