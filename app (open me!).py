@@ -518,9 +518,8 @@ class Game:
                     print("에러! : 계정 정보 없음")
                 
             except auth.InvalidIdTokenError:
-                tokenFile = open("token.txt", "w")
-                w = tokenFile.write("")
-                tokenFile.close()
+                with open("token.txt", "w") as tokenFile:
+                    tokenFile.write("")
 
             except Exception as e:
                 print("Error verifying ID token:", e)
@@ -1545,9 +1544,10 @@ class Game:
                     id_token = response.json().get('idToken')
                     #print(f"ID Token: {id_token}")
 
-                    tokenFile = open("token.txt", "w")
-                    w = tokenFile.write(id_token)
-                    tokenFile.close()
+                    print(id_token)
+                    with open("token.txt", "w") as tokenFile:
+                        tokenFile.write(id_token)
+                    print("토큰이 성공적으로 저장되었습니다.")
 
                     self.end_scene()
                     self.state_title_screen()
@@ -1743,9 +1743,8 @@ class Game:
 
     #로그아웃
     def state_logout(self):
-        tokenFile = open("token.txt", "w")
-        w = tokenFile.write("")
-        tokenFile.close()
+        with open("token.txt", "w") as tokenFile:
+            tokenFile.write("")
 
         clear_data = {
             "is_first_play": True,
