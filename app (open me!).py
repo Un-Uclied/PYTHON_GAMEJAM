@@ -518,14 +518,13 @@ class Game:
                     print("에러! : 계정 정보 없음")
                 
             except auth.InvalidIdTokenError:
-                tokenFile = open("token.txt", "w")
-                w = tokenFile.write("")
-                tokenFile.close()
+                with open("token.txt", "w") as tokenFile:
+                    tokenFile.write("")
 
             except Exception as e:
                 print("Error verifying ID token:", e)
 
-        login_btn = TextButton(doc.to_dict().get("name") if token and user else "<로그인해주세요 현재 : 익명", self.fonts["aggro"], 30, (30, 560), self.sfxs["ui_hover"], "yellow", "blue")
+        login_btn = TextButton(doc.to_dict().get("name") if token and user else "로그인", self.fonts["aggro"], 30, (30, 560), self.sfxs["ui_hover"], "yellow", "blue")
         logout_btn = None
         save_data_btn = None
         get_data_btn = None
@@ -1545,9 +1544,10 @@ class Game:
                     id_token = response.json().get('idToken')
                     #print(f"ID Token: {id_token}")
 
-                    tokenFile = open("token.txt", "w")
-                    w = tokenFile.write(id_token)
-                    tokenFile.close()
+                    print(id_token)
+                    with open("token.txt", "w") as tokenFile:
+                        tokenFile.write(id_token)
+                    print("토큰이 성공적으로 저장되었습니다.")
 
                     self.end_scene()
                     self.state_title_screen()
@@ -1741,10 +1741,10 @@ class Game:
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
 
+    #로그아웃
     def state_logout(self):
-        tokenFile = open("token.txt", "w")
-        w = tokenFile.write("")
-        tokenFile.close()
+        with open("token.txt", "w") as tokenFile:
+            tokenFile.write("")
 
         clear_data = {
             "is_first_play": True,
