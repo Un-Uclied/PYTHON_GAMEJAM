@@ -5,18 +5,19 @@
 
     "scores" : {"ratbit_add_score" : 2000, "helli_add_score" : 3500, "brook_add_score" : 5000, "bluglogger_add_score" : 4500},
 
-    "damages" : {"ratbit_damage" : 20, "strucker_damage" : 10, "helli_damage" : 20, "brook_damage" : 30, "bluglogger_damage" : 10, "stalker_damage" : 30},
+    "damages" : {"ratbit_damage" : 20, "strucker_damage" : 15, "helli_damage" : 20, "brook_damage" : 30, "bluglogger_damage" : 10, "stalker_damage" : 30},
 
     "healths" : {"helli_health" : 60, "bluglogger_health" : 100},
 
-    "amount" : {"heal_amount" : 60, "ammo_amount" : 25},
+    "amount" : {"heal_amount" : 50, "ammo_amount" : 25},
 
-    "speed" : {"ratbit_speed" : 38, "strucker_speed" : 25, "stalker_speed" : 20, "helli_bullet_speed" : 32, "blug_logger_wait_time" : 120},
+    "speed" : {"ratbit_speed" : 38, "strucker_speed" : 25, "stalker_speed" : 25, "helli_bullet_speed" : 32, "blug_logger_wait_time" : 120, "medicine_speed" : 25, "ammo_speed" : 25},
 
     "attack_chance" : {"helli_attack_chance" : 90},
 
     "bg_name" : "secure_room",
     "level_name" : "보안실",
     "level_length" : 140,
-    "level_index" : "4"
+    "level_index" : "4",
+    "scroll_speed" : 25
 }

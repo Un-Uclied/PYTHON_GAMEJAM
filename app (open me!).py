@@ -9,7 +9,7 @@ from Scripts.utils import load_image, load_images, load_data, set_data
 from Scripts.Entities import Player, Entity, KillableEnemy, Obstacle, Ratbit, Helli, Brook, BlugLogger, Medicine, Ammo, Boss, Ufo, BossSoul
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
-from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField, Slider, VanishingTextUi, KeyInputField, VanishingImageUi
+from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField, Slider, VanishingTextUi, KeyInputField, MouseCursor,ClickableUi
 from Scripts.Bullets import Bullet, PlayerBullet, BossBullet
 
 import firebase_admin
@@ -44,6 +44,7 @@ class Game:
     def __init__(self):
         #init함수
         pg.init()
+        pg.mixer.set_num_channels(16)
         pg.display.set_caption(GAME_NAME)
 
         self.camera = pg.display.set_mode(SCREEN_SCALE)
@@ -99,7 +100,15 @@ class Game:
                 "locked_node" : load_image("UI/Locked.png"),
 
                 "pawn" : load_image("UI/Pawn.png"),
-
+                "cursors" : {
+                    "default" : load_image("UI/Mouse.png"),
+                    "finger" : load_image("UI/Finger.png"),
+                    "crosshair" : load_image("UI/Crosshair.png"),
+                },
+                "distance_icon" : load_image("UI/Dist.png"),
+                "health_icon" : load_image("UI/Health.png"),
+                "remain_ammo_icon" : load_image("UI/Bullets.png"),
+                "score_icon" : load_image("UI/Score.png"),
             },
 
             "projectiles" : {
@@ -261,6 +270,10 @@ class Game:
 
         #스폰된 탄들
         self.projectiles = []
+
+        #쌈@뽕한 새삥 마우스 마련
+        self.mouse = MouseCursor(self, "default")
+        self.uis.append(self.mouse)
     
     def manage_spark(self):
         for spark in self.sparks.copy():
@@ -276,17 +289,24 @@ class Game:
             if kill:
                 self.particles.remove(particle)
     
-    def manage_ui(self):
+    def manage_ui(self, is_main_game = False):
         fps_ui = TextUi(f"FPS : {int(self.clock.get_fps())}", (1540, 0), self.fonts["aggro"], 12, "white")
         fps_ui.render(self.screen)
 
         for ui in self.uis:
-            if hasattr(ui, "update"):
-                ui.update()
-            if hasattr(ui, "render"):
-                ui.render(self.screen)
-            if hasattr(ui, "wiggle"):
-                    ui.wiggle()
+            if not isinstance(ui, MouseCursor):
+                if hasattr(ui, "update"):
+                    ui.update()
+                if hasattr(ui, "render"):
+                    ui.render(self.screen)
+                if hasattr(ui, "wiggle"):
+                        ui.wiggle()
+        
+        #self.uis[0]는 무조건 Cursor임 i know it is 헬적화 그래도 state마다 이거 하는것보단 나음 ㅇㅈ?
+        self.uis[0].update()
+        if is_main_game:
+            self.uis[0].set_image("crosshair")
+        self.uis[0].render(self.screen)
 
     def manage_projectiles(self):
         for projectile in self.projectiles:
@@ -352,20 +372,20 @@ class Game:
             self.entities.append(Ratbit(self, "ratbit",
                                         pos=CEIL_SPAWN_POS if random.random() > .5 else FLOOR_SPAWN_POS,
                                         size=(150, 150), anim_size=(150, 150), 
-                                        following_speed=30, 
+                                        following_speed=self.current_level_data["speed"]["ratbit_speed"], 
                                         health=1, damage=self.current_level_data["damages"]["ratbit_damage"], attack_range=100))
         #STRUCKER
         if self.current_level_data["entities"]["strucker"] and random.randint(1, self.current_level_data["spawn_rates"]["strucker_spawn_rate"]) == 1:
             self.entities.append(Obstacle(self, "strucker", 
                                         pos=(FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1] + 40),
                                         size=(100, 150), anim_size=(150, 150), 
-                                        speed=20, damage=self.current_level_data["damages"]["strucker_damage"]))
+                                        speed=self.current_level_data["speed"]["strucker_speed"], damage=self.current_level_data["damages"]["strucker_damage"]))
         #STALKER
         if self.current_level_data["entities"]["stalker"] and random.randint(1, self.current_level_data["spawn_rates"]["stalker_spawn_rate"]) == 1:
             self.entities.append(Obstacle(self, "stalker", 
                                         pos=(CEIL_SPAWN_POS[0], CEIL_SPAWN_POS[1] - 100),
                                         size=(150, 400), anim_size=(150, 400), 
-                                        speed=20, damage=self.current_level_data["damages"]["stalker_damage"]))
+                                        speed=self.current_level_data["speed"]["stalker_speed"], damage=self.current_level_data["damages"]["stalker_damage"]))
         #HELLI
         if self.current_level_data["entities"]["helli"] and random.randint(1, self.current_level_data["spawn_rates"]["helli_spawn_rate"]) == 1:
             self.entities.append(Helli(self, "helli", 
@@ -373,14 +393,14 @@ class Game:
                                         size=(200, 200), anim_size=(150, 150), speed=5, health=self.current_level_data["healths"]["helli_health"], damage=self.current_level_data["damages"]["helli_damage"], 
                                         up=(CEIL_SPAWN_POS[0] - 200, CEIL_SPAWN_POS[1] - 100), 
                                         down=(FLOOR_SPAWN_POS[0] - 200, FLOOR_SPAWN_POS[1] + 100),
-                                        attack_chance=90, bullet_speed=30))
+                                        attack_chance=self.current_level_data["attack_chance"]["helli_attack_chance"], bullet_speed=self.current_level_data["speed"]["helli_bullet_speed"]))
         #BROOK
         if self.current_level_data["entities"]["brook"] and random.randint(1, self.current_level_data["spawn_rates"]["brook_spawn_rate"]) == 1:
             self.entities.append(Brook(self, "brook", 
                                        pos=(CEIL_SPAWN_POS[0] + 100, 350), 
                                        size=(200, 200), anim_size=(150, 150),
                                        start_following_speed = 3,
-                                       following_speed=55, max_health=1, damage=self.current_level_data["damages"]["brook_damage"], speed_change_speed = 5))
+                                       following_speed=60, max_health=1, damage=self.current_level_data["damages"]["brook_damage"], speed_change_speed = 5))
         #BLUGLOGGER
         if self.current_level_data["entities"]["bluglogger"] and random.randint(1, self.current_level_data["spawn_rates"]["bluglogger_spawn_rate"]) == 1:
             #블러그로거는 한 장면에 하나만 나옴
@@ -388,19 +408,19 @@ class Game:
                 self.entities.append(BlugLogger(self, "bluglogger", 
                                                 pos= (FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1] + 35), size=(150, 150), anim_size=(150, 150), 
                                                 following_speed=10, max_health=self.current_level_data["healths"]["bluglogger_health"], damage=self.current_level_data["damages"]["bluglogger_damage"], 
-                                                wait_time=90, attack_rate=50))
+                                                wait_time=self.current_level_data["speed"]["blug_logger_wait_time"], attack_rate=50))
 
         #스포닝 에너미 끝
 
     def spawn_items(self):
         if self.current_level_data["entities"]["medicine"] and random.randint(1, self.current_level_data["spawn_rates"]["medicine_spawn_rate"]) == 1:
             self.entities.append(
-                Medicine(self, "medicine", FLOOR_SPAWN_POS, (130 , 130), (130, 130), 20, self.current_level_data["amount"]["heal_amount"])
+                Medicine(self, "medicine", FLOOR_SPAWN_POS, (130 , 130), (130, 130), self.current_level_data["speed"]["medicine_speed"], self.current_level_data["amount"]["heal_amount"])
             )
         #추가 탄약은 플레이어가 최대 탄약이 아닐때 생김
         if self.player.ammo != self.player.max_ammo and self.current_level_data["entities"]["ammo"] and random.randint(1, self.current_level_data["spawn_rates"]["ammo_spawn_rate"]) == 1:
             self.entities.append(
-                Ammo(self, "ammo", FLOOR_SPAWN_POS, (130 , 130), (130, 130), 20, self.current_level_data["amount"]["ammo_amount"])
+                Ammo(self, "ammo", FLOOR_SPAWN_POS, (130 , 130), (130, 130), self.current_level_data["speed"]["ammo_speed"], self.current_level_data["amount"]["ammo_amount"])
             )
 
     def spawn_boss_entity(self):
@@ -528,6 +548,7 @@ class Game:
 
         self.set_bgm("main_title")
 
+
         while(True):
             #update:
             self.current_time = pg.time.get_ticks()
@@ -632,11 +653,11 @@ class Game:
                         self.end_scene()
                         self.state_login_menu()
                     #로그아웃
-                    if logout_btn !=0 and logout_btn.hovering:
+                    if logout_btn != None and logout_btn.hovering:
                         self.end_scene()
                         self.state_logout()
                     #정보 저장
-                    if save_data_btn !=0 and save_data_btn.hovering:
+                    if save_data_btn != None and save_data_btn.hovering:
                         with open("Status.json", "r", encoding="utf-8") as file:
                             status_data = json.load(file)
 
@@ -663,32 +684,14 @@ class Game:
                             doc_ref.update({"high_scores": high_scores})
                         
                         print("정보가 저장되었습니다.")
-                    if get_data_btn !=0 and get_data_btn.hovering:
-                        #기존 데이터 가져오기
-                        with open("Status.json", "r", encoding="utf-8") as file:
-                            #high_scores만 비교
-                            current_high_scores = json.load(file).pop("high_scores")
-
-                        #firebase에서 데이터 가져오기
+                    if get_data_btn != None and get_data_btn.hovering:
                         doc_ref = db.collection("users").document(user.uid)
-                        data = doc_ref.get().to_dict()
+                        data = doc_ref.get()
 
-                        #name 항목은 제외
-                        filtered_data = {key: value for key, value in data.items() if key != "name"}
+                        filtered_data = 0
+                        if data:
+                            filtered_data = {key: value for key, value in data.to_dict().items() if key != "name"}
 
-                        #high_scores와 나머지 분리
-                        high_scores = filtered_data.pop("high_scores")
-
-                        #기존 데이터와 비교해서 큰 데이터로 저장
-                        final_high_scores = {
-                            key: max(high_scores.get(key, 0), current_high_scores.get(key, 0))
-                            for key in set(high_scores) | set(current_high_scores)
-                        }
-
-                        #데이터 합치기
-                        filtered_data["high_scores"] = final_high_scores
-
-                        #저장 과정
                         with open("status.json", "w", encoding="utf-8") as file:
                             json.dump(filtered_data, file, indent=4, ensure_ascii=False)
                         
@@ -731,15 +734,17 @@ class Game:
         #구렁이 끝
 
         #백그라운드 스크롤
-        background1 = self.assets["bg"][f"{self.current_level_data['bg_name']}/0"]
-        background2 = self.assets["bg"][f"{self.current_level_data['bg_name']}/1"]
+        
         if is_endless:
             choice = random.choice(["office", "steam_room", "foyer", "secure_room", "horror_office", "dark_office"])
             background1 = self.assets["bg"][f"{choice}/0"]
             background2 = self.assets["bg"][f"{choice}/1"]
+        else:
+            background1 = self.assets["bg"][f"{self.current_level_data['bg_name']}/0"]
+            background2 = self.assets["bg"][f"{self.current_level_data['bg_name']}/1"]
 
         bg_width = background1.get_width()
-        bg_scroll_speed = 20
+        bg_scroll_speed = self.current_level_data["scroll_speed"]
 
         bg_x1 = 0
         bg_x2 = bg_width
@@ -752,8 +757,12 @@ class Game:
         self.physic_rects = [floor, ceil]
 
         #ui
-        stat_ui = TextUi("", (50, 30), self.fonts["aggro"], 30, "white")
-        self.uis.append(stat_ui)
+        ammo_text = TextUi("", (100, 30), self.fonts["aggro"], 30, "white")
+        self.uis.append(ammo_text)
+        health_text = TextUi("", (250, 30), self.fonts["aggro"], 30, "white")
+        self.uis.append(health_text)
+        score_text = TextUi("", (475, 30), self.fonts["aggro"], 30, "white")
+        self.uis.append(score_text)
 
         #일시 정지 UI
         pause_bg = background1
@@ -767,10 +776,11 @@ class Game:
         duration = self.current_level_data["level_length"]
         start_pos = (1000, 22)
         end_pos = (1520, 22)
+
         start_time = time.time()
 
         self.set_bgm(f"run{random.randint(1, 2)}")
-            
+
         while(True):
             #update:
             #화면 초기화
@@ -783,7 +793,7 @@ class Game:
                 elapsed_time = time.time() - start_time
                 
                 #레벨 끝나기 1초전에 엔딩애니메이션 보여주기
-                if duration - elapsed_time <= 1 and not is_endless:
+                if not is_endless and duration - elapsed_time <= 1:
                     ENDING = True
                     self.player.pos.x += 25
                     self.player.invincible = True
@@ -808,10 +818,16 @@ class Game:
                     self.screen.blit(self.assets["bg"]["light"], (light_pos[0], light_pos[1]))
 
                 #UI렌더
-                stat_ui.text = f"남은 탄: {self.player.ammo} | {self.score} | 거대 괴물로부터 남은 거리 : {self.player.health}cm"
+                ammo_text.text = str(self.player.ammo)
+                health_text.text = str(self.player.health) + " cm"
+                score_text.text = str(self.score)
                 self.screen.blit(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), (0, 700))
                 self.screen.blit(pg.transform.flip(pg.transform.scale(self.assets["ui"]["bottom_fade"], (SCREEN_SCALE[0], 150)), False, True), (0, 0))
                 self.screen.blit(pg.transform.flip(pg.transform.rotate(self.assets["ui"]["bottom_fade"], 90), True, False), (0, 0))
+                
+                self.screen.blit(pg.transform.scale(self.assets["ui"]["remain_ammo_icon"], (50, 50)), (20, 20))
+                self.screen.blit(pg.transform.scale(self.assets["ui"]["distance_icon"], (50, 50)), (170, 20))
+                self.screen.blit(pg.transform.scale(self.assets["ui"]["score_icon"], (50, 50)), (400, 20))
 
                 #쿠키런 마냥 움직이는 바 어쩌구 유남생?
                 current_pos = [0, 0]
@@ -851,10 +867,15 @@ class Game:
                 worm.render(self.screen)
                 #구렁이 ㅋㅋ 끝
 
+                if not PAUSED:
+                    self.mouse.set_image("crosshair")
+                else:
+                    self.mouse.set_image("default")
+
                 #매니징
                 self.manage_particle()
                 self.manage_spark()
-                self.manage_ui()
+                self.manage_ui(True)
                 #매니징 끝 
                 
                 #ui인데 그 뭐냐 그거 움직이는거
@@ -980,7 +1001,7 @@ class Game:
         background2 = self.assets["bg"][f"{self.current_level_data['bg_name']}/1"]
 
         bg_width = background1.get_width()
-        bg_scroll_speed = 20
+        bg_scroll_speed = self.current_level_data["scroll_speed"]
 
         bg_x1 = 0
         bg_x2 = bg_width
@@ -993,8 +1014,12 @@ class Game:
         self.physic_rects = [floor, ceil]
 
         #ui
-        stat_ui = TextUi("", (50, 30), self.fonts["aggro"], 30, "white")
-        self.uis.append(stat_ui)
+        ammo_text = TextUi("", (100, 30), self.fonts["aggro"], 30, "white")
+        self.uis.append(ammo_text)
+        health_text = TextUi("", (250, 30), self.fonts["aggro"], 30, "white")
+        self.uis.append(health_text)
+        score_text = TextUi("", (475, 30), self.fonts["aggro"], 30, "white")
+        self.uis.append(score_text)
 
         #일시 정지 UI
         pause_bg = background1
@@ -1044,9 +1069,6 @@ class Game:
                 self.screen.blit(background2, (bg_x2, 0))
                 self.screen.blit(rect_surface, (0, 0))
 
-                #UI렌더
-                stat_ui.text = f"남은 탄: {self.player.ammo} | {self.score} | HP : {self.player.health}"
-
                 #쿠키런 마냥 움직이는 바 어쩌구 유남생?
                 current_pos = [0, 0]
                 t = min(elapsed_time / duration, 1)
@@ -1078,10 +1100,24 @@ class Game:
                 self.manage_entity()
                 #매니징 끝
 
+                if not PAUSED:
+                    self.mouse.set_image("crosshair")
+                else:
+                    self.mouse.set_image("default")
+
+                #UI렌더
+                ammo_text.text = str(self.player.ammo)
+                health_text.text = str(self.player.health) + " hp"
+                score_text.text = str(self.score)
+                
+                self.screen.blit(pg.transform.scale(self.assets["ui"]["remain_ammo_icon"], (50, 50)), (20, 20))
+                self.screen.blit(pg.transform.scale(self.assets["ui"]["distance_icon"], (50, 50)), (170, 20))
+                self.screen.blit(pg.transform.scale(self.assets["ui"]["score_icon"], (50, 50)), (400, 20))
+
                 #매니징
                 self.manage_particle()
                 self.manage_spark()
-                self.manage_ui()
+                self.manage_ui(True)
                 #매니징 끝 
                 
                 #화면 렌더
@@ -1353,6 +1389,7 @@ class Game:
 
         #점su 초기화잉
         self.score = 0
+        
 
         while True:
             self.screen.fill("black")
@@ -1712,7 +1749,6 @@ class Game:
 
         clear_data = {
             "is_first_play": True,
-            "need_to_see_made_by": False,
             "high_scores": {
             "BigBreakOut": 0,
                 "1": 0,
@@ -1730,7 +1766,7 @@ class Game:
             },
                 "level": 1,
                 "sfx_volume": 1,
-                "bgm_volume": 1
+                "bgm_volume": 0.5
         }
 
         with open("status.json", "w", encoding="utf-8") as file:
@@ -1841,6 +1877,7 @@ class Game:
         self.uis.append(VanishingTextUi(self, "(<- or A , -> or D)로 넘기기", (650, 730), self.fonts["aggro"], 40, "black", 240, 5))
 
         self.set_bgm("dogam")
+
 
         while True:
             self.screen.fill("black")
@@ -2135,6 +2172,10 @@ class Game:
         self.projectiles.clear()
         self.entities.clear()
         self.status = load_data("Status.json")
+
+        #쌈@뽕한 새삥 마우스 마련
+        self.mouse = MouseCursor(self, "default")
+        self.uis.append(self.mouse)
 
     def on_player_kill(self, killed_entity : Entity):
         self.camera_shake_gain += 5
