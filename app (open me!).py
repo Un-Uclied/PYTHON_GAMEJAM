@@ -497,22 +497,18 @@ class Game:
         tokenFile = open("token.txt", "r")
         token = tokenFile.read()
 
-        user = 0
+        user = None
         if token:
             try:
                 # ID 토큰을 검증하여 사용자 정보 가져오기
                 decoded_token = auth.verify_id_token(token, clock_skew_seconds=60)
                 uid = decoded_token['uid']
                 user = auth.get_user(uid)
-                
-                # 사용자 정보 출력
-                #print("User ID:", user.uid)
-                #print("Email:", user.email)
 
+                #uid를 이용한 유저 정보 불러오기
                 doc_ref = db.collection("users").document(user.uid)
                 doc = doc_ref.get()
                 if doc.exists:
-                    #print("Nickname:", doc.to_dict()["name"])
                     pass
                 else:
                     print("에러! : 계정 정보 없음")
@@ -646,7 +642,7 @@ class Game:
                         self.end_scene()
                         self.state_settings()
                     #로그인
-                    if login_btn.hovering and user == 0:
+                    if login_btn.hovering and user == None:
                         self.end_scene()
                         self.state_login_menu()
                     #로그아웃
@@ -681,11 +677,12 @@ class Game:
                             doc_ref.update({"high_scores": high_scores})
                         
                         print("정보가 저장되었습니다.")
+                    #정보 불러오기
                     if get_data_btn != None and get_data_btn.hovering:
                         doc_ref = db.collection("users").document(user.uid)
                         data = doc_ref.get()
 
-                        filtered_data = 0
+                        filtered_data = None
                         if data:
                             filtered_data = {key: value for key, value in data.to_dict().items() if key != "name"}
 
@@ -1329,7 +1326,7 @@ class Game:
         replay_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["replay"], (200, 150)), (1000, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(replay_btn)
 
-        bg = self.assets["bg"][f"{self.current_level_data["bg_name"]}/"]
+        bg = self.assets["bg"][f"{self.current_level_data["bg_name"]}"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
         rect_surface.fill((0, 0, 0, 200))
         
