@@ -6,10 +6,12 @@ import time
 import json
 
 from Scripts.utils import load_image, load_images, load_data, set_data
-from Scripts.Entities import Player, Entity, KillableEnemy, Obstacle, Ratbit, Helli, Brook, BlugLogger, Medicine, Ammo, Boss, Ufo, BossSoul
+from Scripts.Entities import Player, Entity, KillableEnemy, Obstacle
+from Scripts.Entities import Ratbit, Helli, Brook, BlugLogger, Medicine, Ammo, Boss, Ufo, BossSoul
 from Scripts.Animations import Animation
 from Scripts.Particles import Spark, Particle
-from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton, InputField, Slider, VanishingTextUi, KeyInputField, MouseCursor,ClickableUi
+from Scripts.Ui import TextUi, ButtonUi, WiggleButtonUi, LinkUi, TextButton
+from Scripts.Ui import InputField, Slider, VanishingTextUi, KeyInputField, MouseCursor,ClickableUi
 from Scripts.Bullets import Bullet, PlayerBullet, BossBullet
 
 import firebase_admin
@@ -27,8 +29,6 @@ SCREEN_SCALE = (1600, 800)
 GAME_NAME = "Break Away"
 TARGET_FPS = 60
 
-#입력 설정
-KEY_JUMP = pg.K_SPACE
 #마우스 입력 설정
 MOUSE_ATTACK = 0
 MOUSE_BLOCK = 2
@@ -543,8 +543,6 @@ class Game:
 
         hover_image = pg.Surface((100, 100))
 
-        elapsed_time = 0
-
         self.set_bgm("main_title")
 
 
@@ -697,7 +695,6 @@ class Game:
                         print("정보를 불러왔습니다.")
 
             dt = self.clock.tick(TARGET_FPS) / 1000
-            elapsed_time += dt
             #카메라 업데이트
             pg.display.flip()
 
