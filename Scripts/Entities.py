@@ -40,7 +40,7 @@ class Entity:
             self.action = action
             self.animation = self.game.assets["entities"][self.name + '/' + self.action].copy()
 
-    def can_interact():
+    def can_interact(self):
         pass
 
     def render(self, surface, offset = (0, 0)):
