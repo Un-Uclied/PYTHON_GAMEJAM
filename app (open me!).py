@@ -736,6 +736,7 @@ class Game:
         
         if is_endless:
             choice = random.choice(["office", "steam_room", "foyer", "secure_room", "horror_office", "dark_office"])
+            set_data("Assets/Levels/BigBreakOut.json", "bg_name", choice)
             background1 = self.assets["bg"][f"{choice}/0"]
             background2 = self.assets["bg"][f"{choice}/1"]
         else:
@@ -1320,7 +1321,10 @@ class Game:
 
     #게임 종료
     def state_game_result(self, won = True):
-        
+        #?????
+        if self.current_level_data["level_index"] == "BigBreakOut":
+            self.current_level_data = load_data("Assets/Levels/BigBreakOut.json")
+
         quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (700, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(quit_btn)
         map_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 150)), (400, 650), self.sfxs["ui_hover"], 1, 20)
