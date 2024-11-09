@@ -1,11 +1,7 @@
 {
     "is_first_play": true,
     "high_scores": {
-<<<<<<< HEAD
         "BigBreakOut": 0,
-=======
-        "BigBreakOut": 3500,
->>>>>>> 4bebd805cfddfa291e6a56928e7e1e9cc65fce9d
         "1": 0,
         "2": 0,
         "3": 0,
@@ -21,5 +17,5 @@
     },
     "level": 1,
     "sfx_volume": 1,
-    "bgm_volume": 0.5408163265306123
+    "bgm_volume": 0.5
 }
