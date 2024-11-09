@@ -501,7 +501,7 @@ class Game:
         if token:
             try:
                 # ID 토큰을 검증하여 사용자 정보 가져오기
-                decoded_token = auth.verify_id_token(token, clock_skew_seconds=30)
+                decoded_token = auth.verify_id_token(token, clock_skew_seconds=60)
                 uid = decoded_token['uid']
                 user = auth.get_user(uid)
                 
@@ -588,7 +588,7 @@ class Game:
             if setting_btn.hovering:
                 hover_image = self.assets["ui"]["setting_bg"]
             #로그인
-            if login_btn.hovering or(logout_btn in self.uis and logout_btn.hovering)or (get_data_btn in self.uis and get_data_btn.hovering) or (save_data_btn in self.uis and save_data_btn.hovering):
+            if login_btn.hovering or (logout_btn in self.uis and logout_btn.hovering) or (get_data_btn in self.uis and get_data_btn.hovering) or (save_data_btn in self.uis and save_data_btn.hovering):
                 hover_image = self.assets["ui"]["login_bg"]
 
             self.manage_spark()
@@ -1328,7 +1328,7 @@ class Game:
         replay_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["replay"], (200, 150)), (1000, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(replay_btn)
 
-        bg = self.assets["bg"][f"{self.current_level_data["bg_name"]}/0"]
+        bg = self.assets["bg"][f"{self.current_level_data["bg_name"]}/"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
         rect_surface.fill((0, 0, 0, 200))
         
