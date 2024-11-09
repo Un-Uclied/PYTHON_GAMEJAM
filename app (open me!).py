@@ -1359,7 +1359,7 @@ class Game:
 
             try:
                 # ID 토큰을 검증하여 사용자 정보 가져오기
-                decoded_token = auth.verify_id_token(token, clock_skew_seconds=30)
+                decoded_token = auth.verify_id_token(token, clock_skew_seconds=60)
                 uid = decoded_token['uid']
                 user = auth.get_user(uid)
                 userDoc_ref = db.collection("users").document(user.uid)
@@ -1674,7 +1674,7 @@ class Game:
                                 with open("token.txt", "r") as tokenFile:
                                     token = tokenFile.read()
 
-                                decoded_token = auth.verify_id_token(token, clock_skew_seconds=30)
+                                decoded_token = auth.verify_id_token(token, clock_skew_seconds=60)
                                 uid = decoded_token['uid']
                                 user = auth.get_user(uid)
 
