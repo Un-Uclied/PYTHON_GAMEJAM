@@ -1326,7 +1326,7 @@ class Game:
         replay_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["replay"], (200, 150)), (1000, 650), self.sfxs["ui_hover"], 1, 20)
         self.uis.append(replay_btn)
 
-        bg = self.assets["bg"][f"{self.current_level_data["bg_name"]}"]
+        bg = self.assets["bg"][f"{self.current_level_data["bg_name"]}/0"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
         rect_surface.fill((0, 0, 0, 200))
         
