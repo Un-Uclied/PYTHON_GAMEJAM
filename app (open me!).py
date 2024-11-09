@@ -379,21 +379,25 @@ class Game:
             self.entities.append(Obstacle(self, "strucker", 
                                         pos=(FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1] + 40),
                                         size=(100, 150), anim_size=(150, 150), 
-                                        speed=self.current_level_data["speed"]["strucker_speed"], damage=self.current_level_data["damages"]["strucker_damage"]))
+                                        speed=self.current_level_data["speed"]["strucker_speed"],
+                                         damage=self.current_level_data["damages"]["strucker_damage"]))
         #STALKER
         if self.current_level_data["entities"]["stalker"] and random.randint(1, self.current_level_data["spawn_rates"]["stalker_spawn_rate"]) == 1:
             self.entities.append(Obstacle(self, "stalker", 
                                         pos=(CEIL_SPAWN_POS[0], CEIL_SPAWN_POS[1] - 100),
                                         size=(150, 400), anim_size=(150, 400), 
-                                        speed=self.current_level_data["speed"]["stalker_speed"], damage=self.current_level_data["damages"]["stalker_damage"]))
+                                        speed=self.current_level_data["speed"]["stalker_speed"],
+                                        damage=self.current_level_data["damages"]["stalker_damage"]))
         #HELLI
         if self.current_level_data["entities"]["helli"] and random.randint(1, self.current_level_data["spawn_rates"]["helli_spawn_rate"]) == 1:
             self.entities.append(Helli(self, "helli", 
                                         pos=(FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1]),
-                                        size=(200, 200), anim_size=(150, 150), speed=5, health=self.current_level_data["healths"]["helli_health"], damage=self.current_level_data["damages"]["helli_damage"], 
+                                        size=(200, 200), anim_size=(150, 150), speed=5, health=self.current_level_data["healths"]["helli_health"],
+                                          damage=self.current_level_data["damages"]["helli_damage"], 
                                         up=(CEIL_SPAWN_POS[0] - 200, CEIL_SPAWN_POS[1] - 100), 
                                         down=(FLOOR_SPAWN_POS[0] - 200, FLOOR_SPAWN_POS[1] + 100),
-                                        attack_chance=self.current_level_data["attack_chance"]["helli_attack_chance"], bullet_speed=self.current_level_data["speed"]["helli_bullet_speed"]))
+                                        attack_chance=self.current_level_data["attack_chance"]["helli_attack_chance"],
+                                          bullet_speed=self.current_level_data["speed"]["helli_bullet_speed"]))
         #BROOK
         if self.current_level_data["entities"]["brook"] and random.randint(1, self.current_level_data["spawn_rates"]["brook_spawn_rate"]) == 1:
             self.entities.append(Brook(self, "brook", 
@@ -407,7 +411,8 @@ class Game:
             if not any(isinstance(entity, BlugLogger) for entity in self.entities):
                 self.entities.append(BlugLogger(self, "bluglogger", 
                                                 pos= (FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1] + 35), size=(150, 150), anim_size=(150, 150), 
-                                                following_speed=10, max_health=self.current_level_data["healths"]["bluglogger_health"], damage=self.current_level_data["damages"]["bluglogger_damage"], 
+                                                following_speed=10, max_health=self.current_level_data["healths"]["bluglogger_health"],
+                                                damage=self.current_level_data["damages"]["bluglogger_damage"], 
                                                 wait_time=self.current_level_data["speed"]["blug_logger_wait_time"], attack_rate=50))
 
         #스포닝 에너미 끝
@@ -415,13 +420,17 @@ class Game:
     def spawn_items(self):
         if self.current_level_data["entities"]["medicine"] and random.randint(1, self.current_level_data["spawn_rates"]["medicine_spawn_rate"]) == 1:
             self.entities.append(
-                Medicine(self, "medicine", FLOOR_SPAWN_POS, (130 , 130), (130, 130), self.current_level_data["speed"]["medicine_speed"], self.current_level_data["amount"]["heal_amount"])
+                Medicine(self, "medicine", FLOOR_SPAWN_POS, (130 , 130), (130, 130),
+                          self.current_level_data["speed"]["medicine_speed"], self.current_level_data["amount"]["heal_amount"])
             )
-        #추가 탄약은 플레이어가 최대 탄약이 아닐때 생김
-        if self.player.ammo != self.player.max_ammo and self.current_level_data["entities"]["ammo"] and random.randint(1, self.current_level_data["spawn_rates"]["ammo_spawn_rate"]) == 1:
-            self.entities.append(
-                Ammo(self, "ammo", FLOOR_SPAWN_POS, (130 , 130), (130, 130), self.current_level_data["speed"]["ammo_speed"], self.current_level_data["amount"]["ammo_amount"])
-            )
+        
+        if self.current_level_data["entities"]["ammo"] and random.randint(1, self.current_level_data["spawn_rates"]["ammo_spawn_rate"]) == 1:
+            #추가 탄약은 플레이어가 최대 탄약이 아닐때 생김
+            if self.player.ammo != self.player.max_ammo:
+                self.entities.append(
+                    Ammo(self, "ammo", FLOOR_SPAWN_POS, (130 , 130), (130, 130),
+                        self.current_level_data["speed"]["ammo_speed"], self.current_level_data["amount"]["ammo_amount"])
+                )
 
     def spawn_boss_entity(self):
         if not any(isinstance(entity, Obstacle) for entity in self.entities):
@@ -430,7 +439,8 @@ class Game:
                 self.entities.append(Obstacle(self, "cannon", 
                                             pos=(FLOOR_SPAWN_POS[0], FLOOR_SPAWN_POS[1] + 10),
                                             size=(150, 150), anim_size=(150, 150), 
-                                            speed=self.current_level_data["speed"]["cannon_speed"], damage=self.current_level_data["damages"]["cannon_damage"]))
+                                            speed=self.current_level_data["speed"]["cannon_speed"],
+                                            damage=self.current_level_data["damages"]["cannon_damage"]))
         
         if self.current_level_data["entities"]["ufo"] and random.randint(1, self.current_level_data["spawn_rates"]["ufo_spawn_rate"]) == 1:
             self.entities.append(Ufo(self, "ufo", (1600, 0), (150, 150), (150, 150),
@@ -560,7 +570,7 @@ class Game:
             for btn in btns:
                 btn.pos[1] = 20 + y_offset + margin * btns.index(btn)
     
-            #지도 버튼    tlqkf 나도 좀 똥코드인건 아는데 어쩔수가;
+            #지도 버튼    좀 이상한 코드인건아는데 어쩔수가;
             if map_btn.hovering:
                 hover_image = self.assets["ui"]["world_bg"]
             #엔드레스 게임으로
@@ -879,11 +889,6 @@ class Game:
                 worm.render(self.screen)
                 #구렁이 ㅋㅋ 끝
 
-                if not PAUSED:
-                    self.mouse.set_image("crosshair")
-                else:
-                    self.mouse.set_image("default")
-
                 #매니징
                 self.manage_particle()
                 self.manage_spark()
@@ -949,7 +954,6 @@ class Game:
                     self.end_scene()
                     pg.quit()
                     sys.exit()
-
                 if event.type == pg.KEYDOWN:
                     if event.key == self.status["key_bindings"]["점프키"]:
                         if self.player.jump(20):
@@ -957,8 +961,6 @@ class Game:
                     if event.key == pg.K_SPACE:
                         if PAUSED:
                             PAUSED = False
-                    
-                    
                     if event.key == pg.K_ESCAPE:
                         if PAUSED: #ESC누르기 시작
                             current_esc_time += 1
@@ -966,15 +968,12 @@ class Game:
                             esc_txt.text = "계속 누르고 계세요.."
                         else :
                             PAUSED = True
-
                 if event.type == pg.KEYUP:
                     if event.key == pg.K_ESCAPE:
                         if PAUSED: #ESC를 누르다 뗌
                             esc_pressing = False
                             current_esc_time = 0
                             esc_txt.text = "ESC를 꾹눌러 월드로 돌아가기"
-                        
-                
                 #마우스가 창밖에 나가면 PAUSE
                 if event.type == pg.ACTIVEEVENT:
                     if event.gain == 0:
@@ -1050,13 +1049,17 @@ class Game:
         self.set_bgm("boss")
 
         #보스
-        boss = Boss(self, "boss", (1200, 150), (500, 500), (500, 500), 5000, self.assets["props"]["boss/arm"], self.current_level_data["damages"]["boss_bullet_damage"], self.current_level_data["speed"]["boss_bullet_speed"], self.current_level_data["attack_chance"]["boss_attack_chance"], (280, 190))
+        boss = Boss(self, "boss", (1200, 150), (500, 500), (500, 500), 5000, self.assets["props"]["boss/arm"],
+                     self.current_level_data["damages"]["boss_bullet_damage"], self.current_level_data["speed"]["boss_bullet_speed"],
+                       self.current_level_data["attack_chance"]["boss_attack_chance"], (280, 190))
         self.entities.append(boss)
         boss_soul = BossSoul(self, "world_doom", (1100, 300), (150, 150), (150, 150), 100, self.current_level_data["speed"]["world_doom_speed"])
         self.entities.append(boss_soul)
         self.boss_died = False
 
-        self.uis.append(VanishingTextUi(self, f"{pg.key.name(self.status["key_bindings"]["좌로 움직이기키"]).upper()}, {pg.key.name(self.status["key_bindings"]["우로 움직이기키"]).upper()}로 움직이기", (650, 730), self.fonts["aggro"], 40, "white", 60, 5))
+        self.uis.append(VanishingTextUi(self,
+                                         f"{pg.key.name(self.status["key_bindings"]["좌로 움직이기키"]).upper()}, {pg.key.name(self.status["key_bindings"]["우로 움직이기키"]).upper()}로 움직이기",
+                                           (650, 730), self.fonts["aggro"], 40, "white", 60, 5))
 
         while(True):
             #update:
@@ -1245,7 +1248,8 @@ class Game:
         button_pos = [(390, 40), (500, 200), (920, 340), (1250, 450), (1070, 580), (1200, 700), (1500, 680)]
         buttons = []
         for i in range(6):
-            btn = ButtonUi(pg.transform.scale(self.assets["ui"]["node"] if i < self.status["level"] else self.assets["ui"]["locked_node"], (50, 50)), button_pos[i], self.sfxs["ui_hover"])
+            btn = ButtonUi(pg.transform.scale(self.assets["ui"]["node"] if i < self.status["level"] else self.assets["ui"]["locked_node"],
+                                               (50, 50)), button_pos[i], self.sfxs["ui_hover"])
             buttons.append(btn)
             self.uis.append(btn)
 
@@ -1279,38 +1283,6 @@ class Game:
             
             pg.draw.lines(self.screen, "red", False, line_pos, 5)
 
-            mouse_click = pg.mouse.get_pressed(3)[0]
-
-            #레벨 선택
-            for btn in buttons:
-                if btn.hovering and mouse_click and buttons.index(btn) + 1 <= self.status["level"]:
-                    selected_level = buttons.index(btn) + 1
-                    text.text = f"{selected_level} 레벨"
-                    high_score.text = f"하이스코어: {self.status['high_scores'][str(buttons.index(btn) + 1)]}"
-                    #high_score.text = "하이스코어 : {}".format(self.status["high_scores"][str(buttons.index(btn) + 1)])
-                    level_name.text = f"\"{load_data(f"Assets/Levels/{selected_level}.json")["level_name"]}\""
-                    if not escape_btn in self.uis:
-                        self.uis.append(escape_btn)
-            if boss_btn.hovering and mouse_click and self.status["level"] > 6:
-                selected_level = "Boss"
-                text.text = f"{selected_level} 레벨"
-                high_score.text = f"하이스코어 : {self.status["high_scores"]["Boss"]}"
-                level_name.text = f"\"{load_data(f"Assets/Levels/{selected_level}.json")["level_name"]}\""
-                if not escape_btn in self.uis:
-                        self.uis.append(escape_btn)
-            
-            #게임 시작
-            if escape_btn.hovering and mouse_click:
-                self.end_scene()
-                self.current_level_data = load_data(f"Assets/Levels/{selected_level}.json")
-                if selected_level == "Boss":
-                    #보su!!
-                    self.current_level_data = load_data(f"Assets/Levels/Boss.json")
-                    #self.state_boss()
-                    self.state_cut_scene(self.assets["cutscenes"]["boss_intro"], self.state_boss)
-                else:
-                    self.state_main_game()
-
             self.manage_spark()
             self.manage_particle()
             self.manage_ui()
@@ -1327,6 +1299,34 @@ class Game:
                     if quit_btn.hovering:
                         self.end_scene()
                         self.state_title_screen()
+                    #레벨 선택
+                    for btn in buttons:
+                        if btn.hovering and buttons.index(btn) + 1 <= self.status["level"]:
+                            selected_level = buttons.index(btn) + 1
+                            text.text = f"{selected_level} 레벨"
+                            high_score.text = f"하이스코어: {self.status['high_scores'][str(buttons.index(btn) + 1)]}"
+                            level_name.text = f"\"{load_data(f"Assets/Levels/{selected_level}.json")["level_name"]}\""
+                            if not escape_btn in self.uis:
+                                self.uis.append(escape_btn)
+                    if boss_btn.hovering and self.status["level"] > 6:
+                        selected_level = "Boss"
+                        text.text = f"{selected_level} 레벨"
+                        high_score.text = f"하이스코어 : {self.status["high_scores"]["Boss"]}"
+                        level_name.text = f"\"{load_data(f"Assets/Levels/{selected_level}.json")["level_name"]}\""
+                        if not escape_btn in self.uis:
+                                self.uis.append(escape_btn)
+                    
+                    #게임 시작
+                    if escape_btn.hovering:
+                        self.end_scene()
+                        self.current_level_data = load_data(f"Assets/Levels/{selected_level}.json")
+                        if selected_level == "Boss":
+                            #보su!!
+                            self.current_level_data = load_data(f"Assets/Levels/Boss.json")
+                            #self.state_boss()
+                            self.state_cut_scene(self.assets["cutscenes"]["boss_intro"], self.state_boss)
+                        else:
+                            self.state_main_game()
     
             self.clock.tick(TARGET_FPS)
             pg.display.flip()
@@ -2139,13 +2139,11 @@ class Game:
         cutscene_time = 10
         cutscene_current_time = 0
         can_next = False
-
         self.set_bgm("dialouge")
-
         while True:
             self.screen.fill("black")
             self.camera.fill("black")
-
+            
             self.manage_spark()
             self.manage_particle()
             self.manage_ui()
