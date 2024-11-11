@@ -1342,35 +1342,7 @@ class Game:
         if self.current_level_data["level_index"] == "BigBreakOut":
             self.current_level_data = load_data("Assets/Levels/BigBreakOut.json")
 
-        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (700, 650), self.sfxs["ui_hover"], 1, 20)
-        self.uis.append(quit_btn)
-        map_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 150)), (400, 650), self.sfxs["ui_hover"], 1, 20)
-        self.uis.append(map_btn)
-        replay_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["replay"], (200, 150)), (1000, 650), self.sfxs["ui_hover"], 1, 20)
-        self.uis.append(replay_btn)
-
-        bg = self.assets["bg"][f"{self.current_level_data["bg_name"]}/0"]
-        rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
-        rect_surface.fill((0, 0, 0, 200))
-        
-        self.uis.append(TextUi("탈출 성공!" if won else "탈출실패..", (300, 50), self.fonts["aggro"], 100, "white"))
-        self.uis.append(TextUi(f"{self.score}점", (300, 200), self.fonts["aggro"], 55, "white"))
-
-        if won:
-            self.sfxs["gamewon"].play()
-            if self.current_level_data["level_index"] == "Boss":
-                set_data("Status.json", "level", 7)
-            else:
-                set_data("Status.json", "level", max(int(self.current_level_data["level_index"]) + 1, int(self.status["level"])))
-        else:
-            self.sfxs["gameover"].play()
-            
-
-        if self.score > self.status["high_scores"][f"{self.current_level_data["level_index"]}"]:
-            set_data("Status.json", f"high_scores/{self.current_level_data['level_index']}", self.score)
-
-        #db에 기록 저장
-        if self.current_level_data["level_index"] == "BigBreakOut":
+            #db에 기록 저장
             tokenFile = open("token.txt", "r")
             token = tokenFile.read()
 
@@ -1401,6 +1373,33 @@ class Game:
                     
             except Exception as e:
                 print("Error verifying ID token:", e)
+
+        quit_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["quit"], (200, 150)), (700, 650), self.sfxs["ui_hover"], 1, 20)
+        self.uis.append(quit_btn)
+        map_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["world"], (200, 150)), (400, 650), self.sfxs["ui_hover"], 1, 20)
+        self.uis.append(map_btn)
+        replay_btn = WiggleButtonUi(pg.transform.scale(self.assets["ui"]["replay"], (200, 150)), (1000, 650), self.sfxs["ui_hover"], 1, 20)
+        self.uis.append(replay_btn)
+
+        bg = self.assets["bg"][f"{self.current_level_data["bg_name"]}/0"]
+        rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
+        rect_surface.fill((0, 0, 0, 200))
+        
+        self.uis.append(TextUi("탈출 성공!" if won else "탈출실패..", (300, 50), self.fonts["aggro"], 100, "white"))
+        self.uis.append(TextUi(f"{self.score}점", (300, 200), self.fonts["aggro"], 55, "white"))
+
+        if won:
+            self.sfxs["gamewon"].play()
+            if self.current_level_data["level_index"] == "Boss":
+                set_data("Status.json", "level", 7)
+            else:
+                set_data("Status.json", "level", max(int(self.current_level_data["level_index"]) + 1, int(self.status["level"])))
+        else:
+            self.sfxs["gameover"].play()
+            
+
+        if self.score > self.status["high_scores"][f"{self.current_level_data["level_index"]}"]:
+            set_data("Status.json", f"high_scores/{self.current_level_data['level_index']}", self.score)
         
         self.status = load_data("Status.json")
         self.uis.append(TextUi(f"최고 점수 : {self.status["high_scores"][f"{self.current_level_data["level_index"]}"]}점", (300, 260), self.fonts["aggro"], 32, "white"))
