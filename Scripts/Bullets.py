@@ -3,7 +3,8 @@ from Scripts.Particles import Spark
 
 
 class Bullet:
-    def __init__(self, game, spawn_pos : tuple, direction : pg.math.Vector2, speed : float, sprite : pg.Surface, timer : float, tag : str, shoot_by, damage : int):
+    def __init__(self, game, spawn_pos : tuple, direction : pg.math.Vector2, speed : float, sprite : pg.Surface, timer : float,
+                  tag : str, shoot_by, damage : int):
         self.pos = pg.math.Vector2(spawn_pos[0], spawn_pos[1])
         self.speed = speed
         self.direction = direction.normalize() * speed

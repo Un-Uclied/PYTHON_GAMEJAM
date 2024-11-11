@@ -6,12 +6,7 @@ BASE_IMAGE_PATH = "Assets/Sprites/"
 
 def load_image(path):
     img = pg.image.load(BASE_IMAGE_PATH + path)
-
-    if img.get_bitsize() == 32: #뒤에 투명한 배경이 있는 이미지
-        img = img.convert_alpha()
-    else: #뒤에 검은 배경이 있는 이미지
-        img = img.convert()
-    return img
+    return img.convert_alpha()
 
 def load_images(path):
     images = []

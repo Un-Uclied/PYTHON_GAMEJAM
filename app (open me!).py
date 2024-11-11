@@ -337,7 +337,8 @@ class Game:
                 if self.player.blocking:
                     #패링
                     if projectile.shoot_by in self.entities:
-                        projectile.direction =  pg.math.Vector2(projectile.shoot_by.get_center_pos().x - projectile.pos.x, projectile.shoot_by.get_center_pos().y - projectile.pos.y).normalize() * projectile.speed
+                        projectile.direction =  pg.math.Vector2(projectile.shoot_by.get_center_pos().x - projectile.pos.x,
+                                                                 projectile.shoot_by.get_center_pos().y - projectile.pos.y).normalize() * projectile.speed
                     else:
                         projectile.direction =  pg.math.Vector2(1, 0).normalize() * projectile.speed
                     self.on_player_blocked()
@@ -718,6 +719,10 @@ class Game:
                             json.dump(filtered_data, file, indent=4, ensure_ascii=False)
                         
                         print("정보를 불러왔습니다.")
+
+                        self.end_scene()
+                        
+                        self.state_title_screen()
 
             dt = self.clock.tick(TARGET_FPS) / 1000
             #카메라 업데이트
@@ -1457,11 +1462,14 @@ class Game:
         self.uis.append(TextUi("98세 못밤할아버지의 마지막 물 한모금 팀", (600, 50), self.fonts["aggro"], 50, "white"))
 
         self.uis.append(TextUi("서준범", (830, 220), self.fonts["aggro"], 50, "white"))
-        self.uis.append(LinkUi("깃허브", (850, 520), self.fonts["aggro"], 40, "white", "blue", self.sfxs["ui_hover"], "https://github.com/Un-Uclied"))
-        self.uis.append(LinkUi("유튜브", (850, 600), self.fonts["aggro"], 40, "white", "blue", self.sfxs["ui_hover"], "https://www.youtube.com/@null_plr/featured"))
+        self.uis.append(LinkUi("깃허브", (850, 520), self.fonts["aggro"], 40, "white", "blue", self.sfxs["ui_hover"],
+                                "https://github.com/Un-Uclied"))
+        self.uis.append(LinkUi("유튜브", (850, 600), self.fonts["aggro"], 40, "white", "blue", self.sfxs["ui_hover"],
+                                "https://www.youtube.com/@null_plr/featured"))
 
         self.uis.append(TextUi("이준영    (<-못밤)", (1130, 220), self.fonts["aggro"], 50, "white"))
-        self.uis.append(LinkUi("깃허브", (1150, 520), self.fonts["aggro"], 40, "white", "blue", self.sfxs["ui_hover"], "https://github.com/MicKoreaYoutube"))
+        self.uis.append(LinkUi("깃허브", (1150, 520), self.fonts["aggro"], 40, "white", "blue", self.sfxs["ui_hover"],
+                                "https://github.com/MicKoreaYoutube"))
 
         bg = self.assets["bg"]["office/1"]
         rect_surface = pg.Surface(bg.get_size(), pg.SRCALPHA)
@@ -1598,7 +1606,7 @@ class Game:
                         self.end_scene()
                         self.state_title_screen()
                 
-                #tlqkf 왜 안됨?
+                #왜 안됨?
                 email.get_event(event)
                 password.get_event(event)
     
@@ -1750,7 +1758,7 @@ class Game:
                     pg.quit()
                     sys.exit()
                 
-                #tlqkf 왜 안됨?
+                # 왜 안됨?
                 email.get_event(event)
                 password.get_event(event)
                 passwordCheck.get_event(event)
@@ -2144,7 +2152,7 @@ class Game:
         while True:
             self.screen.fill("black")
             self.camera.fill("black")
-            
+
             self.manage_spark()
             self.manage_particle()
             self.manage_ui()

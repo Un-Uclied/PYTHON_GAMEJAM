@@ -1,21 +1,21 @@
 {
-    "is_first_play": true,
+    "key_bindings": {
+        "우로 움직이기키": 100,
+        "점프키": 32,
+        "좌로 움직이기키": 97
+    },
+    "bgm_volume": 0.07959183673469387,
+    "level": 2,
+    "is_first_play": false,
+    "sfx_volume": 0.004081632653061225,
     "high_scores": {
         "BigBreakOut": 0,
-        "1": 0,
         "2": 0,
         "3": 0,
         "4": 0,
-        "5": 0,
         "6": 0,
-        "Boss": 0
-    },
-    "key_bindings": {
-        "좌로 움직이기키": 97,
-        "우로 움직이기키": 100,
-        "점프키": 32
-    },
-    "level": 1,
-    "sfx_volume": 1,
-    "bgm_volume": 0.5
+        "Boss": 0,
+        "5": 0,
+        "1": 28000
+    }
 }
