@@ -8,5 +8,5 @@ freesound.org opengameart.org pixabay.com의 CC0라이선스 음향 효과를 �
 모든 그래픽은 저희팀이 자체제작하였습니다
 
 <p align="center">
-  <img width="460" height="300" src="https://picsum.photos/460/300">
+  <img width="460" height="300" src="./image.png">
 </p>
