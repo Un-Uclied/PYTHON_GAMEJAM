@@ -10,3 +10,11 @@ freesound.org opengameart.org pixabay.com의 CC0라이선스 음향 효과를 �
 <p align="center">
   <img width="752" height="402" src="./image.png">
 </p>
+
+<p align="center">
+  <img width="752" height="402" src="./image2.png">
+</p>
+
+<p align="center">
+  <img width="752" height="402" src="./image3.png">
+</p>
