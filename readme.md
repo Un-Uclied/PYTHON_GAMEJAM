@@ -6,3 +6,7 @@ freesound.org opengameart.org pixabay.com의 CC0라이선스 음향 효과를 �
 불러오는 에셋들이 많아, 게임을 시작할때 약간의 텀이 있을수 있습니다.
 
 모든 그래픽은 저희팀이 자체제작하였습니다
+
+<p align="center">
+  <img width="460" height="300" src="https://picsum.photos/460/300">
+</p>
